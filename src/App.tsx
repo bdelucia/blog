@@ -4,13 +4,43 @@ import { TypingAnimation } from "./components/magicui/typing-animation";
 import { BlogHeader } from "./components/shared/BlogHeader";
 import Footer from "./components/shared/Footer";
 import { Link } from "./components/ui/link";
-import { getBlogPosts } from "./data/blog";
 
 const BLUR_FADE_DELAY = 0.04;
 
-export default async function BlogPage() {
-    const posts = await getBlogPosts();
+// Example posts for testing
+const posts = [
+    {
+        id: 1,
+        slug: "getting-started-with-vite",
+        title: "Getting Started with Vite",
+        summary:
+            "Learn how to set up a Vite project with React and TypeScript.",
+        published_at: "2024-01-15T00:00:00Z",
+        image_url: "/api/images/vite-logo.png",
+        tags: ["vite", "react", "typescript", "frontend"],
+    },
+    {
+        id: 2,
+        slug: "building-a-blog-with-express",
+        title: "Building a Blog with Express",
+        summary:
+            "Create a full-stack blog application using Express and React.",
+        published_at: "2024-01-20T00:00:00Z",
+        image_url: "/api/images/express-logo.png",
+        tags: ["express", "nodejs", "api", "backend"],
+    },
+    {
+        id: 3,
+        slug: "my-first-blog-post",
+        title: "My First Blog Post",
+        summary: "Welcome to my blog! Here's what I'll be writing about.",
+        published_at: "2024-01-25T00:00:00Z",
+        image_url: "/api/images/blog-logo.png",
+        tags: ["introduction", "blog", "personal"],
+    },
+];
 
+export default function BlogPage() {
     return (
         <div className="flex flex-col h-screen">
             <BlogHeader title="Bob with a Blog" scrollProgress={true} />
@@ -18,7 +48,7 @@ export default async function BlogPage() {
             <div className="flex flex-col">
                 <section
                     id="hero"
-                    className="w-full h-screen px-6 pt-24 relative overflow-hidden"
+                    className="w-full h-screen px-6 relative overflow-hidden"
                 >
                     {/* Background Image */}
                     <div className="absolute inset-0 z-0">

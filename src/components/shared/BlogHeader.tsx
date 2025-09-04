@@ -1,9 +1,7 @@
-import { ArrowLeftIcon } from "lucide-react";
 import { cn } from "../../lib/utils";
-import { Button, buttonVariants } from "../ui/button";
+import { buttonVariants } from "../ui/button";
 import { ModeToggle } from "./mode-toggle";
 import { ScrollProgress } from "../magicui/scroll-progress";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import { Link } from "../ui/link";
 
 interface BlogHeaderProps {
@@ -27,19 +25,17 @@ export function BlogHeader({
         >
             <div className="flex items-center justify-between h-full px-6">
                 {/* Left section - empty for balance */}
-                <div className="w-20">
-                    <BackToPortfolioButton />
-                </div>
+                <div className="w-20"></div>
 
                 {/* Center section - Back to Blog button */}
                 <Link
                     href="/blog"
                     className={cn(
                         buttonVariants({ variant: "outline", size: "default" }),
-                        "text-lg font-medium"
+                        "text-lg font-medium dark:bg-background"
                     )}
                 >
-                    {title ?? "← Back to Blog"}
+                    {title}
                 </Link>
 
                 {/* Right section - ModeToggle */}
@@ -54,22 +50,5 @@ export function BlogHeader({
                 </div>
             )}
         </header>
-    );
-}
-
-function BackToPortfolioButton() {
-    return (
-        <Tooltip>
-            <TooltipTrigger asChild>
-                <Link href="/">
-                    <Button className="bg-background group w-12 h-full">
-                        <ArrowLeftIcon className="h-4 w-4 text-foreground group-hover:text-background" />
-                    </Button>
-                </Link>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-                <p>Back to Portfolio</p>
-            </TooltipContent>
-        </Tooltip>
     );
 }

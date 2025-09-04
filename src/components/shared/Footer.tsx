@@ -1,5 +1,3 @@
-import { BLOG_IMGS_URL } from "../../data/blog";
-
 export default function Footer() {
     return (
         <footer className="bg-black text-white py-8 px-4 mt-8">
@@ -8,7 +6,7 @@ export default function Footer() {
                     {/* Left side - Logo */}
                     <div>
                         <img
-                            src={`${BLOG_IMGS_URL}pets.jpg`}
+                            src="/pets.jpg"
                             alt="Picture of my pets"
                             className="h-[200px] w-auto object-contain"
                         />
