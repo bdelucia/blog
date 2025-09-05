@@ -1,5 +1,5 @@
 import { BlurFade } from "@/components/magicui/blur-fade";
-import { getBlogPosts, BLOG_IMGS_URL } from "@/data/blog";
+import { getBlogPosts, BLOG_IMGS_URL, type Article } from "@/data/blog";
 import { Header } from "@/components/shared/Header";
 import Footer from "@/components/shared/Footer";
 import Link from "next/link";
@@ -15,8 +15,17 @@ export const metadata = {
 
 const BLUR_FADE_DELAY = 0.04;
 
+// Force dynamic rendering to avoid build-time cookie issues
+export const dynamic = "force-dynamic";
+
 export default async function BlogPage() {
-    const posts = await getBlogPosts();
+    let posts: Article[] = [];
+    try {
+        posts = await getBlogPosts();
+    } catch (error) {
+        console.error("Error fetching posts:", error);
+        posts = [];
+    }
 
     return (
         <div className="flex flex-col h-screen">
@@ -43,7 +52,7 @@ export default async function BlogPage() {
                     {/* Content */}
                     <div className="relative z-10 h-full flex items-center justify-center">
                         <BlurFade delay={BLUR_FADE_DELAY}>
-                            <div className="max-w-4xl mx-auto text-center space-y-6 p-8 rounded-2xl bg-white/80 dark:bg-gray-900 backdrop-blur-sm border border-0 border-white/20 dark:border-gray-700/20">
+                            <div className="max-w-4xl mx-auto text-center space-y-6 p-8 rounded-2xl bg-white/80 dark:bg-gray-900 backdrop-blur-sm border border-white/20 dark:border-gray-700/20">
                                 <ShineBorder
                                     shineColor={[
                                         "#A07CFE",
