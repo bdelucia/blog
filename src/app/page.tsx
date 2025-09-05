@@ -52,7 +52,7 @@ export default async function BlogPage() {
                     {/* Content */}
                     <div className="relative z-10 h-full flex items-center justify-center">
                         <BlurFade delay={BLUR_FADE_DELAY}>
-                            <div className="max-w-4xl mx-auto text-center space-y-6 p-8 rounded-2xl bg-white/80 dark:bg-gray-900 backdrop-blur-sm border border-white/20 dark:border-gray-700/20">
+                            <div className="max-w-4xl mx-auto text-center space-y-6 p-8 rounded-2xl bg-white/80 dark:bg-gray-900 backdrop-blur-sm ">
                                 <ShineBorder
                                     shineColor={[
                                         "#A07CFE",
