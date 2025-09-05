@@ -15,6 +15,13 @@
       "when": 1757055786408,
       "tag": "0001_freezing_nighthawk",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1757059301070,
+      "tag": "0002_parallel_radioactive_man",
+      "breakpoints": true
     }
   ]
 }
