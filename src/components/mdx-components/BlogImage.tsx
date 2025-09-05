@@ -1,6 +1,7 @@
-import { Card, CardContent } from "../ui/card";
+"use client";
+
+import Image from "next/image";
 import { useState } from "react";
-import { Button } from "../ui/button";
 import { X } from "lucide-react";
 
 interface BlogImageProps {
@@ -34,21 +35,23 @@ export default function BlogImage({
     };
 
     const imageContent = (
-        <Card className="bg-transparent">
-            <CardContent className="p-1">
-                <img
+        <div className="bg-transparent">
+            <div className="p-1">
+                <Image
                     src={imageSrc}
                     alt={alt}
                     className={`${className} cursor-pointer hover:opacity-80 transition-opacity`}
+                    width={312}
+                    height={416}
                     onClick={handleImageClick}
                 />
-            </CardContent>
+            </div>
             {caption && (
                 <div className="flex italic items-center justify-center -mt-8 -mb-8">
                     <p>{caption}</p>
                 </div>
             )}
-        </Card>
+        </div>
     );
 
     // Proper modal using shadcn/ui patterns
@@ -71,25 +74,26 @@ export default function BlogImage({
                                 {alt}
                             </h3>
                             <div className="flex-1 flex justify-end">
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
+                                <button
                                     onClick={closeModal}
-                                    className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                    className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md flex items-center justify-center"
                                 >
                                     <X className="h-4 w-4" />
                                     <span className="sr-only">Close</span>
-                                </Button>
+                                </button>
                             </div>
                         </div>
 
                         {/* Image */}
                         <div className="p-4">
                             <div className="relative">
-                                <img
+                                <Image
                                     src={imageSrc}
                                     alt={alt}
                                     className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                                    width={800}
+                                    height={600}
+                                    priority
                                 />
                             </div>
                         </div>

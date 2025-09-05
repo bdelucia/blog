@@ -1,4 +1,6 @@
-import useVerticalScroll from "../../hooks/useVerticalScroll";
+"use client";
+
+import useVerticalScroll from "@/hooks/useVerticalScroll";
 
 function ScrollArrow() {
     const {
@@ -24,7 +26,7 @@ function ScrollArrow() {
                 <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-40">
                     <button
                         onClick={scrollToNextSection}
-                        className="bg-background text-foreground rounded-full p-1.5 hover:p-2 shadow-lg hover:shadow-xl hover:cursor-pointer transition-all duration-300 animate-bounce"
+                        className="btn btn-circle btn-primary shadow-lg hover:shadow-xl transition-all duration-300 animate-bounce"
                         aria-label="Scroll down to next section"
                         type="button"
                     >
@@ -55,8 +57,8 @@ function ScrollArrow() {
                                 key={index}
                                 className={`w-2 h-2 rounded-full transition-all duration-300 ${
                                     index === currentSection
-                                        ? "bg-white scale-125"
-                                        : "bg-white/30"
+                                        ? "bg-primary scale-125"
+                                        : "bg-primary/30"
                                 }`}
                                 aria-hidden="true"
                             />

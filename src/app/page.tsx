@@ -1,61 +1,39 @@
-import ScrollArrow from "./components/home/ScrollArrow";
-import { BlurFade } from "./components/magicui/blur-fade";
-import { TypingAnimation } from "./components/magicui/typing-animation";
-import { BlogHeader } from "./components/shared/BlogHeader";
-import Footer from "./components/shared/Footer";
-import { Link } from "./components/ui/link";
+import { BlurFade } from "@/components/magicui/blur-fade";
+import { getBlogPosts, BLOG_IMGS_URL } from "@/data/blog";
+import { Header } from "@/components/shared/Header";
+import Footer from "@/components/shared/Footer";
+import Link from "next/link";
+import Image from "next/image";
+import { TypingAnimation } from "@/components/magicui/typing-animation";
+import ScrollArrow from "@/components/home/ScrollArrow";
+
+export const metadata = {
+    title: "Blog",
+    description: "My thoughts on software development, life, and more.",
+};
 
 const BLUR_FADE_DELAY = 0.04;
 
-// Example posts for testing
-const posts = [
-    {
-        id: 1,
-        slug: "getting-started-with-vite",
-        title: "Getting Started with Vite",
-        summary:
-            "Learn how to set up a Vite project with React and TypeScript.",
-        published_at: "2024-01-15T00:00:00Z",
-        image_url: "/api/images/vite-logo.png",
-        tags: ["vite", "react", "typescript", "frontend"],
-    },
-    {
-        id: 2,
-        slug: "building-a-blog-with-express",
-        title: "Building a Blog with Express",
-        summary:
-            "Create a full-stack blog application using Express and React.",
-        published_at: "2024-01-20T00:00:00Z",
-        image_url: "/api/images/express-logo.png",
-        tags: ["express", "nodejs", "api", "backend"],
-    },
-    {
-        id: 3,
-        slug: "my-first-blog-post",
-        title: "My First Blog Post",
-        summary: "Welcome to my blog! Here's what I'll be writing about.",
-        published_at: "2024-01-25T00:00:00Z",
-        image_url: "/api/images/blog-logo.png",
-        tags: ["introduction", "blog", "personal"],
-    },
-];
+export default async function BlogPage() {
+    const posts = await getBlogPosts();
 
-export default function BlogPage() {
     return (
         <div className="flex flex-col h-screen">
-            <BlogHeader title="Bob with a Blog" scrollProgress={true} />
+            <Header title="Bob with a Blog" scrollProgress={true} />
 
             <div className="flex flex-col">
                 <section
                     id="hero"
-                    className="w-full h-screen px-6 relative overflow-hidden"
+                    className="w-full h-screen px-6 pt-24 relative overflow-hidden"
                 >
                     {/* Background Image */}
                     <div className="absolute inset-0 z-0">
-                        <img
-                            src="/hero-bg.webp" // You can replace this with your image path
+                        <Image
+                            src="/images/backgrounds/hero-bg.webp"
                             alt="Blog background"
-                            className="object-cover w-full h-full"
+                            fill
+                            className="object-cover"
+                            priority
                         />
                         {/* Overlay for better readability */}
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-950/10 to-indigo-950/10"></div>
@@ -105,8 +83,8 @@ export default function BlogPage() {
                     {posts
                         .sort((a, b) => {
                             if (
-                                new Date(a.published_at) >
-                                new Date(b.published_at)
+                                new Date(a.metadata.publishedAt) >
+                                new Date(b.metadata.publishedAt)
                             ) {
                                 return -1;
                             }
@@ -124,11 +102,19 @@ export default function BlogPage() {
                                     <div className="w-full flex items-start space-x-4">
                                         <div className="flex-shrink-0">
                                             <div className="w-48 h-32 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 transform-gpu">
-                                                {post.image_url ? (
-                                                    <img
-                                                        src={post.image_url}
-                                                        alt={post.title}
+                                                {post.metadata.image ? (
+                                                    <Image
+                                                        src={`${BLOG_IMGS_URL}${post.metadata.image}`}
+                                                        alt={
+                                                            post.metadata.title
+                                                        }
+                                                        width={192}
+                                                        height={128}
                                                         className="w-full h-full object-cover"
+                                                        loading="lazy"
+                                                        quality={95}
+                                                        priority={false}
+                                                        sizes="192px"
                                                     />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-600">
@@ -152,13 +138,13 @@ export default function BlogPage() {
                                         {/* Post content */}
                                         <div className="flex-1 min-w-0">
                                             <p className="tracking-tight truncate">
-                                                {post.title}
+                                                {post.metadata.title}
                                             </p>
                                             <p className="h-6 text-xs text-muted-foreground">
-                                                {post.published_at}
+                                                {post.metadata.publishedAt}
                                             </p>
                                             <p className="text-sm text-muted-foreground">
-                                                {post.summary}
+                                                {post.metadata.summary}
                                             </p>
                                         </div>
                                     </div>

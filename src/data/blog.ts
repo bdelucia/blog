@@ -1,88 +1,47 @@
-export const BLOG_IMGS_URL = "/api/images/";
+import fs from "fs";
+import matter from "gray-matter";
+import path from "path";
 
-export interface BlogPost {
-    id: number;
-    slug: string;
+type Metadata = {
     title: string;
-    summary: string;
-    content?: string;
-    published_at: string;
-    image_url?: string;
-    tags?: string[];
-}
-
-export interface BlogPostMetadata {
-    title: string;
-    summary: string;
     publishedAt: string;
+    summary: string;
     image?: string;
-    tags?: string[];
+};
+
+export const BLOG_IMGS_URL = `https://pub-22e36f870e1647a6a48e07c2fa9d9ae8.r2.dev/`;
+
+function getMDXFiles(dir: string) {
+    return fs.readdirSync(dir).filter((file) => path.extname(file) === ".mdx");
 }
 
-// Fallback data for when the API is not available
-const FALLBACK_POSTS: BlogPost[] = [
-    {
-        id: 1,
-        slug: "getting-started-with-vite",
-        title: "Getting Started with Vite",
-        summary:
-            "Learn how to set up a Vite project with React and TypeScript.",
-        published_at: "2024-01-15T00:00:00Z",
-        image_url: "/api/images/vite-logo.png",
-        tags: ["vite", "react", "typescript", "frontend"],
-    },
-    {
-        id: 2,
-        slug: "building-a-blog-with-express",
-        title: "Building a Blog with Express",
-        summary:
-            "Create a full-stack blog application using Express and React.",
-        published_at: "2024-01-20T00:00:00Z",
-        image_url: "/api/images/express-logo.png",
-        tags: ["express", "nodejs", "api", "backend"],
-    },
-];
-
-export async function getBlogPosts(): Promise<BlogPost[]> {
-    try {
-        const response = await fetch("/api/posts");
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const posts = await response.json();
-        return posts;
-    } catch (error) {
-        console.warn("API not available, using fallback data:", error);
-        return FALLBACK_POSTS;
-    }
-}
-
-export async function getBlogPost(slug: string): Promise<BlogPost | null> {
-    try {
-        const response = await fetch(`/api/posts/${slug}`);
-        if (!response.ok) {
-            if (response.status === 404) {
-                return null;
-            }
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const post = await response.json();
-        return post;
-    } catch (error) {
-        console.warn("API not available, checking fallback data:", error);
-        // Check fallback data
-        const fallbackPost = FALLBACK_POSTS.find((post) => post.slug === slug);
-        return fallbackPost || null;
-    }
-}
-
-// Helper function to convert API response to metadata format
-export function postToMetadata(post: BlogPost): BlogPostMetadata {
+export async function getPost(slug: string) {
+    const filePath = path.join("content", `${slug}.mdx`);
+    let source = fs.readFileSync(filePath, "utf-8");
+    const { content: rawContent, data: metadata } = matter(source);
+    // Return the raw MDX content instead of converting to HTML
     return {
-        title: post.title,
-        summary: post.summary,
-        publishedAt: post.published_at,
-        image: post.image_url,
-        tags: post.tags,
+        source: rawContent,
+        metadata,
+        slug,
     };
+}
+
+async function getAllPosts(dir: string) {
+    let mdxFiles = getMDXFiles(dir);
+    return Promise.all(
+        mdxFiles.map(async (file) => {
+            let slug = path.basename(file, path.extname(file));
+            let { metadata, source } = await getPost(slug);
+            return {
+                metadata,
+                slug,
+                source,
+            };
+        })
+    );
+}
+
+export async function getBlogPosts() {
+    return getAllPosts(path.join(process.cwd(), "src/content"));
 }

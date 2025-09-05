@@ -1,6 +1,7 @@
-import { motion, useInView } from "motion/react";
-import type { MotionProps } from "motion/react";
-import { cn } from "../../lib/utils";
+"use client";
+
+import { cn } from "@/lib/utils";
+import { motion, MotionProps, useInView } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 
 interface TypingAnimationProps extends MotionProps {

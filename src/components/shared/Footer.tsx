@@ -1,3 +1,7 @@
+import React from "react";
+import Image from "next/image";
+import { BLOG_IMGS_URL } from "@/data/blog";
+
 export default function Footer() {
     return (
         <footer className="bg-black text-white py-8 px-4 mt-8">
@@ -5,10 +9,12 @@ export default function Footer() {
                 <div className="flex flex-col md:flex-row items-center justify-between space-y-6 md:space-y-0 md:space-x-8">
                     {/* Left side - Logo */}
                     <div>
-                        <img
-                            src="/pets.jpg"
+                        <Image
+                            src="/images/content/pets.jpg"
                             alt="Picture of my pets"
                             className="h-[200px] w-auto object-contain"
+                            width={300}
+                            height={300}
                         />
                     </div>
 
