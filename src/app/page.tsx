@@ -91,8 +91,8 @@ export default async function BlogPage() {
                     {posts
                         .sort((a, b) => {
                             if (
-                                new Date(a.metadata.publishedAt) >
-                                new Date(b.metadata.publishedAt)
+                                new Date(a.datePosted || a.createdAt) >
+                                new Date(b.datePosted || b.createdAt)
                             ) {
                                 return -1;
                             }
@@ -110,12 +110,16 @@ export default async function BlogPage() {
                                     <div className="w-full flex items-start space-x-4">
                                         <div className="flex-shrink-0">
                                             <div className="w-48 h-32 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 transform-gpu">
-                                                {post.metadata.image ? (
+                                                {post.image ? (
                                                     <Image
-                                                        src={`${BLOG_IMGS_URL}${post.metadata.image}`}
-                                                        alt={
-                                                            post.metadata.title
+                                                        src={
+                                                            post.image.startsWith(
+                                                                "http"
+                                                            )
+                                                                ? post.image
+                                                                : `${BLOG_IMGS_URL}${post.image}`
                                                         }
+                                                        alt={post.title}
                                                         width={192}
                                                         height={128}
                                                         className="w-full h-full object-cover"
@@ -146,13 +150,18 @@ export default async function BlogPage() {
                                         {/* Post content */}
                                         <div className="flex-1 min-w-0">
                                             <p className="tracking-tight truncate">
-                                                {post.metadata.title}
+                                                {post.title}
                                             </p>
                                             <p className="h-6 text-xs text-muted-foreground">
-                                                {post.metadata.publishedAt}
+                                                {post.datePosted
+                                                    ? new Date(
+                                                          post.datePosted
+                                                      ).toLocaleDateString()
+                                                    : "No date"}
                                             </p>
                                             <p className="text-sm text-muted-foreground">
-                                                {post.metadata.summary}
+                                                {post.summary ||
+                                                    "No summary available"}
                                             </p>
                                         </div>
                                     </div>

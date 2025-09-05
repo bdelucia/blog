@@ -1,47 +1,191 @@
-import fs from "fs";
-import matter from "gray-matter";
-import path from "path";
-
-type Metadata = {
-    title: string;
-    publishedAt: string;
-    summary: string;
-    image?: string;
-};
+import { createClient } from "@/utils/supabase/server";
 
 export const BLOG_IMGS_URL = `https://pub-22e36f870e1647a6a48e07c2fa9d9ae8.r2.dev/`;
+export const BLUR_FADE_DELAY = 0.04;
 
-function getMDXFiles(dir: string) {
-    return fs.readdirSync(dir).filter((file) => path.extname(file) === ".mdx");
+export interface Article {
+    id: number;
+    title: string;
+    summary: string | null;
+    image: string | null;
+    datePosted: string | null;
+    status: "draft" | "published";
+    content: string | null;
+    slug: string;
+    createdAt: string;
+    updatedAt: string;
 }
 
-export async function getPost(slug: string) {
-    const filePath = path.join("content", `${slug}.mdx`);
-    let source = fs.readFileSync(filePath, "utf-8");
-    const { content: rawContent, data: metadata } = matter(source);
-    // Return the raw MDX content instead of converting to HTML
-    return {
-        source: rawContent,
-        metadata,
-        slug,
-    };
+export interface CreateArticleData {
+    title: string;
+    summary?: string;
+    image?: string;
+    datePosted?: string;
+    status?: "draft" | "published";
+    content?: string;
+    slug: string;
 }
 
-async function getAllPosts(dir: string) {
-    let mdxFiles = getMDXFiles(dir);
-    return Promise.all(
-        mdxFiles.map(async (file) => {
-            let slug = path.basename(file, path.extname(file));
-            let { metadata, source } = await getPost(slug);
-            return {
-                metadata,
-                slug,
-                source,
-            };
-        })
-    );
+export interface UpdateArticleData {
+    title?: string;
+    summary?: string;
+    image?: string;
+    datePosted?: string;
+    status?: "draft" | "published";
+    content?: string;
+    slug?: string;
 }
 
-export async function getBlogPosts() {
-    return getAllPosts(path.join(process.cwd(), "src/content"));
+// READ operations
+export async function getBlogPosts(): Promise<Article[]> {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from("articles")
+        .select("*")
+        .eq("status", "published")
+        .order("datePosted", { ascending: false });
+
+    if (error) {
+        console.error("Error fetching blog posts:", error);
+        return [];
+    }
+
+    return data || [];
+}
+
+export async function getPost(slug: string): Promise<Article | null> {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from("articles")
+        .select("*")
+        .eq("slug", slug)
+        .eq("status", "published")
+        .single();
+
+    if (error) {
+        console.error("Error fetching post:", error);
+        return null;
+    }
+
+    return data;
+}
+
+export async function getAllPosts(): Promise<Article[]> {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from("articles")
+        .select("*")
+        .order("createdAt", { ascending: false });
+
+    if (error) {
+        console.error("Error fetching all posts:", error);
+        return [];
+    }
+
+    return data || [];
+}
+
+export async function getPostById(id: number): Promise<Article | null> {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from("articles")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+    if (error) {
+        console.error("Error fetching post by ID:", error);
+        return null;
+    }
+
+    return data;
+}
+
+// CREATE operation
+export async function createPost(
+    postData: CreateArticleData
+): Promise<Article | null> {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from("articles")
+        .insert([postData])
+        .select()
+        .single();
+
+    if (error) {
+        console.error("Error creating post:", error);
+        return null;
+    }
+
+    return data;
+}
+
+// UPDATE operation
+export async function updatePost(
+    id: number,
+    postData: UpdateArticleData
+): Promise<Article | null> {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from("articles")
+        .update({ ...postData, updatedAt: new Date().toISOString() })
+        .eq("id", id)
+        .select()
+        .single();
+
+    if (error) {
+        console.error("Error updating post:", error);
+        return null;
+    }
+
+    return data;
+}
+
+// DELETE operation
+export async function deletePost(id: number): Promise<boolean> {
+    const supabase = await createClient();
+
+    const { error } = await supabase.from("articles").delete().eq("id", id);
+
+    if (error) {
+        console.error("Error deleting post:", error);
+        return false;
+    }
+
+    return true;
+}
+
+// Utility functions
+export async function getDraftPosts(): Promise<Article[]> {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from("articles")
+        .select("*")
+        .eq("status", "draft")
+        .order("createdAt", { ascending: false });
+
+    if (error) {
+        console.error("Error fetching draft posts:", error);
+        return [];
+    }
+
+    return data || [];
+}
+
+export async function publishPost(id: number): Promise<Article | null> {
+    return updatePost(id, {
+        status: "published",
+        datePosted: new Date().toISOString(),
+    });
+}
+
+export async function unpublishPost(id: number): Promise<Article | null> {
+    return updatePost(id, { status: "draft" });
 }
