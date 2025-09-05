@@ -156,3 +156,85 @@
         @apply bg-background text-foreground;
     }
 }
+
+@layer components {
+    .prose {
+        @apply text-foreground;
+    }
+
+    .prose h1 {
+        @apply text-3xl font-bold text-foreground mb-8 mt-10;
+    }
+
+    .prose h2 {
+        @apply text-2xl font-semibold text-foreground mb-6 mt-8;
+    }
+
+    .prose h3 {
+        @apply text-xl font-semibold text-foreground mb-4 mt-7;
+    }
+
+    .prose h4 {
+        @apply text-lg font-semibold text-foreground mb-3 mt-6;
+    }
+
+    .prose p {
+        @apply text-foreground/90 mb-6 leading-relaxed;
+    }
+
+    .prose a {
+        @apply text-primary hover:text-primary/80 underline decoration-primary/30 hover:decoration-primary/60 transition-colors;
+    }
+
+    .prose strong {
+        @apply font-semibold text-foreground;
+    }
+
+    .prose em {
+        @apply italic text-foreground/90;
+    }
+
+    .prose code {
+        @apply bg-muted text-foreground px-1.5 py-0.5 rounded text-sm font-mono;
+    }
+
+    .prose pre {
+        @apply bg-muted text-foreground p-4 rounded-lg overflow-x-auto my-6;
+    }
+
+    .prose pre code {
+        @apply bg-transparent p-0;
+    }
+
+    .prose blockquote {
+        @apply border-l-4 border-primary/30 pl-4 italic text-foreground/80 my-6;
+    }
+
+    .prose ul {
+        @apply my-6 pl-6 list-disc;
+    }
+
+    .prose ol {
+        @apply my-6 pl-6 list-decimal;
+    }
+
+    .prose li {
+        @apply my-2 text-foreground/90;
+    }
+
+    .prose ul li::marker {
+        @apply text-foreground;
+    }
+
+    .prose ol li::marker {
+        @apply text-foreground;
+    }
+
+    .prose img {
+        @apply rounded-lg my-6;
+    }
+
+    .prose hr {
+        @apply border-border my-10;
+    }
+}

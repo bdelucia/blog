@@ -158,7 +158,7 @@ export default async function Blog({
                             </p>
                         </Suspense>
                     </div>
-                    <article className="prose dark:prose-invert max-w-[650px] mx-auto">
+                    <article className="prose max-w-[650px] mx-auto">
                         <MDXRemote
                             source={post.content || ""}
                             components={components}
