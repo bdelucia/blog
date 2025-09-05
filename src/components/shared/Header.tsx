@@ -5,6 +5,8 @@ import { ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
 import { ModeToggle } from "./mode-toggle";
 import { RainbowButton } from "@/components/magicui/rainbow-button";
+import { CyanButton } from "@/components/magicui/cyan-button";
+import { useState, useEffect } from "react";
 import { ScrollProgress } from "../magicui/scroll-progress";
 
 interface HeaderProps {
@@ -14,10 +16,32 @@ interface HeaderProps {
 }
 
 export function Header({ className, title, scrollProgress }: HeaderProps) {
+    const [isDark, setIsDark] = useState(false);
+
+    useEffect(() => {
+        // Check if dark mode is enabled on initial load
+        const isDarkMode = document.documentElement.classList.contains("dark");
+        setIsDark(isDarkMode);
+
+        // Listen for theme changes
+        const observer = new MutationObserver(() => {
+            const isDarkMode =
+                document.documentElement.classList.contains("dark");
+            setIsDark(isDarkMode);
+        });
+
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ["class"],
+        });
+
+        return () => observer.disconnect();
+    }, []);
+
     return (
         <header
             className={cn(
-                "fixed top-0 z-40 w-full h-16 bg-foreground/90 dark:bg-foreground/90 backdrop-blur-sm border-b border-border",
+                "fixed top-0 z-40 w-full h-16 bg-background backdrop-blur-sm border-b border-border",
                 className
             )}
             style={{ height: "64px" }}
@@ -28,9 +52,15 @@ export function Header({ className, title, scrollProgress }: HeaderProps) {
 
                 {/* Center section - Home button */}
                 <Link href="/">
-                    <RainbowButton className="text-lg font-semibold">
-                        {title ?? "← Back to Home"}
-                    </RainbowButton>
+                    {isDark ? (
+                        <RainbowButton className="text-lg font-semibold">
+                            {title ?? "← Back to Home"}
+                        </RainbowButton>
+                    ) : (
+                        <CyanButton className="text-lg font-semibold">
+                            {title ?? "← Back to Home"}
+                        </CyanButton>
+                    )}
                 </Link>
 
                 {/* Right section */}

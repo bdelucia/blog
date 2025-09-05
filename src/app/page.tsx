@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { TypingAnimation } from "@/components/magicui/typing-animation";
 import ScrollArrow from "@/components/home/ScrollArrow";
+import { ShineBorder } from "@/components/magicui/shine-border";
 
 export const metadata = {
     title: "Blog",
@@ -42,7 +43,14 @@ export default async function BlogPage() {
                     {/* Content */}
                     <div className="relative z-10 h-full flex items-center justify-center">
                         <BlurFade delay={BLUR_FADE_DELAY}>
-                            <div className="max-w-4xl mx-auto text-center space-y-6 p-8 rounded-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-white/20 dark:border-gray-700/20">
+                            <div className="max-w-4xl mx-auto text-center space-y-6 p-8 rounded-2xl bg-white/80 dark:bg-gray-900 backdrop-blur-sm border border-0 border-white/20 dark:border-gray-700/20">
+                                <ShineBorder
+                                    shineColor={[
+                                        "#A07CFE",
+                                        "#FE8FB5",
+                                        "#FFBE7B",
+                                    ]}
+                                />
                                 <h1 className="flex flex-col sm:flex-row justify-center gap-2 items-center text-4xl font-bold tracking-tighter text-gray-900 dark:text-gray-100">
                                     <span>Welcome</span>
                                     <TypingAnimation delay={0.75}>

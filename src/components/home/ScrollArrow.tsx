@@ -26,7 +26,7 @@ function ScrollArrow() {
                 <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-40">
                     <button
                         onClick={scrollToNextSection}
-                        className="btn btn-circle btn-primary shadow-lg hover:shadow-xl transition-all duration-300 animate-bounce"
+                        className="bg-foreground text-background dark:bg-foreground dark:text-background w-9 h-9 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 animate-bounce flex items-center justify-center"
                         aria-label="Scroll down to next section"
                         type="button"
                     >
