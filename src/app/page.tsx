@@ -114,7 +114,7 @@ export default async function BlogPage() {
                             >
                                 <Link
                                     className="flex flex-col space-y-1 mb-4"
-                                    href={`/blog/${post.slug}`}
+                                    href={`/${post.slug}`}
                                 >
                                     <div className="w-full flex items-start space-x-4">
                                         <div className="flex-shrink-0">
