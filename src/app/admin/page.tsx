@@ -3,6 +3,9 @@ import { getAllUsers, getUsersByRole } from "@/db/users/functions";
 import { getBlogPosts, getAllPosts } from "@/db/articles/functions";
 import Link from "next/link";
 
+// Force dynamic rendering for admin page
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboard() {
     const admin = await requireAdmin();
 
