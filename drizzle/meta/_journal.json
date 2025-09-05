@@ -22,6 +22,20 @@
       "when": 1757059301070,
       "tag": "0002_parallel_radioactive_man",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1757060271292,
+      "tag": "0003_yielding_champions",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1757060361113,
+      "tag": "0004_broken_white_queen",
+      "breakpoints": true
     }
   ]
 }
