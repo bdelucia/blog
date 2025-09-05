@@ -51,7 +51,7 @@ export default function BlogImageClient({
                 />
             </div>
             {caption && (
-                <div className="flex italic items-center justify-center -mt-8 -mb-8">
+                <div className="flex italic items-center justify-center -mb-8">
                     <p>{caption}</p>
                 </div>
             )}
@@ -104,7 +104,7 @@ export default function BlogImageClient({
 
                         {/* Footer with caption */}
                         {caption && (
-                            <div className="border-t border-gray-200 dark:border-gray-700">
+                            <div className="mt-2 border-t border-gray-200 dark:border-gray-700">
                                 <p className="text-center text-gray-600 dark:text-gray-400 italic">
                                     {caption}
                                 </p>
