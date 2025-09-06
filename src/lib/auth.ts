@@ -72,13 +72,25 @@ export async function isAuthenticated(): Promise<boolean> {
 export async function createUserAfterSignup(
     userId: string,
     email: string,
-    fullName?: string
+    fullName?: string,
+    avatarUrl?: string
 ) {
     try {
+        // First check if user already exists
+        const existingUser = await getUser(userId);
+
+        if (existingUser) {
+            // User exists, update with new data if provided
+            console.log("User already exists, updating with latest data");
+            // You might want to add an update function here if needed
+            return;
+        }
+
         await createUser({
             id: userId,
             email: email,
             fullName: fullName,
+            avatarUrl: avatarUrl,
             role: "user", // Default role
         });
     } catch (error) {

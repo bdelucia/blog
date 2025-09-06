@@ -3,7 +3,7 @@ import { createUserAfterSignup } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
     try {
-        const { userId, email, fullName } = await request.json();
+        const { userId, email, fullName, avatarUrl } = await request.json();
 
         if (!userId || !email) {
             return NextResponse.json(
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        await createUserAfterSignup(userId, email, fullName);
+        await createUserAfterSignup(userId, email, fullName, avatarUrl);
 
         return NextResponse.json({ success: true });
     } catch (error) {

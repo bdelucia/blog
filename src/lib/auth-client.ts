@@ -98,3 +98,49 @@ export async function resetPasswordClient(email: string) {
         throw new Error(error.message);
     }
 }
+
+export async function signInWithGoogle() {
+    const supabase = getClientAuth();
+
+    // Use the Supabase callback URL and then redirect to our app
+    const redirectUrl = `${window.location.origin}/auth/callback`;
+
+    console.log("Google OAuth redirect URL:", redirectUrl);
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+            redirectTo: redirectUrl,
+        },
+    });
+
+    if (error) {
+        console.error("Google OAuth error:", error);
+        throw new Error(error.message);
+    }
+
+    return data;
+}
+
+export async function signUpWithGoogle() {
+    const supabase = getClientAuth();
+
+    // Use the Supabase callback URL and then redirect to our app
+    const redirectUrl = `${window.location.origin}/auth/callback`;
+
+    console.log("Google OAuth redirect URL:", redirectUrl);
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+            redirectTo: redirectUrl,
+        },
+    });
+
+    if (error) {
+        console.error("Google OAuth error:", error);
+        throw new Error(error.message);
+    }
+
+    return data;
+}

@@ -8,6 +8,17 @@ import { RainbowButton } from "@/components/magicui/rainbow-button";
 import { CyanButton } from "@/components/magicui/cyan-button";
 import { useState, useEffect } from "react";
 import { ScrollProgress } from "../magicui/scroll-progress";
+import { useAuth } from "@/hooks/useAuth";
+import { Avatar } from "./Avatar";
+import { Button } from "@/components/ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { User, LogOut } from "lucide-react";
+import { signOutClient } from "@/lib/auth-client";
 
 interface HeaderProps {
     className?: string;
@@ -17,6 +28,16 @@ interface HeaderProps {
 
 export function Header({ className, title, scrollProgress }: HeaderProps) {
     const [isDark, setIsDark] = useState(false);
+    const { user, loading } = useAuth();
+
+    const handleSignOut = async () => {
+        try {
+            await signOutClient();
+            // The useAuth hook will automatically update the user state
+        } catch (error) {
+            console.error("Error signing out:", error);
+        }
+    };
 
     useEffect(() => {
         // Check if dark mode is enabled on initial load
@@ -47,8 +68,47 @@ export function Header({ className, title, scrollProgress }: HeaderProps) {
             style={{ height: "64px" }}
         >
             <div className="flex items-center justify-between h-full px-6">
-                {/* Left section - empty for balance */}
-                <div className="w-20"></div>
+                {/* Left section - Sign in button or Avatar */}
+                <div className="w-20 flex justify-start">
+                    {loading ? (
+                        <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                    ) : user ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-full">
+                                    <Avatar
+                                        src={user.avatarUrl}
+                                        alt={user.fullName || "User avatar"}
+                                        size="md"
+                                    />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56">
+                                <DropdownMenuItem
+                                    onClick={() => {
+                                        /* TODO: Navigate to profile */
+                                    }}
+                                >
+                                    <User className="mr-2 h-4 w-4" />
+                                    <span>User Profile</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={handleSignOut}
+                                    variant="destructive"
+                                >
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    <span>Sign Out</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : (
+                        <Link href="/auth/signup">
+                            <Button variant="outline" size="sm">
+                                Sign In
+                            </Button>
+                        </Link>
+                    )}
+                </div>
 
                 {/* Center section - Home button */}
                 <Link href="/">
