@@ -82,10 +82,37 @@ export async function createUserAfterSignup(
         if (existingUser) {
             // User exists, update with new data if provided
             console.log("User already exists, updating with latest data");
-            // You might want to add an update function here if needed
+            console.log(
+                "Updating avatar URL from:",
+                existingUser.avatarUrl,
+                "to:",
+                avatarUrl
+            );
+
+            // Update user with new avatar URL if provided
+            if (avatarUrl && avatarUrl !== existingUser.avatarUrl) {
+                const supabase = await createClient();
+                const { error } = await supabase
+                    .from("users")
+                    .update({
+                        avatar_url: avatarUrl,
+                        full_name: fullName || existingUser.fullName,
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", userId);
+
+                if (error) {
+                    console.error("Error updating user:", error);
+                } else {
+                    console.log(
+                        "User updated successfully with new avatar URL"
+                    );
+                }
+            }
             return;
         }
 
+        console.log("Creating user in database with avatar URL:", avatarUrl);
         await createUser({
             id: userId,
             email: email,
@@ -93,6 +120,7 @@ export async function createUserAfterSignup(
             avatarUrl: avatarUrl,
             role: "user", // Default role
         });
+        console.log("User created in database successfully");
     } catch (error) {
         console.error("Error creating user record:", error);
         throw error;

@@ -33,27 +33,37 @@ export default function AuthCallbackPage() {
                         "User authenticated successfully:",
                         data.session.user
                     );
+                    console.log(
+                        "User metadata:",
+                        data.session.user.user_metadata
+                    );
+                    console.log(
+                        "Avatar URL from Google:",
+                        data.session.user.user_metadata?.avatar_url
+                    );
 
                     // Check if this is a new user (Google OAuth signup)
                     // and create user record if needed
                     try {
+                        const userData = {
+                            userId: data.session.user.id,
+                            email: data.session.user.email,
+                            fullName:
+                                data.session.user.user_metadata?.full_name ||
+                                data.session.user.user_metadata?.name ||
+                                data.session.user.user_metadata?.display_name,
+                            avatarUrl:
+                                data.session.user.user_metadata?.avatar_url,
+                        };
+
+                        console.log("Sending user data to API:", userData);
+
                         const response = await fetch("/api/auth/create-user", {
                             method: "POST",
                             headers: {
                                 "Content-Type": "application/json",
                             },
-                            body: JSON.stringify({
-                                userId: data.session.user.id,
-                                email: data.session.user.email,
-                                fullName:
-                                    data.session.user.user_metadata
-                                        ?.full_name ||
-                                    data.session.user.user_metadata?.name ||
-                                    data.session.user.user_metadata
-                                        ?.display_name,
-                                avatarUrl:
-                                    data.session.user.user_metadata?.avatar_url,
-                            }),
+                            body: JSON.stringify(userData),
                         });
 
                         if (!response.ok) {

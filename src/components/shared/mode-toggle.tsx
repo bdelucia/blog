@@ -5,8 +5,11 @@ import { Moon, Sun } from "lucide-react";
 
 export function ModeToggle() {
     const [isDark, setIsDark] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        setMounted(true);
+
         // Check if dark mode is enabled on initial load
         const isDarkMode = document.documentElement.classList.contains("dark");
         setIsDark(isDarkMode);
@@ -38,6 +41,18 @@ export function ModeToggle() {
             localStorage.setItem("theme", "light");
         }
     };
+
+    if (!mounted) {
+        // Show a neutral button during SSR to prevent hydration mismatch
+        return (
+            <button
+                className="flex items-center justify-center w-10 h-10 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Theme toggle"
+            >
+                <Sun className="h-4 w-4 text-gray-400" />
+            </button>
+        );
+    }
 
     return (
         <button

@@ -43,6 +43,20 @@
       "when": 1757062961802,
       "tag": "0005_fancy_swordsman",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1757142517629,
+      "tag": "0006_orange_garia",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1757142833337,
+      "tag": "0007_cute_eternity",
+      "breakpoints": true
     }
   ]
 }

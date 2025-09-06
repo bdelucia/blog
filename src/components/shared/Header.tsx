@@ -8,7 +8,9 @@ import { RainbowButton } from "@/components/magicui/rainbow-button";
 import { CyanButton } from "@/components/magicui/cyan-button";
 import { useState, useEffect } from "react";
 import { ScrollProgress } from "../magicui/scroll-progress";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuthState } from "@/hooks/useAuthState";
+import { useTheme } from "@/hooks/useTheme";
+import { NoSSR } from "./NoSSR";
 import { Avatar } from "./Avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,8 +29,8 @@ interface HeaderProps {
 }
 
 export function Header({ className, title, scrollProgress }: HeaderProps) {
-    const [isDark, setIsDark] = useState(false);
-    const { user, loading } = useAuth();
+    const { theme, mounted: themeMounted } = useTheme();
+    const { user, loading, initialized } = useAuthState();
 
     const handleSignOut = async () => {
         try {
@@ -38,26 +40,6 @@ export function Header({ className, title, scrollProgress }: HeaderProps) {
             console.error("Error signing out:", error);
         }
     };
-
-    useEffect(() => {
-        // Check if dark mode is enabled on initial load
-        const isDarkMode = document.documentElement.classList.contains("dark");
-        setIsDark(isDarkMode);
-
-        // Listen for theme changes
-        const observer = new MutationObserver(() => {
-            const isDarkMode =
-                document.documentElement.classList.contains("dark");
-            setIsDark(isDarkMode);
-        });
-
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ["class"],
-        });
-
-        return () => observer.disconnect();
-    }, []);
 
     return (
         <header
@@ -70,49 +52,66 @@ export function Header({ className, title, scrollProgress }: HeaderProps) {
             <div className="flex items-center justify-between h-full px-6">
                 {/* Left section - Sign in button or Avatar */}
                 <div className="w-20 flex justify-start">
-                    {loading ? (
-                        <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-                    ) : user ? (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <button className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-full">
-                                    <Avatar
-                                        src={user.avatarUrl}
-                                        alt={user.fullName || "User avatar"}
-                                        size="md"
-                                    />
-                                </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56">
-                                <DropdownMenuItem
-                                    onClick={() => {
-                                        /* TODO: Navigate to profile */
-                                    }}
+                    <NoSSR
+                        fallback={
+                            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                        }
+                    >
+                        {!initialized || loading ? (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                        ) : user ? (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <button className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 rounded-full">
+                                        <Avatar
+                                            src={user.avatarUrl}
+                                            alt={user.fullName || "User avatar"}
+                                            size="md"
+                                        />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="end"
+                                    className="w-56"
                                 >
-                                    <User className="mr-2 h-4 w-4" />
-                                    <span>User Profile</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    onClick={handleSignOut}
-                                    variant="destructive"
-                                >
-                                    <LogOut className="mr-2 h-4 w-4" />
-                                    <span>Sign Out</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    ) : (
-                        <Link href="/auth/signup">
-                            <Button variant="outline" size="sm">
-                                Sign In
-                            </Button>
-                        </Link>
-                    )}
+                                    <DropdownMenuItem
+                                        onClick={() => {
+                                            /* TODO: Navigate to profile */
+                                        }}
+                                    >
+                                        <User className="mr-2 h-4 w-4" />
+                                        <span>User Profile</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={handleSignOut}
+                                        variant="destructive"
+                                    >
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        <span>Sign Out</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        ) : (
+                            <Link href="/auth/signup">
+                                <Button variant="outline" size="sm">
+                                    Sign In
+                                </Button>
+                            </Link>
+                        )}
+                    </NoSSR>
                 </div>
 
                 {/* Center section - Home button */}
                 <Link href="/">
-                    {isDark ? (
+                    {!themeMounted ? (
+                        // Show a neutral button during SSR to prevent hydration mismatch
+                        <Button
+                            variant="outline"
+                            className="text-lg font-semibold"
+                        >
+                            {title ?? "← Back to Home"}
+                        </Button>
+                    ) : theme === "dark" ? (
                         <RainbowButton className="text-lg font-semibold">
                             {title ?? "← Back to Home"}
                         </RainbowButton>

@@ -5,6 +5,13 @@ export async function POST(request: NextRequest) {
     try {
         const { userId, email, fullName, avatarUrl } = await request.json();
 
+        console.log("Create user API received:", {
+            userId,
+            email,
+            fullName,
+            avatarUrl,
+        });
+
         if (!userId || !email) {
             return NextResponse.json(
                 { error: "User ID and email are required" },
@@ -13,6 +20,7 @@ export async function POST(request: NextRequest) {
         }
 
         await createUserAfterSignup(userId, email, fullName, avatarUrl);
+        console.log("User created successfully with avatar URL:", avatarUrl);
 
         return NextResponse.json({ success: true });
     } catch (error) {
