@@ -32,6 +32,10 @@
                 {
                     "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
                     "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1a3dhdW5ubGJvdGR2bXZhc2t4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwMzQyOTUsImV4cCI6MjA3MjYxMDI5NX0.XJ0Ix4BDQZL6_e_zpwf_jwCLalGyJXH3UbeUvxag4d4"
+                },
+                {
+                    "name": "NEXT_PUBLIC_GA_ID",
+                    "value": "G-J39FE9KMT4"
                 }
             ],
             "healthCheck": {
