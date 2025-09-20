@@ -1,0 +1,57 @@
+{
+    "family": "blog-app",
+    "networkMode": "awsvpc",
+    "requiresCompatibilities": ["FARGATE"],
+    "cpu": "1024",
+    "memory": "2048",
+    "executionRoleArn": "arn:aws:iam::423623853941:role/ecsTaskExecutionRole",
+    "containerDefinitions": [
+        {
+            "name": "blog-app",
+            "image": "423623853941.dkr.ecr.us-east-2.amazonaws.com/blog-app:latest",
+            "portMappings": [
+                {
+                    "containerPort": 3000,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "NODE_ENV",
+                    "value": "production"
+                },
+                {
+                    "name": "PORT",
+                    "value": "3000"
+                },
+                {
+                    "name": "NEXT_PUBLIC_SUPABASE_URL",
+                    "value": "https://cukwaunnlbotdvmvaskx.supabase.co"
+                },
+                {
+                    "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+                    "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1a3dhdW5ubGJvdGR2bXZhc2t4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwMzQyOTUsImV4cCI6MjA3MjYxMDI5NX0.XJ0Ix4BDQZL6_e_zpwf_jwCLalGyJXH3UbeUvxag4d4"
+                }
+            ],
+            "healthCheck": {
+                "command": [
+                    "CMD-SHELL",
+                    "curl -f http://localhost:3000/api/health || exit 1"
+                ],
+                "interval": 30,
+                "timeout": 5,
+                "retries": 3,
+                "startPeriod": 120
+            },
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/blog-app",
+                    "awslogs-region": "us-east-2",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ]
+}

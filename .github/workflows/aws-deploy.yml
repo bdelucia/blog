@@ -1,0 +1,237 @@
+name: Deploy to AWS
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+env:
+    AWS_REGION: us-east-2
+    ECR_REPOSITORY: blog-app
+    ECS_CLUSTER: bob-with-a-blog
+    ECS_SERVICE: blog-app-task-service-u66yqxeg
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v2
+              with:
+                  version: 9
+
+            - name: Install dependencies
+              run: pnpm install --no-frozen-lockfile
+
+            - name: Run type check
+              run: pnpm run build
+              env:
+                  NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+                  NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+            - name: Run linting
+              run: pnpm run lint || echo "No lint script found"
+
+    deploy:
+        needs: test
+        runs-on: ubuntu-latest
+        if: github.ref == 'refs/heads/main'
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ${{ env.AWS_REGION }}
+
+            - name: Login to Amazon ECR
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v2
+
+            - name: Build, tag, and push image to Amazon ECR
+              env:
+                  ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+                  IMAGE_TAG: ${{ github.sha }}
+              run: |
+                  # Build a docker container and push it to ECR
+                  docker build \
+                    --build-arg NEXT_PUBLIC_SUPABASE_URL="${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" \
+                    --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" \
+                    -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+                  docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+                  docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+                  docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+            - name: Fill in the new image ID in the Amazon ECS task definition
+              id: task-def
+              run: |
+                  echo "Updating task definition with new image..."
+
+                  # Create a temporary task definition file with the new image
+                  cat aws-deployment/ecs-task-definition.json | \
+                  jq --arg image "${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}" \
+                     '.containerDefinitions[0].image = $image' > task-definition-updated.json
+
+                  echo "Updated task definition:"
+                  cat task-definition-updated.json
+
+                  # Register the new task definition
+                  TASK_DEFINITION_ARN=$(aws ecs register-task-definition \
+                      --cli-input-json file://task-definition-updated.json \
+                      --region ${{ env.AWS_REGION }} \
+                      --query 'taskDefinition.taskDefinitionArn' \
+                      --output text)
+
+                  echo "Registered task definition: $TASK_DEFINITION_ARN"
+                  echo "TASK_DEFINITION_ARN=$TASK_DEFINITION_ARN" >> $GITHUB_OUTPUT
+
+            - name: Verify IAM roles exist
+              run: |
+                  echo "Checking ECS execution role..."
+                  aws iam get-role --role-name ecsTaskExecutionRole --region ${{ env.AWS_REGION }} || {
+                      echo "ERROR: ecsTaskExecutionRole does not exist!"
+                      echo "Creating the role..."
+                      aws iam create-role \
+                          --role-name ecsTaskExecutionRole \
+                          --assume-role-policy-document '{
+                              "Version": "2012-10-17",
+                              "Statement": [
+                                  {
+                                      "Effect": "Allow",
+                                      "Principal": {
+                                          "Service": "ecs-tasks.amazonaws.com"
+                                      },
+                                      "Action": "sts:AssumeRole"
+                                  }
+                              ]
+                          }' \
+                          --region ${{ env.AWS_REGION }}
+                      
+                      aws iam attach-role-policy \
+                          --role-name ecsTaskExecutionRole \
+                          --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy \
+                          --region ${{ env.AWS_REGION }}
+                  }
+
+            - name: Update ALB health check path
+              run: |
+                  echo "Updating ALB target group health check path..."
+                  aws elbv2 modify-target-group \
+                      --target-group-arn arn:aws:elasticloadbalancing:us-east-2:423623853941:targetgroup/blog-app-tg/5f942ec95106430c \
+                      --health-check-path /api/health-simple \
+                      --health-check-interval-seconds 30 \
+                      --health-check-timeout-seconds 10 \
+                      --healthy-threshold-count 2 \
+                      --unhealthy-threshold-count 3 \
+                      --region ${{ env.AWS_REGION }} || echo "Failed to update target group health check"
+
+            - name: Clean up old task definitions
+              run: |
+                  echo "Cleaning up old task definitions..."
+
+                  # List all task definitions for the blog-app family
+                  TASK_DEFS=$(aws ecs list-task-definitions \
+                      --family-prefix blog-app \
+                      --status ACTIVE \
+                      --region ${{ env.AWS_REGION }} \
+                      --query 'taskDefinitionArns' \
+                      --output text)
+
+                  echo "Found task definitions: $TASK_DEFS"
+
+                  # Deregister all old task definitions except the latest one
+                  for task_def in $TASK_DEFS; do
+                      if [[ "$task_def" != "${{ steps.task-def.outputs.TASK_DEFINITION_ARN }}" ]]; then
+                          echo "Deregistering old task definition: $task_def"
+                          aws ecs deregister-task-definition \
+                              --task-definition "$task_def" \
+                              --region ${{ env.AWS_REGION }} || echo "Failed to deregister $task_def"
+                      fi
+                  done
+
+            - name: Deploy Amazon ECS task definition
+              run: |
+                  echo "Deploying ECS task definition..."
+                  echo "Using task definition: ${{ steps.task-def.outputs.TASK_DEFINITION_ARN }}"
+
+                  # Verify the task definition exists and is correct
+                  echo "Verifying task definition..."
+                  aws ecs describe-task-definition \
+                      --task-definition ${{ steps.task-def.outputs.TASK_DEFINITION_ARN }} \
+                      --region ${{ env.AWS_REGION }} \
+                      --query 'taskDefinition.{Family:family,Revision:revision,ExecutionRoleArn:executionRoleArn,TaskRoleArn:taskRoleArn}' \
+                      --output table
+
+                  # Stop any running tasks that might be using old task definitions
+                  echo "Stopping tasks with old task definitions..."
+                  RUNNING_TASKS=$(aws ecs list-tasks \
+                      --cluster ${{ env.ECS_CLUSTER }} \
+                      --service-name ${{ env.ECS_SERVICE }} \
+                      --region ${{ env.AWS_REGION }} \
+                      --query 'taskArns' \
+                      --output text)
+
+                  if [ ! -z "$RUNNING_TASKS" ]; then
+                      echo "Stopping running tasks: $RUNNING_TASKS"
+                      for task in $RUNNING_TASKS; do
+                          aws ecs stop-task \
+                              --cluster ${{ env.ECS_CLUSTER }} \
+                              --task "$task" \
+                              --region ${{ env.AWS_REGION }} || echo "Failed to stop task $task"
+                      done
+                      
+                      # Wait a bit for tasks to stop
+                      echo "Waiting for tasks to stop..."
+                      sleep 30
+                  fi
+
+                  # Force a new deployment to clear any stuck deployments
+                  echo "Forcing new deployment..."
+                  aws ecs update-service \
+                      --cluster ${{ env.ECS_CLUSTER }} \
+                      --service ${{ env.ECS_SERVICE }} \
+                      --task-definition ${{ steps.task-def.outputs.TASK_DEFINITION_ARN }} \
+                      --force-new-deployment \
+                      --region ${{ env.AWS_REGION }}
+
+                  echo "Waiting for service to stabilize..."
+
+                  # Wait for service to stabilize with timeout
+                  aws ecs wait services-stable \
+                      --cluster ${{ env.ECS_CLUSTER }} \
+                      --services ${{ env.ECS_SERVICE }} \
+                      --region ${{ env.AWS_REGION }} \
+                      --cli-read-timeout 900 \
+                      --cli-connect-timeout 60
+
+                  echo "Service deployment completed successfully!"
+
+            - name: Check ECS service status after deployment
+              run: |
+                  echo "Service status after deployment:"
+                  aws ecs describe-services \
+                      --cluster ${{ env.ECS_CLUSTER }} \
+                      --services ${{ env.ECS_SERVICE }} \
+                      --query 'services[0].{Status:status,RunningCount:runningCount,PendingCount:pendingCount,DesiredCount:desiredCount}' \
+                      --output table
+
+                  echo "Recent service events:"
+                  aws ecs describe-services \
+                      --cluster ${{ env.ECS_CLUSTER }} \
+                      --services ${{ env.ECS_SERVICE }} \
+                      --query 'services[0].events[:5]' \
+                      --output table
