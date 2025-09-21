@@ -21,7 +21,6 @@ import { LogOut, Settings, Shield } from "lucide-react";
 import { signOutClient } from "@/lib/auth-client";
 import { ProfileModal } from "./ProfileModal";
 import { useUpdateProfile } from "@/hooks/useUserQuery";
-import { MobileSidebar } from "./MobileSidebar";
 
 interface HeaderProps {
     className?: string;
@@ -41,24 +40,8 @@ export function Header({
     const updateProfileMutation = useUpdateProfile();
     const [mounted, setMounted] = useState(false);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-    const [isMobile, setIsMobile] = useState(false);
-
     useEffect(() => {
         setMounted(true);
-
-        // Check if screen width is less than 540px
-        const checkIsMobile = () => {
-            setIsMobile(window.innerWidth < 540);
-        };
-
-        // Initial check
-        checkIsMobile();
-
-        // Add event listener for window resize
-        window.addEventListener("resize", checkIsMobile);
-
-        // Cleanup
-        return () => window.removeEventListener("resize", checkIsMobile);
     }, []);
 
     const handleSignOut = async () => {
@@ -93,96 +76,83 @@ export function Header({
             style={{ height: "64px" }}
         >
             <div className="flex items-center justify-between h-full px-6">
-                {/* Left section - Mobile sidebar or Desktop auth buttons */}
+                {/* Left section - Auth buttons (same for all screen sizes) */}
                 {showSignIn ? (
                     <div className="w-20 flex justify-start">
-                        {/* Mobile sidebar - shown on screens < 540px */}
-                        {isMobile && <MobileSidebar showSignIn={showSignIn} />}
-
-                        {/* Desktop auth buttons - shown on screens >= 540px */}
-                        {!isMobile && (
-                            <>
-                                {!mounted ? (
-                                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-                                ) : !initialized || loading ? (
-                                    <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-                                ) : user ? (
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <button className="hover:cursor-pointer focus:outline-none rounded-full">
-                                                <Avatar
-                                                    src={user.avatarUrl}
-                                                    alt={
-                                                        user.fullName ||
-                                                        "User avatar"
-                                                    }
-                                                    size="md"
-                                                />
-                                            </button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent
-                                            align="end"
-                                            className="w-56"
-                                            onCloseAutoFocus={(e) => {
-                                                // Prevent the trigger from getting focus when dropdown closes
-                                                e.preventDefault();
-                                            }}
+                        {!mounted ? (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                        ) : !initialized || loading ? (
+                            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+                        ) : user ? (
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <button className="hover:cursor-pointer focus:outline-none rounded-full">
+                                        <Avatar
+                                            src={user.avatarUrl}
+                                            alt={user.fullName || "User avatar"}
+                                            size="md"
+                                        />
+                                    </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="end"
+                                    className="w-56"
+                                    onCloseAutoFocus={(e) => {
+                                        // Prevent the trigger from getting focus when dropdown closes
+                                        e.preventDefault();
+                                    }}
+                                >
+                                    <DropdownMenuItem
+                                        onClick={() =>
+                                            setIsProfileModalOpen(true)
+                                        }
+                                        className="cursor-pointer"
+                                    >
+                                        <Settings className="mr-2 h-4 w-4" />
+                                        <span>Edit Profile</span>
+                                    </DropdownMenuItem>
+                                    {user.role === "admin" && (
+                                        <DropdownMenuItem
+                                            asChild
+                                            className="cursor-pointer"
                                         >
-                                            <DropdownMenuItem
-                                                onClick={() =>
-                                                    setIsProfileModalOpen(true)
-                                                }
-                                                className="cursor-pointer"
-                                            >
-                                                <Settings className="mr-2 h-4 w-4" />
-                                                <span>Edit Profile</span>
-                                            </DropdownMenuItem>
-                                            {user.role === "admin" && (
-                                                <DropdownMenuItem
-                                                    asChild
-                                                    className="cursor-pointer"
-                                                >
-                                                    <Link href="/admin">
-                                                        <Shield className="mr-2 h-4 w-4" />
-                                                        <span>
-                                                            Admin Dashboard
-                                                        </span>
-                                                    </Link>
-                                                </DropdownMenuItem>
-                                            )}
-                                            <DropdownMenuItem
-                                                onClick={handleSignOut}
-                                                variant="destructive"
-                                                className="cursor-pointer"
-                                            >
-                                                <LogOut className="mr-2 h-4 w-4" />
-                                                <span>Sign Out</span>
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                ) : (
-                                    <div className="flex gap-2">
-                                        <Link href="/auth/login">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="hover:cursor-pointer"
-                                            >
-                                                Sign In
-                                            </Button>
-                                        </Link>
-                                        <Link href="/auth/signup">
-                                            <Button
-                                                variant="default"
-                                                size="sm"
-                                                className="hover:cursor-pointer"
-                                            >
-                                                Sign Up
-                                            </Button>
-                                        </Link>
-                                    </div>
-                                )}
-                            </>
+                                            <Link href="/admin">
+                                                <Shield className="mr-2 h-4 w-4" />
+                                                <span>Admin Dashboard</span>
+                                            </Link>
+                                        </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem
+                                        onClick={handleSignOut}
+                                        variant="destructive"
+                                        className="cursor-pointer"
+                                    >
+                                        <LogOut className="mr-2 h-4 w-4" />
+                                        <span>Sign Out</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        ) : (
+                            <div className="flex gap-2">
+                                <Link href="/auth/login">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="hover:cursor-pointer"
+                                    >
+                                        Sign In
+                                    </Button>
+                                </Link>
+                                <Link href="/auth/signup">
+                                    <Button
+                                        variant="default"
+                                        size="sm"
+                                        className="hover:cursor-pointer"
+                                    >
+                                        Sign Up
+                                    </Button>
+                                </Link>
+                            </div>
                         )}
                     </div>
                 ) : (
