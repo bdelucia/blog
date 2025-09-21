@@ -201,62 +201,61 @@ export default async function BlogPage() {
                                                                     : "No date"}
                                                             </div>
 
+                                                            {/* Tags */}
+                                                            <div className="flex flex-wrap gap-1 mb-1 sm:mb-2 min-h-[20px]">
+                                                                {post.tags &&
+                                                                post.tags
+                                                                    .length >
+                                                                    0 ? (
+                                                                    <>
+                                                                        {post.tags
+                                                                            .slice(
+                                                                                0,
+                                                                                2
+                                                                            )
+                                                                            .map(
+                                                                                (
+                                                                                    tag,
+                                                                                    index
+                                                                                ) => (
+                                                                                    <span
+                                                                                        key={
+                                                                                            index
+                                                                                        }
+                                                                                        className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200"
+                                                                                    >
+                                                                                        {
+                                                                                            tag
+                                                                                        }
+                                                                                    </span>
+                                                                                )
+                                                                            )}
+                                                                        {post
+                                                                            .tags
+                                                                            .length >
+                                                                            2 && (
+                                                                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                                                                                +
+                                                                                {post
+                                                                                    .tags
+                                                                                    .length -
+                                                                                    2}
+                                                                            </span>
+                                                                        )}
+                                                                    </>
+                                                                ) : (
+                                                                    <div className="w-0"></div>
+                                                                )}
+                                                            </div>
+
                                                             {/* Summary */}
                                                             <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-2 sm:line-clamp-3 mb-2 min-h-[3rem] sm:min-h-[4rem]">
                                                                 {post.summary ||
                                                                     "No summary available"}
                                                             </p>
 
-                                                            {/* Tags and Read button */}
-                                                            <div className="flex items-center justify-between min-h-[20px]">
-                                                                {/* Tags */}
-                                                                <div className="flex flex-wrap gap-1">
-                                                                    {post.tags &&
-                                                                    post.tags
-                                                                        .length >
-                                                                        0 ? (
-                                                                        <>
-                                                                            {post.tags
-                                                                                .slice(
-                                                                                    0,
-                                                                                    2
-                                                                                )
-                                                                                .map(
-                                                                                    (
-                                                                                        tag,
-                                                                                        index
-                                                                                    ) => (
-                                                                                        <span
-                                                                                            key={
-                                                                                                index
-                                                                                            }
-                                                                                            className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200"
-                                                                                        >
-                                                                                            {
-                                                                                                tag
-                                                                                            }
-                                                                                        </span>
-                                                                                    )
-                                                                                )}
-                                                                            {post
-                                                                                .tags
-                                                                                .length >
-                                                                                2 && (
-                                                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
-                                                                                    +
-                                                                                    {post
-                                                                                        .tags
-                                                                                        .length -
-                                                                                        2}
-                                                                                </span>
-                                                                            )}
-                                                                        </>
-                                                                    ) : (
-                                                                        <div className="w-0"></div>
-                                                                    )}
-                                                                </div>
-
-                                                                {/* Read button */}
+                                                            {/* Read button */}
+                                                            <div className="flex justify-end min-h-[20px]">
                                                                 <div className="flex items-center text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors cursor-pointer">
                                                                     <span>
                                                                         Read
@@ -333,7 +332,7 @@ export default async function BlogPage() {
                                     className="flex flex-col space-y-1 mb-4 group"
                                     href={`/${post.slug}`}
                                 >
-                                    <div className="relative w-full flex flex-col sm:flex-row items-start space-y-3 sm:space-y-0 sm:space-x-4 p-4 rounded-lg bg-white/80 dark:bg-background hover:bg-white dark:hover:bg-background/80 transition-colors duration-200 border border-gray-200 dark:border-gray-600">
+                                    <div className="relative w-full flex flex-col sm:flex-row items-start space-y-3 sm:space-y-0 sm:space-x-4 p-4 rounded-lg bg-white/80 dark:bg-background hover:bg-white dark:hover:bg-background/80 transition-colors duration-200 border border-gray-200 dark:border-gray-600 min-h-[200px] sm:min-h-0 pb-12 sm:pb-0">
                                         <ShineBorder className="opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                         <div className="flex-shrink-0 w-full sm:w-48">
                                             <div className="w-full sm:w-48 h-32 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 transform-gpu">
@@ -374,8 +373,8 @@ export default async function BlogPage() {
                                                 )}
                                             </div>
                                         </div>
-                                        {/* Post content */}
-                                        <div className="flex-1 min-w-0 flex flex-col justify-between h-full">
+                                        {/* Details - Second child */}
+                                        <div className="flex-1 min-w-0 flex flex-col">
                                             <div className="flex-1">
                                                 <p className="tracking-tight truncate text-sm sm:text-base font-medium">
                                                     {post.title}
@@ -387,16 +386,9 @@ export default async function BlogPage() {
                                                           ).toLocaleDateString()
                                                         : "No date"}
                                                 </p>
-                                                <p className="text-xs sm:text-sm text-muted-foreground mb-2 min-h-[3rem]">
-                                                    {post.summary ||
-                                                        "No summary available"}
-                                                </p>
-                                            </div>
 
-                                            {/* Tags and Read button on same line - pushed to bottom */}
-                                            <div className="flex items-center justify-between mb-2">
                                                 {/* Tags */}
-                                                <div className="flex flex-wrap gap-1">
+                                                <div className="flex flex-wrap gap-1 mb-2 min-h-[20px]">
                                                     {post.tags &&
                                                     post.tags.length > 0 ? (
                                                         <>
@@ -435,8 +427,15 @@ export default async function BlogPage() {
                                                     )}
                                                 </div>
 
-                                                {/* Read more link */}
-                                                <div className="flex items-center text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors mr-8 cursor-pointer">
+                                                <p className="text-xs sm:text-sm text-muted-foreground mb-2 min-h-[3rem]">
+                                                    {post.summary ||
+                                                        "No summary available"}
+                                                </p>
+                                            </div>
+
+                                            {/* Read button - contained within details sub-flexbox */}
+                                            <div className="hidden sm:flex justify-end mt-auto pb-2 pl-6">
+                                                <div className="flex items-center text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors cursor-pointer">
                                                     <span>Read</span>
                                                     <svg
                                                         className="w-3 h-3 ml-1"
@@ -452,6 +451,33 @@ export default async function BlogPage() {
                                                         />
                                                     </svg>
                                                 </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Read button - positioned absolutely within main card */}
+                                        <div
+                                            className="absolute bottom-4 right-4 sm:hidden"
+                                            style={{
+                                                position: "absolute",
+                                                bottom: "16px",
+                                                right: "16px",
+                                            }}
+                                        >
+                                            <div className="flex items-center text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors cursor-pointer">
+                                                <span>Read</span>
+                                                <svg
+                                                    className="w-3 h-3 ml-1"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M9 5l7 7-7 7"
+                                                    />
+                                                </svg>
                                             </div>
                                         </div>
                                     </div>

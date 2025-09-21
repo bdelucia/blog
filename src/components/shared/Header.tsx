@@ -21,6 +21,7 @@ import { LogOut, Settings, Shield } from "lucide-react";
 import { signOutClient } from "@/lib/auth-client";
 import { ProfileModal } from "./ProfileModal";
 import { useUpdateProfile } from "@/hooks/useUserQuery";
+import { MobileSidebar } from "./MobileSidebar";
 
 interface HeaderProps {
     className?: string;
@@ -76,7 +77,7 @@ export function Header({
             style={{ height: "64px" }}
         >
             <div className="flex items-center justify-between h-full px-6">
-                {/* Left section - Auth buttons (same for all screen sizes) */}
+                {/* Left section - Responsive auth section */}
                 {showSignIn ? (
                     <div className="w-20 flex justify-start">
                         {!mounted ? (
@@ -84,6 +85,7 @@ export function Header({
                         ) : !initialized || loading ? (
                             <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
                         ) : user ? (
+                            /* User is logged in - show avatar on all screen sizes */
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <button className="hover:cursor-pointer focus:outline-none rounded-full">
@@ -133,26 +135,35 @@ export function Header({
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         ) : (
-                            <div className="flex gap-2">
-                                <Link href="/auth/login">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="hover:cursor-pointer"
-                                    >
-                                        Sign In
-                                    </Button>
-                                </Link>
-                                <Link href="/auth/signup">
-                                    <Button
-                                        variant="default"
-                                        size="sm"
-                                        className="hover:cursor-pointer"
-                                    >
-                                        Sign Up
-                                    </Button>
-                                </Link>
-                            </div>
+                            /* User is not logged in - show hamburger on mobile, buttons on desktop */
+                            <>
+                                {/* Mobile hamburger menu */}
+                                <div className="md:hidden">
+                                    <MobileSidebar showSignIn={showSignIn} />
+                                </div>
+
+                                {/* Desktop auth buttons */}
+                                <div className="hidden md:flex gap-2">
+                                    <Link href="/auth/login">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="hover:cursor-pointer"
+                                        >
+                                            Sign In
+                                        </Button>
+                                    </Link>
+                                    <Link href="/auth/signup">
+                                        <Button
+                                            variant="default"
+                                            size="sm"
+                                            className="hover:cursor-pointer"
+                                        >
+                                            Sign Up
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </>
                         )}
                     </div>
                 ) : (
