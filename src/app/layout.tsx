@@ -61,7 +61,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en">
+        <html lang="en" suppressHydrationWarning>
             <head>
                 <link rel="manifest" href="/site.webmanifest" />
                 <script
@@ -90,6 +90,9 @@ export default function RootLayout({
                                         document.documentElement.classList.remove('dark');
                                     }
                                 }
+                                
+                                // Prevent hydration mismatch by adding a data attribute
+                                document.documentElement.setAttribute('data-theme-initialized', 'true');
                             })();
                         `,
                     }}

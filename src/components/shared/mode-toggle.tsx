@@ -10,23 +10,37 @@ export function ModeToggle() {
     useEffect(() => {
         setMounted(true);
 
-        // Check if dark mode is enabled on initial load
-        const isDarkMode = document.documentElement.classList.contains("dark");
-        setIsDark(isDarkMode);
+        // Wait for theme initialization to complete
+        const checkThemeInitialized = () => {
+            const isInitialized =
+                document.documentElement.getAttribute(
+                    "data-theme-initialized"
+                ) === "true";
+            if (isInitialized) {
+                const isDarkMode =
+                    document.documentElement.classList.contains("dark");
+                setIsDark(isDarkMode);
 
-        // Listen for theme changes from other components
-        const observer = new MutationObserver(() => {
-            const isDarkMode =
-                document.documentElement.classList.contains("dark");
-            setIsDark(isDarkMode);
-        });
+                // Listen for theme changes from other components
+                const observer = new MutationObserver(() => {
+                    const isDarkMode =
+                        document.documentElement.classList.contains("dark");
+                    setIsDark(isDarkMode);
+                });
 
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ["class"],
-        });
+                observer.observe(document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ["class"],
+                });
 
-        return () => observer.disconnect();
+                return () => observer.disconnect();
+            } else {
+                // If not initialized yet, check again in next frame
+                requestAnimationFrame(checkThemeInitialized);
+            }
+        };
+
+        checkThemeInitialized();
     }, []);
 
     const toggleTheme = () => {

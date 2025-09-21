@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { Header } from "@/components/shared/Header";
 import { useUpdateUserCache } from "@/hooks/useUserQuery";
+import { Starfield } from "@/components/magicui/starfield";
 
 export default function AuthCallbackPage() {
     const router = useRouter();
@@ -188,9 +189,16 @@ export default function AuthCallbackPage() {
 
     if (error) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+            <div className="relative min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black">
+                <Starfield
+                    starCount={150}
+                    duration={25}
+                    starColor="#ffffff"
+                    starSize={[1, 4]}
+                    className="dark:opacity-100 opacity-0"
+                />
                 <Header />
-                <div className="text-center">
+                <div className="relative z-10 text-center">
                     <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/20">
                         <svg
                             className="h-6 w-6 text-red-600 dark:text-red-400"
@@ -221,9 +229,16 @@ export default function AuthCallbackPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="relative min-h-screen flex items-center justify-center bg-gray-50 dark:bg-black">
+            <Starfield
+                starCount={150}
+                duration={25}
+                starColor="#ffffff"
+                starSize={[1, 4]}
+                className="dark:opacity-100 opacity-0"
+            />
             <Header />
-            <div className="text-center">
+            <div className="relative z-10 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                 <p className="mt-2 text-gray-600 dark:text-gray-400">
                     Completing sign in...
