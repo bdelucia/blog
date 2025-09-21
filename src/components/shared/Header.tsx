@@ -132,12 +132,16 @@ export function Header({
                                                 onClick={() =>
                                                     setIsProfileModalOpen(true)
                                                 }
+                                                className="cursor-pointer"
                                             >
                                                 <Settings className="mr-2 h-4 w-4" />
                                                 <span>Edit Profile</span>
                                             </DropdownMenuItem>
                                             {user.role === "admin" && (
-                                                <DropdownMenuItem asChild>
+                                                <DropdownMenuItem
+                                                    asChild
+                                                    className="cursor-pointer"
+                                                >
                                                     <Link href="/admin">
                                                         <Shield className="mr-2 h-4 w-4" />
                                                         <span>
@@ -149,6 +153,7 @@ export function Header({
                                             <DropdownMenuItem
                                                 onClick={handleSignOut}
                                                 variant="destructive"
+                                                className="cursor-pointer"
                                             >
                                                 <LogOut className="mr-2 h-4 w-4" />
                                                 <span>Sign Out</span>

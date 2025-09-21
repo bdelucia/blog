@@ -293,6 +293,75 @@ export async function deletePost(id: number): Promise<boolean> {
     return true;
 }
 
+export async function deletePostWithImage(
+    id: number,
+    imagePath?: string | null
+): Promise<boolean> {
+    try {
+        const supabase = await createClient();
+
+        // Delete the image from storage if it exists
+        if (imagePath) {
+            try {
+                // Extract filename from the image path
+                let fileName: string;
+
+                if (imagePath.startsWith("http")) {
+                    // Full URL - extract filename from path
+                    const url = new URL(imagePath);
+                    fileName = url.pathname.split("/").pop() || "";
+                } else if (imagePath.includes("/")) {
+                    // Relative path - extract filename
+                    fileName = imagePath.split("/").pop() || "";
+                } else {
+                    // Just filename
+                    fileName = imagePath;
+                }
+
+                console.log("Original image path:", imagePath);
+                console.log("Extracted filename:", fileName);
+
+                // Use service role client for storage operations
+                const { createClient: createServiceClient } = await import(
+                    "@supabase/supabase-js"
+                );
+
+                if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+                    console.error("SUPABASE_SERVICE_ROLE_KEY not found");
+                } else {
+                    const serviceSupabase = createServiceClient(
+                        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                        process.env.SUPABASE_SERVICE_ROLE_KEY!
+                    );
+
+                    // Delete from Supabase storage using service role
+                    const { error: storageError } =
+                        await serviceSupabase.storage
+                            .from("blog-images")
+                            .remove([fileName]);
+
+                    if (storageError) {
+                        console.error("Storage deletion error:", storageError);
+                    } else {
+                        console.log(
+                            "Successfully deleted image from storage:",
+                            fileName
+                        );
+                    }
+                }
+            } catch (error) {
+                console.error("Error deleting image:", error);
+            }
+        }
+
+        // Delete the post from the database
+        const { error } = await supabase.from("articles").delete().eq("id", id);
+        return !error;
+    } catch {
+        return false;
+    }
+}
+
 export async function deletePostBySlug(slug: string): Promise<boolean> {
     const supabase = await createClient();
     const { error } = await supabase.from("articles").delete().eq("slug", slug);

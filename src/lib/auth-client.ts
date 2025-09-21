@@ -20,11 +20,17 @@ export function getClientAuth() {
 export async function signUpClient(signUpData: SignUpData) {
     const supabase = getClientAuth();
 
+    // Use dynamic URL based on environment
+    const baseUrl =
+        typeof window !== "undefined"
+            ? window.location.origin
+            : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
     const { data: authData, error: authError } = await supabase.auth.signUp({
         email: signUpData.email,
         password: signUpData.password,
         options: {
-            emailRedirectTo: `https://www.bobwithablog.com/auth/callback`,
+            emailRedirectTo: `${baseUrl}/auth/callback`,
             data: {
                 full_name: signUpData.fullName,
             },
@@ -102,8 +108,14 @@ export async function signOutClient() {
 export async function resetPasswordClient(email: string) {
     const supabase = getClientAuth();
 
+    // Use dynamic URL based on environment
+    const baseUrl =
+        typeof window !== "undefined"
+            ? window.location.origin
+            : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `https://www.bobwithablog.com/auth/reset-password`,
+        redirectTo: `${baseUrl}/auth/reset-password`,
     });
 
     if (error) {
@@ -114,8 +126,13 @@ export async function resetPasswordClient(email: string) {
 export async function signInWithGoogle() {
     const supabase = getClientAuth();
 
-    // Use the www subdomain for OAuth redirects
-    const redirectUrl = `https://www.bobwithablog.com/auth/callback`;
+    // Use dynamic URL based on environment
+    const baseUrl =
+        typeof window !== "undefined"
+            ? window.location.origin
+            : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+    const redirectUrl = `${baseUrl}/auth/callback`;
 
     console.log("Google OAuth redirect URL:", redirectUrl);
 
@@ -137,8 +154,13 @@ export async function signInWithGoogle() {
 export async function signUpWithGoogle() {
     const supabase = getClientAuth();
 
-    // Use the www subdomain for OAuth redirects
-    const redirectUrl = `https://www.bobwithablog.com/auth/callback`;
+    // Use dynamic URL based on environment
+    const baseUrl =
+        typeof window !== "undefined"
+            ? window.location.origin
+            : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
+    const redirectUrl = `${baseUrl}/auth/callback`;
 
     console.log("Google OAuth redirect URL:", redirectUrl);
 

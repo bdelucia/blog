@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +12,7 @@ import { Header } from "../shared/Header";
 import { ArrowLeft, Save, Eye, Upload, X } from "lucide-react";
 
 export function NewPostForm() {
+    const router = useRouter();
     const [title, setTitle] = useState("");
     const [slug, setSlug] = useState("");
     const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
@@ -170,7 +172,7 @@ export function NewPostForm() {
             }
 
             // Success! Redirect to admin posts page
-            window.location.href = "/admin/posts";
+            router.push("/admin/posts");
         } catch (error) {
             console.error("Error creating post:", error);
             alert("Failed to create post. Please try again.");
@@ -401,7 +403,7 @@ export function NewPostForm() {
                                             {/* Image Preview */}
                                             {(imagePreview || imageUrl) && (
                                                 <div className="relative">
-                                                    <div className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+                                                    <div className="relative w-full sm:w-[200px] h-32 rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
                                                         <Image
                                                             src={
                                                                 imageUrl ||

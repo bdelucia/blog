@@ -26,13 +26,16 @@ import {
 import { Badge } from "../ui/badge";
 import { Header } from "../shared/Header";
 import { ArrowLeft, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 interface AdminPostsListProps {
     posts: Article[];
+    onPostDeleted?: (postId: number) => void;
 }
 
-export function AdminPostsList({ posts }: AdminPostsListProps) {
+export function AdminPostsList({ posts, onPostDeleted }: AdminPostsListProps) {
     const [filter, setFilter] = useState<"all" | "published" | "draft">("all");
+    const [deletingPostId, setDeletingPostId] = useState<number | null>(null);
 
     const filteredPosts = posts.filter((post) => {
         if (filter === "all") return true;
@@ -41,6 +44,42 @@ export function AdminPostsList({ posts }: AdminPostsListProps) {
 
     const publishedCount = posts.filter((p) => p.status === "published").length;
     const draftCount = posts.filter((p) => p.status === "draft").length;
+
+    const handleDeletePost = async (post: Article) => {
+        setDeletingPostId(post.id);
+
+        try {
+            const response = await fetch("/api/admin/delete-post", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    postId: post.id,
+                    imagePath: post.image,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to delete post");
+            }
+
+            toast.success("Post deleted successfully");
+
+            // Notify parent component to refresh the posts list
+            if (onPostDeleted) {
+                onPostDeleted(post.id);
+            }
+        } catch (error) {
+            toast.error(
+                error instanceof Error ? error.message : "Failed to delete post"
+            );
+        } finally {
+            setDeletingPostId(null);
+        }
+    };
 
     return (
         <div className="flex flex-col h-screen">
@@ -133,7 +172,7 @@ export function AdminPostsList({ posts }: AdminPostsListProps) {
                                             <CardContent className="p-0">
                                                 <div className="post-container">
                                                     {/* Post Image */}
-                                                    <div className="image-container w-full h-32 relative">
+                                                    <div className="image-container w-full h-32 relative rounded-lg overflow-hidden">
                                                         {post.image ? (
                                                             <Image
                                                                 src={
@@ -295,10 +334,23 @@ export function AdminPostsList({ posts }: AdminPostsListProps) {
                                                                             Edit
                                                                             Post
                                                                         </DropdownMenuItem>
-                                                                        <DropdownMenuItem className="text-red-600 hover:cursor-pointer">
+                                                                        <DropdownMenuItem
+                                                                            className="text-red-600 hover:cursor-pointer"
+                                                                            onClick={() =>
+                                                                                handleDeletePost(
+                                                                                    post
+                                                                                )
+                                                                            }
+                                                                            disabled={
+                                                                                deletingPostId ===
+                                                                                post.id
+                                                                            }
+                                                                        >
                                                                             <Trash2 className="w-4 h-4 mr-2" />
-                                                                            Delete
-                                                                            Post
+                                                                            {deletingPostId ===
+                                                                            post.id
+                                                                                ? "Deleting..."
+                                                                                : "Delete Post"}
                                                                         </DropdownMenuItem>
                                                                     </DropdownMenuContent>
                                                                 </DropdownMenu>

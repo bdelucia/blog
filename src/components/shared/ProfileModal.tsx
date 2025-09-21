@@ -206,6 +206,7 @@ export function ProfileModal({
                         size="sm"
                         onClick={handleClose}
                         disabled={isLoading}
+                        className="cursor-pointer"
                     >
                         <X className="h-4 w-4" />
                     </Button>
@@ -229,7 +230,7 @@ export function ProfileModal({
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                className="flex items-center space-x-2"
+                                className="flex items-center space-x-2 cursor-pointer"
                                 onClick={() =>
                                     document
                                         .getElementById("avatarFile")
@@ -247,7 +248,7 @@ export function ProfileModal({
                                     type="button"
                                     variant="destructive"
                                     size="sm"
-                                    className="flex items-center space-x-2"
+                                    className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity"
                                     onClick={handleDeleteAvatar}
                                     disabled={isLoading}
                                 >
@@ -298,6 +299,7 @@ export function ProfileModal({
                             variant="outline"
                             onClick={handleClose}
                             disabled={isLoading}
+                            className="cursor-pointer"
                         >
                             Cancel
                         </Button>
@@ -306,6 +308,7 @@ export function ProfileModal({
                             disabled={
                                 isLoading || !fullName.trim() || !hasChanges
                             }
+                            className="cursor-pointer"
                         >
                             {isLoading ? "Saving..." : "Save Changes"}
                         </Button>

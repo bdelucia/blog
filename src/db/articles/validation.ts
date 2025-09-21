@@ -9,12 +9,12 @@ const baseArticleSchema = z.object({
     summary: z
         .string()
         .max(1000, "Summary must be less than 1000 characters")
-        .optional(),
+        .nullish(),
     image: z
         .string()
         .url("Image must be a valid URL")
         .max(500, "Image URL must be less than 500 characters")
-        .optional(),
+        .nullish(),
     tags: z
         .array(
             z
@@ -23,7 +23,7 @@ const baseArticleSchema = z.object({
                 .max(50, "Tag must be less than 50 characters")
         )
         .max(5, "Maximum 5 tags allowed")
-        .optional(),
+        .nullish(),
     datePosted: z
         .string()
         .datetime("Date posted must be a valid ISO datetime")
@@ -32,7 +32,7 @@ const baseArticleSchema = z.object({
     content: z
         .string()
         .max(100000, "Content must be less than 100,000 characters")
-        .optional(),
+        .nullish(),
     slug: z
         .string()
         .min(1, "Slug is required")
