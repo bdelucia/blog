@@ -1,6 +1,6 @@
 import { getBlogPosts, getPost } from "@/data/blog";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { BLOG_IMGS_URL } from "@/lib/constants";
 import { Header } from "@/components/shared/Header";
@@ -11,6 +11,7 @@ import BlogImage from "@/components/mdx-components/BlogImage";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { UnauthorizedToast } from "@/components/shared/UnauthorizedToast";
 import { BlogPostTracker } from "@/components/analytics/BlogPostTracker";
+import { getCurrentUser } from "@/lib/auth";
 
 const DATA = {
     name: "Bob with a Blog",
@@ -32,6 +33,13 @@ export async function generateMetadata({
         let post = await getPost(resolvedParams.slug);
 
         if (!post) {
+            return undefined;
+        }
+
+        // Don't generate metadata for draft posts (except for admins)
+        const currentUser = await getCurrentUser();
+        const isAdmin = currentUser?.role === "admin";
+        if (post.status === "draft" && !isAdmin) {
             return undefined;
         }
 
@@ -93,6 +101,16 @@ export default async function Blog({
 
     if (!post) {
         notFound();
+    }
+
+    // Get current user to check admin status
+    const currentUser = await getCurrentUser();
+    const isAdmin = currentUser?.role === "admin";
+    const isDraft = post.status === "draft";
+
+    // Server-side redirect for non-admin users trying to access draft posts
+    if (isDraft && !isAdmin) {
+        redirect("/?draft_access_denied=true");
     }
 
     // Define MDX components directly

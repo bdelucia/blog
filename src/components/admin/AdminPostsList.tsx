@@ -16,6 +16,8 @@ import {
     Globe,
     Lock,
     MoreVertical,
+    Upload,
+    EyeOff,
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -31,11 +33,17 @@ import { toast } from "sonner";
 interface AdminPostsListProps {
     posts: Article[];
     onPostDeleted?: (postId: number) => void;
+    onPostUpdated?: (updatedPost: Article) => void;
 }
 
-export function AdminPostsList({ posts, onPostDeleted }: AdminPostsListProps) {
+export function AdminPostsList({
+    posts,
+    onPostDeleted,
+    onPostUpdated,
+}: AdminPostsListProps) {
     const [filter, setFilter] = useState<"all" | "published" | "draft">("all");
     const [deletingPostId, setDeletingPostId] = useState<number | null>(null);
+    const [updatingPostId, setUpdatingPostId] = useState<number | null>(null);
 
     const filteredPosts = posts.filter((post) => {
         if (filter === "all") return true;
@@ -78,6 +86,46 @@ export function AdminPostsList({ posts, onPostDeleted }: AdminPostsListProps) {
             );
         } finally {
             setDeletingPostId(null);
+        }
+    };
+
+    const handleUpdatePostStatus = async (post: Article) => {
+        setUpdatingPostId(post.id);
+
+        try {
+            const action = post.status === "draft" ? "publish" : "delist";
+
+            const response = await fetch("/api/admin/update-post-status", {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    postId: post.id,
+                    action: action,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to update post status");
+            }
+
+            toast.success(data.message);
+
+            // Notify parent component to update the post
+            if (onPostUpdated) {
+                onPostUpdated(data.post);
+            }
+        } catch (error) {
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to update post status"
+            );
+        } finally {
+            setUpdatingPostId(null);
         }
     };
 
@@ -315,6 +363,46 @@ export function AdminPostsList({ posts, onPostDeleted }: AdminPostsListProps) {
                                                                         View
                                                                     </Button>
                                                                 </Link>
+
+                                                                {/* Publish/Delist Button */}
+                                                                <Button
+                                                                    variant={
+                                                                        post.status ===
+                                                                        "draft"
+                                                                            ? "default"
+                                                                            : "secondary"
+                                                                    }
+                                                                    size="sm"
+                                                                    className="hover:cursor-pointer"
+                                                                    onClick={() =>
+                                                                        handleUpdatePostStatus(
+                                                                            post
+                                                                        )
+                                                                    }
+                                                                    disabled={
+                                                                        updatingPostId ===
+                                                                        post.id
+                                                                    }
+                                                                >
+                                                                    {post.status ===
+                                                                    "draft" ? (
+                                                                        <>
+                                                                            <Upload className="w-4 h-4 mr-1" />
+                                                                            {updatingPostId ===
+                                                                            post.id
+                                                                                ? "Publishing..."
+                                                                                : "Publish"}
+                                                                        </>
+                                                                    ) : (
+                                                                        <>
+                                                                            <EyeOff className="w-4 h-4 mr-1" />
+                                                                            {updatingPostId ===
+                                                                            post.id
+                                                                                ? "Delisting..."
+                                                                                : "Delist"}
+                                                                        </>
+                                                                    )}
+                                                                </Button>
 
                                                                 <DropdownMenu>
                                                                     <DropdownMenuTrigger

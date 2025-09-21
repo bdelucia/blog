@@ -20,5 +20,20 @@ export function AdminPostsPageClient({
         );
     };
 
-    return <AdminPostsList posts={posts} onPostDeleted={handlePostDeleted} />;
+    const handlePostUpdated = (updatedPost: Article) => {
+        // Update the post in the local state
+        setPosts((prevPosts) =>
+            prevPosts.map((post) =>
+                post.id === updatedPost.id ? updatedPost : post
+            )
+        );
+    };
+
+    return (
+        <AdminPostsList
+            posts={posts}
+            onPostDeleted={handlePostDeleted}
+            onPostUpdated={handlePostUpdated}
+        />
+    );
 }
