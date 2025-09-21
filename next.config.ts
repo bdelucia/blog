@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-    // output: "standalone", // Commented out to fix Windows symlink issues with pnpm
+    // Enable standalone output for production builds (Docker)
+    // This will be ignored in development due to Windows symlink issues with pnpm
+    ...(process.env.NODE_ENV === "production" && { output: "standalone" }),
     images: {
         remotePatterns: [
             {
