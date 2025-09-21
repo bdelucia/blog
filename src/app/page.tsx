@@ -93,7 +93,7 @@ export default async function BlogPage() {
                                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">
                                     Recent Posts
                                 </h2>
-                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-1.5 sm:gap-3 lg:gap-4">
                                     {posts
                                         .sort((a, b) => {
                                             if (
@@ -124,7 +124,7 @@ export default async function BlogPage() {
                                                     <article className="relative bg-white dark:bg-background rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md dark:hover:shadow-lg transition-shadow duration-300">
                                                         <ShineBorder className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
                                                         {/* Post Image */}
-                                                        <div className="aspect-[3/2] sm:aspect-video lg:aspect-[4/3] bg-gray-100 dark:bg-gray-700 relative overflow-hidden">
+                                                        <div className="aspect-[3/2] sm:aspect-[2/1] lg:aspect-[5/2] bg-gray-100 dark:bg-gray-700 relative overflow-hidden">
                                                             {post.image ? (
                                                                 <Image
                                                                     src={
@@ -145,7 +145,7 @@ export default async function BlogPage() {
                                                             ) : (
                                                                 <div className="w-full h-full flex items-center justify-center text-gray-400 dark:text-gray-600">
                                                                     <svg
-                                                                        className="w-6 h-6 sm:w-8 sm:h-8 lg:w-12 lg:h-12"
+                                                                        className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8"
                                                                         fill="none"
                                                                         stroke="currentColor"
                                                                         viewBox="0 0 24 24"
@@ -164,9 +164,9 @@ export default async function BlogPage() {
                                                         </div>
 
                                                         {/* Post Content */}
-                                                        <div className="p-2 sm:p-3 lg:p-4">
+                                                        <div className="p-1.5 sm:p-2 lg:p-3">
                                                             {/* Title */}
-                                                            <h3 className="text-xs sm:text-sm lg:text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2 mb-1 sm:mb-2">
+                                                            <h3 className="text-xs sm:text-sm lg:text-base font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2 mb-1 sm:mb-1.5">
                                                                 {post.title}
                                                             </h3>
 
@@ -202,7 +202,7 @@ export default async function BlogPage() {
                                                             </div>
 
                                                             {/* Summary */}
-                                                            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-1 sm:line-clamp-2 mb-2">
+                                                            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-2 sm:line-clamp-3 mb-2 min-h-[3rem] sm:min-h-[4rem]">
                                                                 {post.summary ||
                                                                     "No summary available"}
                                                             </p>

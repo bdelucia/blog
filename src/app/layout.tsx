@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
@@ -18,8 +18,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
     title: "Bob with a Blog",
     description: "A modern blog about technology, coding, and life adventures",
-    viewport:
-        "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no",
     icons: {
         icon: [
             { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
@@ -50,6 +48,13 @@ export const metadata: Metadata = {
     },
 };
 
+export const viewport: Viewport = {
+    width: "device-width",
+    initialScale: 1.0,
+    maximumScale: 1.0,
+    userScalable: false,
+};
+
 export default function RootLayout({
     children,
 }: Readonly<{
@@ -59,6 +64,36 @@ export default function RootLayout({
         <html lang="en">
             <head>
                 <link rel="manifest" href="/site.webmanifest" />
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `
+                            (function() {
+                                try {
+                                    const theme = localStorage.getItem('theme');
+                                    if (theme === 'dark') {
+                                        document.documentElement.classList.add('dark');
+                                    } else if (theme === 'light') {
+                                        document.documentElement.classList.remove('dark');
+                                    } else {
+                                        // Default to system preference
+                                        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                                            document.documentElement.classList.add('dark');
+                                        } else {
+                                            document.documentElement.classList.remove('dark');
+                                        }
+                                    }
+                                } catch (e) {
+                                    // Fallback to system preference if localStorage fails
+                                    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                                        document.documentElement.classList.add('dark');
+                                    } else {
+                                        document.documentElement.classList.remove('dark');
+                                    }
+                                }
+                            })();
+                        `,
+                    }}
+                />
                 {process.env.NEXT_PUBLIC_GA_ID && (
                     <>
                         <script

@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-    output: "standalone",
+    // output: "standalone", // Commented out to fix Windows symlink issues with pnpm
     images: {
         remotePatterns: [
             {
