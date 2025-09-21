@@ -155,6 +155,22 @@
     body {
         @apply bg-background text-foreground;
     }
+
+    /* Fix for iOS Safari viewport issues */
+    html {
+        height: 100%;
+        height: -webkit-fill-available;
+    }
+
+    body {
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+    }
+
+    /* Ensure proper containment for absolute positioned elements */
+    .relative {
+        position: relative;
+    }
 }
 
 @layer components {

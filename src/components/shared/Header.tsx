@@ -17,7 +17,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Settings } from "lucide-react";
+import { LogOut, Settings, Shield } from "lucide-react";
 import { signOutClient } from "@/lib/auth-client";
 import { ProfileModal } from "./ProfileModal";
 import { useUpdateProfile } from "@/hooks/useUserQuery";
@@ -136,6 +136,16 @@ export function Header({
                                                 <Settings className="mr-2 h-4 w-4" />
                                                 <span>Edit Profile</span>
                                             </DropdownMenuItem>
+                                            {user.role === "admin" && (
+                                                <DropdownMenuItem asChild>
+                                                    <Link href="/admin">
+                                                        <Shield className="mr-2 h-4 w-4" />
+                                                        <span>
+                                                            Admin Dashboard
+                                                        </span>
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                            )}
                                             <DropdownMenuItem
                                                 onClick={handleSignOut}
                                                 variant="destructive"

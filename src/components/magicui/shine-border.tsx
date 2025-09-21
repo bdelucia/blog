@@ -71,6 +71,8 @@ export function ShineBorder({
                 "pointer-events-none absolute inset-0 size-full rounded-[inherit] will-change-[background-position] motion-safe:animate-shine",
                 // Override with dark mode colors when in dark theme
                 "dark:!bg-[radial-gradient(transparent,transparent,var(--dark-color),transparent,transparent)]",
+                // Ensure proper containment on mobile devices
+                "max-w-full max-h-full overflow-hidden",
                 className
             )}
             {...props}
