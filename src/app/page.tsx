@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { TypingAnimation } from "@/components/magicui/typing-animation";
 import { ShineBorder } from "@/components/magicui/shine-border";
+import { Starfield } from "@/components/magicui/starfield";
 import { UnauthorizedToast } from "@/components/shared/UnauthorizedToast";
 import { Search } from "lucide-react";
 import { TagFilterModal } from "@/components/home/TagFilterModal";
@@ -42,8 +43,15 @@ export default async function BlogPage() {
             <div className="flex flex-col">
                 <section
                     id="hero"
-                    className="w-full min-h-screen bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 lg:px-8 pt-24 pb-12"
+                    className="relative w-full min-h-screen bg-gray-50 dark:bg-black px-4 sm:px-6 lg:px-8 pt-24 pb-12"
                 >
+                    <Starfield
+                        starCount={150}
+                        duration={25}
+                        starColor="#ffffff"
+                        starSize={[1, 4]}
+                        className="dark:opacity-100 opacity-0"
+                    />
                     {/* Grid Layout */}
                     <div className="max-w-7xl mx-auto min-h-full flex flex-col gap-8 justify-between">
                         {/* Top Content Group */}
@@ -85,7 +93,7 @@ export default async function BlogPage() {
                                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">
                                     Recent Posts
                                 </h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
                                     {posts
                                         .sort((a, b) => {
                                             if (
@@ -113,7 +121,8 @@ export default async function BlogPage() {
                                                     href={`/${post.slug}`}
                                                     className="group"
                                                 >
-                                                    <article className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md dark:hover:shadow-lg transition-shadow duration-300">
+                                                    <article className="relative bg-white dark:bg-background rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden hover:shadow-md dark:hover:shadow-lg transition-shadow duration-300">
+                                                        <ShineBorder className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
                                                         {/* Post Image */}
                                                         <div className="aspect-[3/2] sm:aspect-video lg:aspect-[4/3] bg-gray-100 dark:bg-gray-700 relative overflow-hidden">
                                                             {post.image ? (
@@ -324,7 +333,8 @@ export default async function BlogPage() {
                                     className="flex flex-col space-y-1 mb-4 group"
                                     href={`/${post.slug}`}
                                 >
-                                    <div className="w-full flex flex-col sm:flex-row items-start space-y-3 sm:space-y-0 sm:space-x-4 p-4 rounded-lg bg-white/80 dark:bg-gray-800/30 hover:bg-white dark:hover:bg-gray-800/50 transition-colors duration-200 border border-gray-200 dark:border-gray-600">
+                                    <div className="relative w-full flex flex-col sm:flex-row items-start space-y-3 sm:space-y-0 sm:space-x-4 p-4 rounded-lg bg-white/80 dark:bg-background hover:bg-white dark:hover:bg-background/80 transition-colors duration-200 border border-gray-200 dark:border-gray-600">
+                                        <ShineBorder className="opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                                         <div className="flex-shrink-0 w-full sm:w-48">
                                             <div className="w-full sm:w-48 h-32 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 transform-gpu">
                                                 {post.image ? (
