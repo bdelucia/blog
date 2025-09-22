@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,27 +9,37 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
+import { useTagFilter } from "@/components/providers/tag-filter-provider";
 
 interface TagFilterModalProps {
     allTags: string[];
 }
 
 export function TagFilterModal({ allTags }: TagFilterModalProps) {
-    const [selectedTags, setSelectedTags] = useState<string[]>([]);
+    const { selectedTags, toggleTag, clearTags } = useTagFilter();
 
-    const toggleTag = (tag: string) => {
-        setSelectedTags((prev) =>
-            prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-        );
-    };
+    const handleTagClick = (tag: string) => {
+        const wasSelected = selectedTags.includes(tag);
+        toggleTag(tag);
 
-    const clearAll = () => {
-        setSelectedTags([]);
-    };
+        // Only scroll if we're enabling/activating a tag (not disabling)
+        if (!wasSelected) {
+            // Smooth scroll to the blog section
+            setTimeout(() => {
+                const blogSection = document.getElementById("blog-posts");
+                if (blogSection) {
+                    const elementPosition =
+                        blogSection.getBoundingClientRect().top;
+                    const offsetPosition =
+                        elementPosition + window.pageYOffset - 100; // 100px offset from top
 
-    const applyFilters = () => {
-        // TODO: Implement actual filtering logic
-        console.log("Selected tags:", selectedTags);
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: "smooth",
+                    });
+                }
+            }, 200); // Increased delay for smoother transition
+        }
     };
 
     return (
@@ -60,7 +69,7 @@ export function TagFilterModal({ allTags }: TagFilterModalProps) {
                             return (
                                 <button
                                     key={tag}
-                                    onClick={() => toggleTag(tag)}
+                                    onClick={() => handleTagClick(tag)}
                                     className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
                                         isSelected
                                             ? "bg-blue-600 text-white hover:bg-blue-700"
@@ -73,11 +82,8 @@ export function TagFilterModal({ allTags }: TagFilterModalProps) {
                         })}
                     </div>
                     <div className="flex justify-end gap-2 pt-4">
-                        <Button variant="outline" size="sm" onClick={clearAll}>
+                        <Button variant="outline" size="sm" onClick={clearTags}>
                             Clear All
-                        </Button>
-                        <Button size="sm" onClick={applyFilters}>
-                            Apply Filters
                         </Button>
                     </div>
                 </div>

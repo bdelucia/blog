@@ -15,7 +15,18 @@ export default function Table({ headers, rows, className = "" }: TableProps) {
                         {headers.map((header, index) => (
                             <th
                                 key={index}
-                                className="px-6 py-3 text-left text-xs font-medium text-foreground dark:text-background uppercase tracking-wider border border-gray-300 dark:border-gray-600"
+                                className={`px-2 sm:px-6 py-3 text-xs font-medium text-foreground dark:text-background uppercase tracking-wider border border-gray-300 dark:border-gray-600 ${
+                                    [
+                                        "title",
+                                        "prep time",
+                                        "cook time",
+                                        "total time",
+                                        "difficulty",
+                                        "servings",
+                                    ].includes(header.toLowerCase())
+                                        ? "text-center"
+                                        : "text-left"
+                                }`}
                             >
                                 {header}
                             </th>
@@ -31,7 +42,20 @@ export default function Table({ headers, rows, className = "" }: TableProps) {
                             {row.map((cell, cellIndex) => (
                                 <td
                                     key={cellIndex}
-                                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600"
+                                    className={`px-2 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 ${
+                                        [
+                                            "title",
+                                            "prep time",
+                                            "cook time",
+                                            "total time",
+                                            "difficulty",
+                                            "servings",
+                                        ].includes(
+                                            headers[cellIndex]?.toLowerCase()
+                                        )
+                                            ? "text-center"
+                                            : "text-left"
+                                    }`}
                                 >
                                     {cell}
                                 </td>

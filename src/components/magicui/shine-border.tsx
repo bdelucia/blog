@@ -35,14 +35,14 @@ export function ShineBorder({
     style,
     ...props
 }: ShineBorderProps) {
-    // Determine colors based on theme
+    // Determine colors based on theme - opposite colors for unhovered state
     const lightModeColor = [
-        "#000000",
-        "#000000",
+        "#ffffff", // White border in light mode
+        "#ffffff",
         "#00FFFF",
-        "#000000",
+        "#ffffff",
         "#00FFFF",
-        "#000000",
+        "#ffffff",
     ];
     const darkModeColor = Array.isArray(shineColor)
         ? shineColor.join(",")
