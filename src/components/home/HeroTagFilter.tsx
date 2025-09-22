@@ -48,7 +48,7 @@ export function HeroTagFilter({ allTags }: HeroTagFilterProps) {
                         </p>
                         <InteractiveHoverButton
                             onClick={scrollToBlogSection}
-                            className="[&>svg]:w-2 [&>svg]:h-2 [&>svg]:translate-x-2 [&_.hover-text]:translate-x-2 bg-[#00FFFF] text-black [&>span:first-child]:opacity-0 [&>span:first-child]:text-transparent [&>div>div:first-child]:bg-black [&>div:last-child>span]:text-white"
+                            className="[&>svg]:w-2 [&>svg]:h-2 [&>svg]:translate-x-2 [&_.hover-text]:translate-x-2 bg-[#00FFFF] text-black [&>span:first-child]:opacity-0 [&>span:first-child]:text-transparent [&>div>div:first-child]:bg-black [&>div:last-child>span]:text-white [&>div:last-child>svg]:text-white"
                         >
                             Browse all posts
                         </InteractiveHoverButton>
