@@ -66,6 +66,9 @@ export function MarkdownEditor({
     const [imageSrc, setImageSrc] = useState("");
     const [imageAlt, setImageAlt] = useState("");
     const [imageCaption, setImageCaption] = useState("");
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
 
     const editor = useEditor({
         immediatelyRender: false,
@@ -124,14 +127,77 @@ export function MarkdownEditor({
         return null;
     }
 
-    const handleImageInsert = () => {
-        if (!imageSrc.trim() || !imageAlt.trim()) {
-            alert("Please provide both image source and alt text.");
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setImagePreview(e.target?.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const uploadImageToR2 = async (): Promise<string | null> => {
+        if (!imageFile) return null;
+
+        setIsUploading(true);
+        const formData = new FormData();
+        formData.append("file", imageFile);
+
+        try {
+            const response = await fetch("/api/upload-r2-image", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorData = await response
+                    .json()
+                    .catch(() => ({ error: "Unknown error" }));
+                console.error("Upload failed:", errorData);
+                throw new Error(
+                    errorData.error ||
+                        `Upload failed with status ${response.status}`
+                );
+            }
+
+            const data = await response.json();
+            return data.url;
+        } catch (error) {
+            console.error("Error uploading image:", error);
+            return null;
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleImageInsert = async () => {
+        if (!imageAlt.trim()) {
+            alert("Please provide alt text for the image.");
+            return;
+        }
+
+        let finalImageSrc = imageSrc;
+
+        // If a file is selected, upload it first
+        if (imageFile) {
+            const uploadedUrl = await uploadImageToR2();
+            if (!uploadedUrl) {
+                alert("Failed to upload image. Please try again.");
+                return;
+            }
+            finalImageSrc = uploadedUrl;
+        } else if (!imageSrc.trim()) {
+            alert(
+                "Please provide either an image URL or select a file to upload."
+            );
             return;
         }
 
         // Combine image and caption into a single content insertion
-        let content = `<img src="${imageSrc}" alt="${imageAlt}" class="max-w-full h-auto rounded-lg" />`;
+        let content = `<img src="${finalImageSrc}" alt="${imageAlt}" class="max-w-full h-auto rounded-lg" />`;
 
         if (imageCaption.trim()) {
             content += `<p class="text-center text-sm text-gray-600 dark:text-gray-400 italic mt-2">${imageCaption}</p>`;
@@ -144,6 +210,8 @@ export function MarkdownEditor({
         setImageSrc("");
         setImageAlt("");
         setImageCaption("");
+        setImageFile(null);
+        setImagePreview(null);
         setIsImageDialogOpen(false);
     };
 
@@ -361,28 +429,71 @@ export function MarkdownEditor({
                                     <ImageIcon className="w-4 h-4" />
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="sm:max-w-[425px]">
+                            <DialogContent className="sm:max-w-[500px]">
                                 <DialogHeader>
                                     <DialogTitle>Insert Image</DialogTitle>
                                 </DialogHeader>
+
                                 <div className="grid gap-4 py-4">
+                                    {/* Image URL/Upload Field */}
                                     <div className="grid grid-cols-4 items-center gap-4">
-                                        <Label
-                                            htmlFor="image-src"
-                                            className="text-right"
-                                        >
-                                            Image URL
+                                        <Label className="text-right">
+                                            Image
                                         </Label>
-                                        <Input
-                                            id="image-src"
-                                            value={imageSrc}
-                                            onChange={(e) =>
-                                                setImageSrc(e.target.value)
-                                            }
-                                            className="col-span-3"
-                                            placeholder="Enter image URL..."
-                                        />
+                                        <div className="col-span-3 flex gap-2">
+                                            <Input
+                                                id="image-src"
+                                                value={imageSrc}
+                                                onChange={(e) =>
+                                                    setImageSrc(e.target.value)
+                                                }
+                                                className="flex-1"
+                                                placeholder="Enter image URL..."
+                                            />
+                                            <span className="flex items-center text-gray-500 dark:text-gray-400">
+                                                -- OR --
+                                            </span>
+                                            <input
+                                                type="file"
+                                                accept="image/jpeg,image/jpg,image/png,image/webp"
+                                                onChange={handleFileSelect}
+                                                className="hidden"
+                                                id="file-upload"
+                                            />
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() =>
+                                                    document
+                                                        .getElementById(
+                                                            "file-upload"
+                                                        )
+                                                        ?.click()
+                                                }
+                                                className="whitespace-nowrap"
+                                            >
+                                                Browse...
+                                            </Button>
+                                        </div>
                                     </div>
+
+                                    {/* Image Preview - only show after file is selected */}
+                                    {imagePreview && (
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label className="text-right">
+                                                Preview
+                                            </Label>
+                                            <div className="col-span-3">
+                                                <img
+                                                    src={imagePreview}
+                                                    alt="Preview"
+                                                    className="max-w-64 max-h-64 object-contain rounded-lg border border-gray-300 dark:border-gray-600"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Alt Text (always required) */}
                                     <div className="grid grid-cols-4 items-center gap-4">
                                         <Label
                                             htmlFor="image-alt"
@@ -400,6 +511,8 @@ export function MarkdownEditor({
                                             placeholder="Describe the image..."
                                         />
                                     </div>
+
+                                    {/* Caption (optional) */}
                                     <div className="grid grid-cols-4 items-center gap-4">
                                         <Label
                                             htmlFor="image-caption"
@@ -418,13 +531,19 @@ export function MarkdownEditor({
                                         />
                                     </div>
                                 </div>
+
                                 <div className="flex justify-end space-x-2">
                                     <Button
                                         type="button"
                                         variant="outline"
-                                        onClick={() =>
-                                            setIsImageDialogOpen(false)
-                                        }
+                                        onClick={() => {
+                                            setIsImageDialogOpen(false);
+                                            setImageSrc("");
+                                            setImageAlt("");
+                                            setImageCaption("");
+                                            setImageFile(null);
+                                            setImagePreview(null);
+                                        }}
                                     >
                                         Cancel
                                     </Button>
@@ -432,10 +551,19 @@ export function MarkdownEditor({
                                         type="button"
                                         onClick={handleImageInsert}
                                         disabled={
-                                            !imageSrc.trim() || !imageAlt.trim()
+                                            isUploading ||
+                                            !imageAlt.trim() ||
+                                            (!imageSrc.trim() && !imageFile)
                                         }
                                     >
-                                        Insert Image
+                                        {isUploading ? (
+                                            <>
+                                                <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                                                Uploading...
+                                            </>
+                                        ) : (
+                                            "Insert Image"
+                                        )}
                                     </Button>
                                 </div>
                             </DialogContent>
