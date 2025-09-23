@@ -3,6 +3,7 @@ import { getAllUsers, getUsersByRole } from "@/db/users/functions";
 import { getBlogPosts, getAllPosts } from "@/db/articles/functions";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AdminCards } from "@/components/admin-cards";
+import { AnalyticsChart } from "@/components/admin/analytics-chart";
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -102,6 +103,9 @@ export default async function AdminDashboard() {
                                                 bounceRate: 42.3,
                                             }}
                                         />
+                                        <div className="px-4 lg:px-6">
+                                            <AnalyticsChart />
+                                        </div>
                                     </div>
                                 </div>
                             </div>

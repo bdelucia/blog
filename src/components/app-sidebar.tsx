@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/sidebar";
 
 interface AppSidebarProps {
-    user: {
+    user?: {
         name: string;
         email: string;
         avatar?: string;
@@ -87,6 +87,15 @@ export function AppSidebar({
 }: AppSidebarProps & React.ComponentProps<typeof Sidebar>) {
     const { theme, mounted: themeMounted } = useTheme();
 
+    // Default user data if not provided
+    const defaultUser = {
+        name: "User",
+        email: "user@example.com",
+        avatar: undefined,
+    };
+
+    const userData = user || defaultUser;
+
     return (
         <Sidebar collapsible="icon" {...props}>
             <SidebarHeader>
@@ -121,7 +130,7 @@ export function AppSidebar({
                 <NavMain items={data.navMain} />
             </SidebarContent>
             <SidebarFooter>
-                <NavUser user={user} />
+                <NavUser user={userData} />
             </SidebarFooter>
         </Sidebar>
     );
