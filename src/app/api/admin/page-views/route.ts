@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
         const authClient = await auth.getClient();
         const accessToken = await authClient.getAccessToken();
 
-        // Fetch data from Google Analytics
+        // Fetch page views data from Google Analytics
         const gaResponse = await fetch(
             `https://analyticsdata.googleapis.com/v1beta/properties/${GA_PROPERTY_ID}:runReport`,
             {
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
                             endDate: endDateStr,
                         },
                     ],
-                    dimensions: [{ name: "date" }, { name: "deviceCategory" }],
+                    dimensions: [{ name: "date" }],
                     metrics: [{ name: "screenPageViews" }],
                     orderBys: [{ dimension: { dimensionName: "date" } }],
                 }),
@@ -75,7 +75,11 @@ export async function GET(request: NextRequest) {
         const gaData = await gaResponse.json();
 
         // Transform GA data to chart format
-        const chartData = transformGAData(gaData, startDateStr, endDateStr);
+        const chartData = transformGAPageViewsData(
+            gaData,
+            startDateStr,
+            endDateStr
+        );
 
         return NextResponse.json({
             success: true,
@@ -83,7 +87,7 @@ export async function GET(request: NextRequest) {
             source: "google_analytics",
         });
     } catch (error) {
-        console.error("Error fetching analytics data:", error);
+        console.error("Error fetching page views data:", error);
 
         // Return empty data on error
         return NextResponse.json({
@@ -94,7 +98,11 @@ export async function GET(request: NextRequest) {
     }
 }
 
-function transformGAData(gaData: any, startDate: string, endDate: string) {
+function transformGAPageViewsData(
+    gaData: any,
+    startDate: string,
+    endDate: string
+) {
     const dataMap = new Map();
 
     // Initialize all dates with zero values
@@ -102,14 +110,13 @@ function transformGAData(gaData: any, startDate: string, endDate: string) {
     const end = new Date(endDate);
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         const dateStr = d.toISOString().split("T")[0];
-        dataMap.set(dateStr, { date: dateStr, desktop: 0, mobile: 0 });
+        dataMap.set(dateStr, { date: dateStr, pageViews: 0 });
     }
 
     // Process GA data
     if (gaData.rows) {
         gaData.rows.forEach((row: any) => {
             const rawDate = row.dimensionValues[0]?.value;
-            const device = row.dimensionValues[1]?.value;
             const views = parseInt(row.metricValues[0]?.value || "0");
 
             // Convert GA4 date format (YYYYMMDD) to our format (YYYY-MM-DD)
@@ -121,12 +128,7 @@ function transformGAData(gaData: any, startDate: string, endDate: string) {
                 : null;
 
             if (date && dataMap.has(date)) {
-                const existing = dataMap.get(date);
-                if (device === "desktop") {
-                    existing.desktop += views;
-                } else if (device === "mobile") {
-                    existing.mobile += views;
-                }
+                dataMap.set(date, { date, pageViews: views });
             }
         });
     }

@@ -4,6 +4,7 @@ import { getBlogPosts, getAllPosts } from "@/db/articles/functions";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AdminCards } from "@/components/admin-cards";
 import { AnalyticsChart } from "@/components/admin/analytics-chart";
+import { PageViewsChart } from "@/components/admin/page-views-chart";
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -48,7 +49,7 @@ export default async function AdminDashboard() {
     };
 
     return (
-        <div className="h-screen overflow-hidden">
+        <div className="min-h-screen">
             <SidebarProvider>
                 <AppSidebar
                     user={{
@@ -59,7 +60,7 @@ export default async function AdminDashboard() {
                 />
                 <SidebarInset>
                     <div className="relative mx-4 my-4">
-                        <div className="relative h-full bg-gray-50 dark:bg-black overflow-hidden flex flex-col rounded-lg">
+                        <div className="relative min-h-[calc(100vh-2rem)] bg-gray-50 dark:bg-black flex flex-col rounded-lg">
                             <Starfield
                                 starCount={150}
                                 duration={25}
@@ -91,8 +92,8 @@ export default async function AdminDashboard() {
                                     </Breadcrumb>
                                 </div>
                             </header>
-                            <div className="flex flex-1 flex-col relative z-10 overflow-hidden">
-                                <div className="@container/main flex flex-1 flex-col gap-2 overflow-y-auto">
+                            <div className="flex flex-1 flex-col relative z-10">
+                                <div className="@container/main flex flex-1 flex-col gap-2">
                                     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
                                         <AdminCards
                                             stats={stats}
@@ -105,6 +106,9 @@ export default async function AdminDashboard() {
                                         />
                                         <div className="px-4 lg:px-6">
                                             <AnalyticsChart />
+                                        </div>
+                                        <div className="px-4 lg:px-6">
+                                            <PageViewsChart />
                                         </div>
                                     </div>
                                 </div>

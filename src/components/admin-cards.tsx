@@ -15,6 +15,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
+import { NumberTicker } from "@/components/ui/number-ticker";
 
 interface AdminCardsProps {
     stats: {
@@ -39,7 +40,10 @@ export function AdminCards({ stats, analytics }: AdminCardsProps) {
                 <CardHeader>
                     <CardDescription>Unique Visitors</CardDescription>
                     <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                        {analytics?.uniqueVisitors?.toLocaleString() || "1,247"}
+                        <NumberTicker
+                            value={analytics?.uniqueVisitors || 1247}
+                            className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl"
+                        />
                     </CardTitle>
                     <CardAction>
                         <Badge variant="outline">
@@ -63,7 +67,10 @@ export function AdminCards({ stats, analytics }: AdminCardsProps) {
                 <CardHeader>
                     <CardDescription>Total Users</CardDescription>
                     <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                        {stats.totalUsers}
+                        <NumberTicker
+                            value={stats.totalUsers}
+                            className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl"
+                        />
                     </CardTitle>
                     <CardAction>
                         <Badge variant="outline">
@@ -87,7 +94,10 @@ export function AdminCards({ stats, analytics }: AdminCardsProps) {
                 <CardHeader>
                     <CardDescription>Published Posts</CardDescription>
                     <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                        {stats.publishedPosts}
+                        <NumberTicker
+                            value={stats.publishedPosts}
+                            className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl"
+                        />
                     </CardTitle>
                     <CardAction>
                         <Badge variant="outline">
@@ -111,7 +121,10 @@ export function AdminCards({ stats, analytics }: AdminCardsProps) {
                 <CardHeader>
                     <CardDescription>Page Views</CardDescription>
                     <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                        {analytics?.pageViews?.toLocaleString() || "3,842"}
+                        <NumberTicker
+                            value={analytics?.pageViews || 3842}
+                            className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl"
+                        />
                     </CardTitle>
                     <CardAction>
                         <Badge variant="outline">

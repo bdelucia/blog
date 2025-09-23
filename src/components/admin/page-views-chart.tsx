@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -27,34 +27,26 @@ import {
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
-interface ChartDataPoint {
+interface PageViewsDataPoint {
     date: string;
-    desktop: number;
-    mobile: number;
+    pageViews: number;
 }
 
-interface AnalyticsChartProps {
+interface PageViewsChartProps {
     className?: string;
 }
 
 const chartConfig = {
-    visitors: {
-        label: "Visitors",
-    },
-    desktop: {
-        label: "Desktop",
-        color: "var(--chart-1)",
-    },
-    mobile: {
-        label: "Mobile",
-        color: "var(--chart-2)",
+    pageViews: {
+        label: "Page Views",
+        color: "var(--chart-3)",
     },
 } satisfies ChartConfig;
 
-export function AnalyticsChart({ className }: AnalyticsChartProps) {
+export function PageViewsChart({ className }: PageViewsChartProps) {
     const isMobile = useIsMobile();
     const [timeRange, setTimeRange] = React.useState("30d");
-    const [chartData, setChartData] = React.useState<ChartDataPoint[]>([]);
+    const [chartData, setChartData] = React.useState<PageViewsDataPoint[]>([]);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
 
@@ -78,19 +70,17 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
             setLoading(true);
             setError(null);
 
-            const response = await fetch(
-                `/api/admin/analytics-chart?days=${days}`
-            );
+            const response = await fetch(`/api/admin/page-views?days=${days}`);
             const result = await response.json();
 
             if (result.success) {
                 setChartData(result.data);
             } else {
-                throw new Error("Failed to fetch analytics data");
+                throw new Error("Failed to fetch page views data");
             }
         } catch (err) {
-            console.error("Error fetching chart data:", err);
-            setError("Failed to load analytics data");
+            console.error("Error fetching page views data:", err);
+            setError("Failed to load page views data");
             // Set empty data on error
             setChartData([]);
         } finally {
@@ -129,8 +119,10 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
         return (
             <Card className={`@container/card ${className}`}>
                 <CardHeader>
-                    <CardTitle>Total Visitors</CardTitle>
-                    <CardDescription>Loading analytics data...</CardDescription>
+                    <CardTitle>Page Views</CardTitle>
+                    <CardDescription>
+                        Loading page views data...
+                    </CardDescription>
                 </CardHeader>
                 <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
                     <div className="aspect-auto h-[250px] w-full flex items-center justify-center">
@@ -147,7 +139,7 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
         return (
             <Card className={`@container/card ${className}`}>
                 <CardHeader>
-                    <CardTitle>Total Visitors</CardTitle>
+                    <CardTitle>Page Views</CardTitle>
                     <CardDescription className="text-destructive">
                         {error}
                     </CardDescription>
@@ -167,10 +159,10 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
         return (
             <Card className={`@container/card ${className}`}>
                 <CardHeader>
-                    <CardTitle>Total Visitors</CardTitle>
+                    <CardTitle>Page Views</CardTitle>
                     <CardDescription>
                         No analytics data available. Configure Google Analytics
-                        to view visitor data.
+                        to view page views data.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
@@ -187,10 +179,10 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
     return (
         <Card className={`@container/card ${className}`}>
             <CardHeader>
-                <CardTitle>Total Visitors</CardTitle>
+                <CardTitle>Page Views</CardTitle>
                 <CardDescription>
                     <span className="hidden @[540px]/card:block">
-                        Total for the last{" "}
+                        Total page views for the last{" "}
                         {timeRange === "7d"
                             ? "7 days"
                             : timeRange === "30d"
@@ -251,45 +243,7 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
                     config={chartConfig}
                     className="aspect-auto h-[250px] w-full"
                 >
-                    <AreaChart data={filteredData}>
-                        <defs>
-                            <linearGradient
-                                id="fillDesktop"
-                                x1="0"
-                                y1="0"
-                                x2="0"
-                                y2="1"
-                            >
-                                <stop
-                                    offset="5%"
-                                    stopColor="var(--color-desktop)"
-                                    stopOpacity={1.0}
-                                />
-                                <stop
-                                    offset="95%"
-                                    stopColor="var(--color-desktop)"
-                                    stopOpacity={0.1}
-                                />
-                            </linearGradient>
-                            <linearGradient
-                                id="fillMobile"
-                                x1="0"
-                                y1="0"
-                                x2="0"
-                                y2="1"
-                            >
-                                <stop
-                                    offset="5%"
-                                    stopColor="var(--color-mobile)"
-                                    stopOpacity={0.8}
-                                />
-                                <stop
-                                    offset="95%"
-                                    stopColor="var(--color-mobile)"
-                                    stopOpacity={0.1}
-                                />
-                            </linearGradient>
-                        </defs>
+                    <LineChart data={filteredData}>
                         <CartesianGrid vertical={false} />
                         <XAxis
                             dataKey="date"
@@ -305,6 +259,17 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
                                 });
                             }}
                         />
+                        <YAxis
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                            tickFormatter={(value) => {
+                                if (value >= 1000) {
+                                    return `${(value / 1000).toFixed(1)}k`;
+                                }
+                                return value.toString();
+                            }}
+                        />
                         <ChartTooltip
                             cursor={false}
                             content={
@@ -317,25 +282,28 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
                                             day: "numeric",
                                         });
                                     }}
+                                    formatter={(value) => [
+                                        `${value?.toLocaleString()} views`,
+                                        "Page Views",
+                                    ]}
                                     indicator="dot"
                                 />
                             }
                         />
-                        <Area
-                            dataKey="mobile"
-                            type="natural"
-                            fill="url(#fillMobile)"
-                            stroke="var(--color-mobile)"
-                            stackId="a"
+                        <Line
+                            dataKey="pageViews"
+                            type="monotone"
+                            stroke="var(--color-pageViews)"
+                            strokeWidth={2}
+                            dot={false}
+                            activeDot={{
+                                r: 4,
+                                stroke: "var(--color-pageViews)",
+                                strokeWidth: 2,
+                                fill: "hsl(var(--background))",
+                            }}
                         />
-                        <Area
-                            dataKey="desktop"
-                            type="natural"
-                            fill="url(#fillDesktop)"
-                            stroke="var(--color-desktop)"
-                            stackId="a"
-                        />
-                    </AreaChart>
+                    </LineChart>
                 </ChartContainer>
             </CardContent>
         </Card>
