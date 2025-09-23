@@ -76,7 +76,6 @@ A modern blog built with Next.js, React, TypeScript, Drizzle ORM, and Supabase, 
 -   **`/admin/posts/new-post`** - Create new blog post
 -   **`/admin/posts/edit-post/[id]`** - Edit existing blog post
 
-
 ## Project Structure
 
 ```
