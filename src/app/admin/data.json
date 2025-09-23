@@ -1,0 +1,42 @@
+[
+    {
+        "id": "1",
+        "title": "Getting Started with Next.js",
+        "status": "published",
+        "author": "John Doe",
+        "createdAt": "2024-01-15",
+        "views": 1250
+    },
+    {
+        "id": "2",
+        "title": "Building Modern React Apps",
+        "status": "draft",
+        "author": "Jane Smith",
+        "createdAt": "2024-01-14",
+        "views": 0
+    },
+    {
+        "id": "3",
+        "title": "TypeScript Best Practices",
+        "status": "published",
+        "author": "Mike Johnson",
+        "createdAt": "2024-01-13",
+        "views": 890
+    },
+    {
+        "id": "4",
+        "title": "CSS Grid Layout Guide",
+        "status": "published",
+        "author": "Sarah Wilson",
+        "createdAt": "2024-01-12",
+        "views": 2100
+    },
+    {
+        "id": "5",
+        "title": "Node.js Performance Tips",
+        "status": "draft",
+        "author": "David Brown",
+        "createdAt": "2024-01-11",
+        "views": 0
+    }
+]
