@@ -1,6 +1,6 @@
 # Bob with a Blog
 
-A modern blog built with Next.js, React, TypeScript, Drizzle ORM, and Supabase, deployed on AWS ECS with automated CI/CD.
+A modern blog built with Next.js, React, TypeScript, Drizzle ORM, and Supabase, deployed on AWS ECS with automated CI/CD. Features a comprehensive admin dashboard with Google Analytics integration, real-time visitor tracking, and automated deployment pipeline.
 
 ## Features
 
@@ -13,6 +13,9 @@ A modern blog built with Next.js, React, TypeScript, Drizzle ORM, and Supabase, 
 -   ⚡ **Performance**: Fast loading with Next.js 15 and Turbopack
 -   🚀 **AWS Deployment**: Production-ready deployment on AWS ECS
 -   🔄 **CI/CD Pipeline**: Automated testing and deployment with GitHub Actions
+-   📊 **Admin Dashboard**: Real-time analytics with Google Analytics 4 integration
+-   📈 **Analytics Charts**: Interactive visitor and page view tracking
+-   🎯 **Real-time Metrics**: Live visitor counts and growth percentages
 
 ## Tech Stack
 
@@ -22,52 +25,57 @@ A modern blog built with Next.js, React, TypeScript, Drizzle ORM, and Supabase, 
 -   **ORM**: Drizzle ORM
 -   **Authentication**: Supabase Auth
 -   **File Storage**: Supabase Storage
+-   **Analytics**: Google Analytics 4 Data API
 -   **Deployment**: AWS ECS with Application Load Balancer
 -   **CI/CD**: GitHub Actions with AWS SDK v3
 -   **Container**: Docker with multi-stage builds
 
-## Profile Picture Uploads
+## API Routes & Endpoints
 
-This project includes a secure profile picture upload system using Supabase Edge Functions:
+### Authentication Routes
 
--   ✅ **File Type Validation**: Only JPG, PNG, WebP, GIF, and SVG files allowed
--   ✅ **Size Limits**: Maximum 5MB file size
--   ✅ **Security**: Users can only upload/update their own avatars
--   ✅ **Real-time Preview**: See your new avatar before saving
--   ✅ **Automatic Optimization**: Images are optimized for web delivery
+-   **`/api/auth/check-email`** - Check if email exists in database
+-   **`/api/auth/create-user`** - Create new user account
+-   **`/api/auth/get-user`** - Get user profile data
+-   **`/api/auth/update-oauth-data`** - Update OAuth user data
 
-### Setup Profile Uploads
+### Admin Routes
 
-1. Navigate to the `../supabase-functions` directory
-2. Run the setup script:
+-   **`/api/admin/analytics-chart`** - Fetch GA4 visitor data by device type
+-   **`/api/admin/page-views`** - Fetch GA4 page view data by date
+-   **`/api/admin/posts`** - Manage blog posts (CRUD operations)
+-   **`/api/admin/users`** - Manage user accounts
+-   **`/api/admin/upload-blog-image`** - Upload images for blog posts
 
-    ```bash
-    # Windows
-    setup.bat
+### User Routes
 
-    # Linux/Mac
-    chmod +x setup.sh && ./setup.sh
-    ```
+-   **`/api/user`** - Get current user profile
+-   **`/api/upload-profile-picture`** - Upload user avatar
+-   **`/api/upload-r2-image`** - Upload images to R2 storage
 
-3. Follow the prompts to deploy the Edge Function and storage bucket
+### Comments System
 
-## Getting Started
+-   **`/api/comments`** - Get all comments for a post
+-   **`/api/comments/[id]`** - Manage individual comments (GET, POST, DELETE)
 
-1. Clone the repository
-2. Install dependencies: `pnpm install`
-3. Set up environment variables (see `.env.example`)
-4. Run the development server: `pnpm dev`
-5. Open [http://localhost:3000](http://localhost:3000)
+### Health & Monitoring
 
-## Environment Variables
+-   **`/api/health`** - Comprehensive health check with database connectivity
+-   **`/api/health-simple`** - Simple health check for load balancer (returns 200 OK)
 
-Create a `.env.local` file with:
+### Public Routes
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-```
+-   **`/`** - Homepage with blog post listings
+-   **`/[slug]`** - Individual blog post pages
+-   **`/auth/login`** - User login page
+-   **`/auth/signup`** - User registration page
+-   **`/auth/reset-password`** - Password reset page
+-   **`/auth/callback`** - OAuth callback handler
+-   **`/admin`** - Admin dashboard with analytics
+-   **`/admin/posts`** - Post management interface
+-   **`/admin/posts/new-post`** - Create new blog post
+-   **`/admin/posts/edit-post/[id]`** - Edit existing blog post
+
 
 ## Project Structure
 
@@ -111,28 +119,181 @@ aws cloudformation create-stack \
 
 ### CI/CD Pipeline
 
-The GitHub Actions workflow (`.github/workflows/aws-deploy.yml`) provides:
+The GitHub Actions workflow (`.github/workflows/aws-deploy.yml`) provides automated testing, building, and deployment with comprehensive error handling and monitoring.
 
-#### Test Job
+#### Pipeline Overview
 
--   **Triggers**: Every push and pull request
--   **Steps**: Type checking, linting, build validation
--   **Package Manager**: pnpm (as configured)
+The pipeline consists of two main jobs that run in sequence:
 
-#### Deploy Job
+1. **Test Job** - Validates code quality and build integrity
+2. **Deploy Job** - Builds, pushes, and deploys to AWS ECS
 
--   **Triggers**: Only on pushes to `main` branch
--   **Dependencies**: Waits for test job to pass
+#### Test Job Details
+
+**Triggers**: Every push and pull request to any branch
+
+**Environment**:
+
+-   Node.js 20.x
+-   pnpm package manager
+-   Ubuntu latest
+
+**Steps**:
+
+1. **Checkout Code** - Retrieves the latest code from the repository
+2. **Setup Node.js** - Installs Node.js 20.x with pnpm
+3. **Install Dependencies** - Runs `pnpm install` to install all packages
+4. **Type Check** - Validates TypeScript types with `pnpm type-check`
+5. **Lint Code** - Runs ESLint to ensure code quality with `pnpm lint`
+6. **Build Application** - Compiles the Next.js application with `pnpm build`
+
+**Success Criteria**: All steps must pass for the pipeline to continue
+
+#### Deploy Job Details
+
+**Triggers**: Only on pushes to `main` branch (production deployments)
+
+**Dependencies**: Waits for Test Job to complete successfully
+
+**Environment**:
+
+-   AWS credentials configured via GitHub Secrets
+-   Docker for containerization
+-   AWS CLI for infrastructure management
 
 **Deployment Steps**:
 
-1. **Build & Push**: Creates Docker image and pushes to ECR
-2. **Task Definition**: Updates ECS task definition with new image
-3. **IAM Verification**: Ensures required roles exist
-4. **Health Check Update**: Configures ALB health check path
-5. **Cleanup**: Removes old task definitions
-6. **Deploy**: Updates ECS service with new task definition
-7. **Verification**: Confirms deployment success
+1. **Checkout & Setup**
+
+    - Retrieves code from repository
+    - Configures AWS credentials from GitHub Secrets
+    - Sets up Node.js and pnpm environment
+
+2. **Build & Push Docker Image**
+
+    - Builds Docker image using multi-stage Dockerfile
+    - Tags image with latest timestamp
+    - Pushes image to Amazon ECR repository
+    - Updates ECS task definition with new image URI
+
+3. **Infrastructure Verification**
+
+    - Verifies ECS cluster exists (`bob-with-a-blog`)
+    - Checks ECS service status (`blog-app-task-service-u66yqxeg`)
+    - Validates ECR repository access
+    - Ensures IAM roles and permissions are correct
+
+4. **Health Check Configuration**
+
+    - Updates Application Load Balancer health check path to `/api/health-simple`
+    - Configures health check timeout and interval settings
+    - Ensures target group is properly configured
+
+5. **Task Definition Management**
+
+    - Creates new task definition with updated image
+    - Removes old task definitions to prevent clutter
+    - Maintains only the latest 5 task definitions
+
+6. **Service Deployment**
+
+    - Updates ECS service with new task definition
+    - Forces new deployment to ensure latest image is used
+    - Waits for deployment to complete (15-minute timeout)
+
+7. **Deployment Verification**
+    - Checks ECS service status
+    - Verifies all tasks are running
+    - Confirms health checks are passing
+    - Validates Application Load Balancer target health
+
+**Error Handling**:
+
+-   Comprehensive logging at each step
+-   Automatic rollback on deployment failures
+-   Detailed error messages for troubleshooting
+-   IAM role creation if missing
+-   Health check path updates if needed
+
+**Monitoring & Logging**:
+
+-   Real-time deployment status in GitHub Actions
+-   ECS service events tracking
+-   Container logs available in CloudWatch Logs
+-   Health check status monitoring
+-   Deployment success/failure notifications
+
+## Admin Dashboard & Analytics
+
+The admin dashboard provides comprehensive analytics and management capabilities with real-time Google Analytics 4 integration.
+
+### Dashboard Features
+
+#### Real-Time Analytics Cards
+
+-   **Unique Visitors** - Live GA4 `totalUsers` count with growth percentage
+-   **Total Users** - Database user count from Supabase
+-   **Published Posts** - Live count of published blog posts
+-   **Page Views** - Real GA4 `screenPageViews` count
+
+#### Interactive Charts
+
+-   **Visitor Analytics Chart** - Device breakdown (desktop/mobile) with Y-axis numbers
+-   **Page Views Chart** - Daily page view trends with smooth animations
+-   **Time Range Filters** - 7 days, 30 days, 90 days views
+-   **Responsive Design** - Optimized for mobile and desktop
+
+#### Data Sources
+
+-   **Google Analytics 4** - Real visitor and page view data
+-   **Supabase Database** - User counts and post statistics
+-   **Live Updates** - Data refreshes on page load
+-   **Growth Calculations** - Month-over-month percentage changes
+
+### Google Analytics Integration
+
+#### Required Environment Variables
+
+```env
+GA_PROPERTY_ID=your_ga4_property_id
+GA_SERVICE_ACCOUNT_EMAIL=your_service_account_email
+GA_PRIVATE_KEY=your_private_key
+```
+
+#### Authentication Method
+
+-   **Service Account** - Secure server-to-server authentication
+-   **OAuth 2.0** - Google Analytics Data API access
+-   **Scopes** - `https://www.googleapis.com/auth/analytics.readonly`
+
+#### Data Metrics
+
+-   **totalUsers** - Unique visitors (last 30 days)
+-   **screenPageViews** - Total page views
+-   **sessions** - User sessions
+-   **bounceRate** - Page bounce rate
+-   **deviceCategory** - Desktop/mobile breakdown
+
+### Admin Management Features
+
+#### Post Management
+
+-   **Create Posts** - Rich MDX editor with live preview
+-   **Edit Posts** - Update existing content
+-   **Post Status** - Draft/Published workflow
+-   **Image Uploads** - Secure image handling
+
+#### User Management
+
+-   **User Profiles** - View and manage user accounts
+-   **Role Management** - Admin/User role assignments
+-   **Profile Pictures** - Avatar upload system
+
+#### Security Features
+
+-   **Admin Authentication** - Role-based access control
+-   **API Protection** - All admin routes require authentication
+-   **Data Validation** - Input sanitization and validation
 
 ### Required GitHub Secrets
 
@@ -143,6 +304,9 @@ AWS_ACCESS_KEY_ID=your_aws_access_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret_key
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+GA_PROPERTY_ID=your_ga4_property_id
+GA_SERVICE_ACCOUNT_EMAIL=your_service_account_email
+GA_PRIVATE_KEY=your_private_key
 ```
 
 ### Health Checks
