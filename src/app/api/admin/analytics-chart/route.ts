@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        // Calculate date range
+        // Calculate date range - go back from today
         const endDate = new Date();
         const startDate = new Date();
         startDate.setDate(startDate.getDate() - days);

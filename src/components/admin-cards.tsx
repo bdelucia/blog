@@ -29,6 +29,7 @@ interface AdminCardsProps {
         pageViews: number;
         sessions: number;
         bounceRate: number;
+        uniqueVisitorsGrowth?: number;
     };
 }
 
@@ -48,7 +49,15 @@ export function AdminCards({ stats, analytics }: AdminCardsProps) {
                     <CardAction>
                         <Badge variant="outline">
                             <IconTrendingUp />
-                            +12.5%
+                            {analytics?.uniqueVisitorsGrowth !== undefined
+                                ? `${
+                                      analytics.uniqueVisitorsGrowth >= 0
+                                          ? "+"
+                                          : ""
+                                  }${analytics.uniqueVisitorsGrowth.toFixed(
+                                      1
+                                  )}%`
+                                : "+12.5%"}
                         </Badge>
                     </CardAction>
                 </CardHeader>

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -304,6 +304,12 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
                                     day: "numeric",
                                 });
                             }}
+                        />
+                        <YAxis
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                            tickFormatter={(value) => value.toLocaleString()}
                         />
                         <ChartTooltip
                             cursor={false}
