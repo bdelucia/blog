@@ -417,11 +417,15 @@ export function AdminPostsList({
                                                                         </Button>
                                                                     </DropdownMenuTrigger>
                                                                     <DropdownMenuContent align="end">
-                                                                        <DropdownMenuItem className="hover:cursor-pointer">
-                                                                            <Edit className="w-4 h-4 mr-2" />
-                                                                            Edit
-                                                                            Post
-                                                                        </DropdownMenuItem>
+                                                                        <Link
+                                                                            href={`/admin/posts/edit-post/${post.slug}`}
+                                                                        >
+                                                                            <DropdownMenuItem className="hover:cursor-pointer">
+                                                                                <Edit className="w-4 h-4 mr-2" />
+                                                                                Edit
+                                                                                Post
+                                                                            </DropdownMenuItem>
+                                                                        </Link>
                                                                         <DropdownMenuItem
                                                                             className="text-red-600 hover:cursor-pointer"
                                                                             onClick={() =>

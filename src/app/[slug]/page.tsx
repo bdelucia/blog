@@ -13,6 +13,82 @@ import { UnauthorizedToast } from "@/components/shared/UnauthorizedToast";
 import { BlogPostTracker } from "@/components/analytics/BlogPostTracker";
 import { getCurrentUser } from "@/lib/auth";
 
+// Function to convert HTML content to MDX-compatible format
+function convertHtmlToMdx(htmlContent: string): string {
+    if (!htmlContent || htmlContent.trim() === "") {
+        return "";
+    }
+
+    let mdx = htmlContent;
+
+    // Convert img tags to proper MDX format (self-closing with space before />)
+    mdx = mdx.replace(/<img([^>]*?)\s*\/?>/g, (match, attributes) => {
+        // Ensure there's a space before the closing />
+        return `<img${attributes} />`;
+    });
+
+    // Convert other HTML tags to MDX-compatible format
+    // Convert headers
+    mdx = mdx.replace(/<h1[^>]*>(.*?)<\/h1>/g, "\n# $1\n");
+    mdx = mdx.replace(/<h2[^>]*>(.*?)<\/h2>/g, "\n## $1\n");
+    mdx = mdx.replace(/<h3[^>]*>(.*?)<\/h3>/g, "\n### $1\n");
+    mdx = mdx.replace(/<h4[^>]*>(.*?)<\/h4>/g, "\n#### $1\n");
+    mdx = mdx.replace(/<h5[^>]*>(.*?)<\/h5>/g, "\n##### $1\n");
+    mdx = mdx.replace(/<h6[^>]*>(.*?)<\/h6>/g, "\n###### $1\n");
+
+    // Convert text formatting
+    mdx = mdx.replace(/<strong[^>]*>(.*?)<\/strong>/g, "**$1**");
+    mdx = mdx.replace(/<b[^>]*>(.*?)<\/b>/g, "**$1**");
+    mdx = mdx.replace(/<em[^>]*>(.*?)<\/em>/g, "*$1*");
+    mdx = mdx.replace(/<i[^>]*>(.*?)<\/i>/g, "*$1*");
+
+    // Convert lists
+    mdx = mdx.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/g, (match, content) => {
+        return content.replace(/<li[^>]*>([\s\S]*?)<\/li>/g, "- $1\n") + "\n";
+    });
+    mdx = mdx.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/g, (match, content) => {
+        let counter = 1;
+        return (
+            content.replace(
+                /<li[^>]*>([\s\S]*?)<\/li>/g,
+                () => `${counter++}. $1\n`
+            ) + "\n"
+        );
+    });
+
+    // Convert links
+    mdx = mdx.replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/g, "[$2]($1)");
+
+    // Convert blockquotes
+    mdx = mdx.replace(
+        /<blockquote[^>]*>([\s\S]*?)<\/blockquote>/g,
+        (match, content) => {
+            return content.replace(/^/gm, "> ") + "\n";
+        }
+    );
+
+    // Convert horizontal rules
+    mdx = mdx.replace(/<hr[^>]*\/?>/g, "\n---\n");
+
+    // Convert code blocks
+    mdx = mdx.replace(
+        /<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/g,
+        "```\n$1\n```\n"
+    );
+    mdx = mdx.replace(/<code[^>]*>(.*?)<\/code>/g, "`$1`");
+
+    // Convert paragraphs to newlines
+    mdx = mdx.replace(/<p[^>]*>/g, "").replace(/<\/p>/g, "\n\n");
+
+    // Convert line breaks
+    mdx = mdx.replace(/<br\s*\/?>/g, "\n");
+
+    // Clean up extra whitespace
+    mdx = mdx.replace(/\n{3,}/g, "\n\n").trim();
+
+    return mdx;
+}
+
 const DATA = {
     name: "Bob with a Blog",
     url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
@@ -174,7 +250,7 @@ export default async function Blog({
                     </div>
                     <article className="prose max-w-[650px] mx-auto">
                         <MDXRemote
-                            source={post.content || ""}
+                            source={convertHtmlToMdx(post.content || "")}
                             components={components}
                         />
                     </article>

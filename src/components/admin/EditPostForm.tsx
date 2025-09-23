@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -11,19 +11,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Header } from "../shared/Header";
 import { MarkdownEditor } from "./MarkdownEditor";
 import { ArrowLeft, Save, Eye, Upload, X } from "lucide-react";
+import { type Article } from "@/data/blog-client";
 
-export function NewPostForm() {
+interface EditPostFormProps {
+    post: Article;
+}
+
+export function EditPostForm({ post }: EditPostFormProps) {
     const router = useRouter();
-    const [title, setTitle] = useState("");
-    const [slug, setSlug] = useState("");
-    const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
-    const [summary, setSummary] = useState("");
-    const [content, setContent] = useState("");
-    const [tags, setTags] = useState<string[]>([]);
+    const [title, setTitle] = useState(post.title || "");
+    const [slug, setSlug] = useState(post.slug || "");
+    const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(true); // Start as true since we're editing
+    const [summary, setSummary] = useState(post.summary || "");
+    const [content, setContent] = useState(post.content || "");
+    const [tags, setTags] = useState<string[]>(post.tags || []);
     const [tagInput, setTagInput] = useState("");
     const [image, setImage] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(
+        post.image || null
+    );
+    const [imageUrl, setImageUrl] = useState<string | null>(post.image || null);
     const [isUploading, setIsUploading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [slugError, setSlugError] = useState<string | null>(null);
@@ -59,11 +66,13 @@ export function NewPostForm() {
         setSlugError(null); // Clear any existing error when user types
     };
 
-    // Function to check if slug already exists
+    // Function to check if slug already exists (excluding current post)
     const checkSlugExists = async (slugToCheck: string): Promise<boolean> => {
         try {
             const response = await fetch(
-                `/api/admin/check-slug?slug=${encodeURIComponent(slugToCheck)}`
+                `/api/admin/check-slug?slug=${encodeURIComponent(
+                    slugToCheck
+                )}&exclude=${post.slug}`
             );
             if (!response.ok) {
                 throw new Error("Failed to check slug");
@@ -81,10 +90,18 @@ export function NewPostForm() {
         setTagInput(e.target.value);
     };
 
+    // Handle tag input key press
+    const handleTagKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault();
+            addTag();
+        }
+    };
+
     // Add tag
     const addTag = () => {
         const trimmedTag = tagInput.trim();
-        if (trimmedTag && !tags.includes(trimmedTag) && tags.length < 5) {
+        if (trimmedTag && !tags.includes(trimmedTag)) {
             setTags([...tags, trimmedTag]);
             setTagInput("");
         }
@@ -95,49 +112,49 @@ export function NewPostForm() {
         setTags(tags.filter((tag) => tag !== tagToRemove));
     };
 
-    // Handle tag input key press
-    const handleTagKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter" || e.key === ",") {
-            e.preventDefault();
-            addTag();
-        }
-    };
-
-    // Handle image selection
+    // Handle image upload
     const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             setImage(file);
-            const previewUrl = URL.createObjectURL(file);
-            setImagePreview(previewUrl);
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                setImagePreview(e.target?.result as string);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
-    // Upload image to Supabase
-    const uploadImage = async () => {
-        if (!image) return;
+    // Upload image function
+    const uploadImage = async (): Promise<string | null> => {
+        if (!image) return null;
 
         setIsUploading(true);
-        try {
-            const formData = new FormData();
-            formData.append("file", image);
+        const formData = new FormData();
+        formData.append("file", image);
 
+        try {
             const response = await fetch("/api/upload-blog-image", {
                 method: "POST",
                 body: formData,
             });
 
-            const data = await response.json();
-
             if (!response.ok) {
-                throw new Error(data.error || "Upload failed");
+                const errorData = await response
+                    .json()
+                    .catch(() => ({ error: "Unknown error" }));
+                console.error("Upload failed:", errorData);
+                throw new Error(
+                    errorData.error ||
+                        `Upload failed with status ${response.status}`
+                );
             }
 
+            const data = await response.json();
             setImageUrl(data.url);
             return data.url;
         } catch (error) {
             console.error("Error uploading image:", error);
-            alert("Failed to upload image. Please try again.");
             return null;
         } finally {
             setIsUploading(false);
@@ -158,8 +175,8 @@ export function NewPostForm() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Check if slug already exists
-        if (slug.trim()) {
+        // Check if slug already exists (excluding current post)
+        if (slug.trim() && slug.trim() !== post.slug) {
             const slugExists = await checkSlugExists(slug.trim());
             if (slugExists) {
                 setSlugError(
@@ -184,33 +201,38 @@ export function NewPostForm() {
                 }
             }
 
-            // Create the post
-            const response = await fetch("/api/admin/create-post", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    title,
-                    slug,
-                    summary: summary || null,
-                    content: content || null,
-                    tags: tags.length > 0 ? tags : null,
-                    image: finalImageUrl,
-                }),
-            });
-
-            const data = await response.json();
+            // Update the post
+            const response = await fetch(
+                `/api/admin/update-post/${post.slug}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        title,
+                        slug,
+                        summary: summary || null,
+                        content: content || null,
+                        tags: tags.length > 0 ? tags : null,
+                        image: finalImageUrl,
+                    }),
+                }
+            );
 
             if (!response.ok) {
-                throw new Error(data.error || "Failed to create post");
+                throw new Error("Failed to update post");
             }
 
-            // Success! Redirect to admin posts page
-            router.push("/admin/posts");
+            const data = await response.json();
+            if (data.success) {
+                router.push("/admin/posts");
+            } else {
+                throw new Error(data.error || "Failed to update post");
+            }
         } catch (error) {
-            console.error("Error creating post:", error);
-            alert("Failed to create post. Please try again.");
+            console.error("Error updating post:", error);
+            alert("Failed to update post. Please try again.");
         } finally {
             setIsSubmitting(false);
         }
@@ -219,35 +241,28 @@ export function NewPostForm() {
     return (
         <div className="flex flex-col h-screen">
             <Header scrollProgress={false} showSignIn={false} />
-
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-8">
                 <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
                     <div className="px-4 py-6 sm:px-0">
                         {/* Page Header */}
-                        <div className="mb-8">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-4">
-                                    <Link href="/admin/posts">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="hover:cursor-pointer"
-                                        >
-                                            <ArrowLeft className="w-4 h-4 mr-2" />
-                                            Back to Posts
-                                        </Button>
-                                    </Link>
-                                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                        Create New Post
-                                    </h1>
-                                </div>
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center space-x-4">
+                                <Link
+                                    href="/admin/posts"
+                                    className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
+                                >
+                                    <ArrowLeft className="w-5 h-5 mr-2" />
+                                    Back to Posts
+                                </Link>
                             </div>
+                            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                Edit Post
+                            </h1>
                         </div>
 
-                        {/* Form */}
                         <Card>
                             <CardHeader>
-                                <CardTitle>Post Details</CardTitle>
+                                <CardTitle>Edit Post Details</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <form
@@ -256,10 +271,7 @@ export function NewPostForm() {
                                 >
                                     {/* Title Field */}
                                     <div className="space-y-2">
-                                        <Label
-                                            htmlFor="title"
-                                            className="text-sm font-medium"
-                                        >
+                                        <Label htmlFor="title">
                                             Title{" "}
                                             <span className="text-red-500">
                                                 *
@@ -274,18 +286,11 @@ export function NewPostForm() {
                                             className="w-full"
                                             required
                                         />
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                                            The title will be displayed as the
-                                            main heading of your post.
-                                        </p>
                                     </div>
 
                                     {/* Slug Field */}
                                     <div className="space-y-2">
-                                        <Label
-                                            htmlFor="slug"
-                                            className="text-sm font-medium"
-                                        >
+                                        <Label htmlFor="slug">
                                             Slug{" "}
                                             <span className="text-red-500">
                                                 *
@@ -489,16 +494,40 @@ export function NewPostForm() {
 
                                     {/* Action Buttons */}
                                     <div className="flex items-center justify-between pt-6 border-t">
+                                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                                            Last updated:{" "}
+                                            {new Date(
+                                                post.updatedAt || post.createdAt
+                                            ).toLocaleDateString()}
+                                        </div>
                                         <div className="flex space-x-3">
                                             <Button
-                                                type="submit"
-                                                disabled={isSubmitting}
-                                                className="bg-green-600 hover:bg-green-700 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() =>
+                                                    router.push("/admin/posts")
+                                                }
                                             >
-                                                <Save className="w-4 h-4 mr-2" />
-                                                {isSubmitting
-                                                    ? "Creating..."
-                                                    : "Create Post"}
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                type="submit"
+                                                disabled={
+                                                    isSubmitting || isUploading
+                                                }
+                                                className="bg-blue-600 hover:bg-blue-700"
+                                            >
+                                                {isSubmitting ? (
+                                                    <>
+                                                        <Save className="w-4 h-4 mr-2 animate-spin" />
+                                                        Updating...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Save className="w-4 h-4 mr-2" />
+                                                        Update Post
+                                                    </>
+                                                )}
                                             </Button>
                                         </div>
                                     </div>
