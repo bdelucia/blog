@@ -18,6 +18,17 @@ import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { createLowlight } from "lowlight";
+import javascript from "highlight.js/lib/languages/javascript";
+import typescript from "highlight.js/lib/languages/typescript";
+import python from "highlight.js/lib/languages/python";
+import cpp from "highlight.js/lib/languages/cpp";
+import java from "highlight.js/lib/languages/java";
+import html from "highlight.js/lib/languages/xml";
+import css from "highlight.js/lib/languages/css";
+import json from "highlight.js/lib/languages/json";
+import sql from "highlight.js/lib/languages/sql";
+import shell from "highlight.js/lib/languages/shell";
+import yaml from "highlight.js/lib/languages/yaml";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +60,7 @@ import {
     Heading5,
     Heading6,
     Type,
+    ChevronDown,
 } from "lucide-react";
 
 interface MarkdownEditorProps {
@@ -72,6 +84,13 @@ export function MarkdownEditor({
 
     const editor = useEditor({
         immediatelyRender: false,
+        editorProps: {
+            attributes: {
+                className:
+                    "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[400px] p-4",
+                style: "line-height: 1.6;",
+            },
+        },
         extensions: [
             StarterKit.configure({
                 bulletList: false,
@@ -98,28 +117,36 @@ export function MarkdownEditor({
             Link.configure({
                 openOnClick: false,
                 HTMLAttributes: {
-                    class: "text-blue-600 underline cursor-pointer",
+                    className: "text-blue-600 underline cursor-pointer",
                 },
             }),
             Image.configure({
-                HTMLAttributes: {
-                    class: "max-w-full h-auto rounded-lg",
-                },
+                HTMLAttributes: {},
             }),
             CodeBlockLowlight.configure({
-                lowlight: createLowlight(),
+                lowlight: createLowlight({
+                    javascript,
+                    typescript,
+                    python,
+                    cpp,
+                    java,
+                    html,
+                    css,
+                    json,
+                    sql,
+                    shell,
+                    yaml,
+                }),
+                HTMLAttributes: {
+                    className: "hljs",
+                },
+                defaultLanguage: "javascript",
             }),
         ],
         content: content || "<p></p>",
         onUpdate: ({ editor }) => {
             const html = editor.getHTML();
             onChange(html);
-        },
-        editorProps: {
-            attributes: {
-                class: "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[400px] p-4",
-                style: "line-height: 1.6;",
-            },
         },
     });
 
@@ -196,15 +223,17 @@ export function MarkdownEditor({
             return;
         }
 
-        // Combine image and caption into a single content insertion
-        let content = `<img src="${finalImageSrc}" alt="${imageAlt}" class="max-w-full h-auto rounded-lg" />`;
+        // Insert image using TipTap's insertContent with minimal attributes
+        editor.commands.insertContent(
+            `<img src="${finalImageSrc}" alt="${imageAlt}" />`
+        );
 
+        // Add caption if present
         if (imageCaption.trim()) {
-            content += `<p class="text-center text-sm text-gray-600 dark:text-gray-400 italic mt-2">${imageCaption}</p>`;
+            editor.commands.insertContent(
+                `<p className="text-center text-sm text-gray-600 dark:text-gray-400 italic mt-2">${imageCaption}</p>`
+            );
         }
-
-        // Insert the combined content
-        editor.commands.insertContent(content);
 
         // Reset form and close dialog
         setImageSrc("");
@@ -390,6 +419,44 @@ export function MarkdownEditor({
                         >
                             <Code className="w-4 h-4" />
                         </ToolbarButton>
+
+                        {/* Language Selector */}
+                        <div className="relative">
+                            <select
+                                onChange={(e) => {
+                                    const language = e.target.value;
+                                    if (language) {
+                                        if (editor.isActive("codeBlock")) {
+                                            // Update existing code block language
+                                            editor.commands.updateAttributes(
+                                                "codeBlock",
+                                                { language }
+                                            );
+                                        } else {
+                                            // Create new code block with language
+                                            editor.commands.setCodeBlock({
+                                                language,
+                                            });
+                                        }
+                                    }
+                                }}
+                                className="h-8 px-2 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                defaultValue=""
+                            >
+                                <option value="">Language</option>
+                                <option value="javascript">JavaScript</option>
+                                <option value="typescript">TypeScript</option>
+                                <option value="python">Python</option>
+                                <option value="cpp">C++</option>
+                                <option value="java">Java</option>
+                                <option value="html">HTML</option>
+                                <option value="css">CSS</option>
+                                <option value="json">JSON</option>
+                                <option value="sql">SQL</option>
+                                <option value="shell">Shell</option>
+                                <option value="yaml">YAML</option>
+                            </select>
+                        </div>
                         <ToolbarButton
                             onClick={() =>
                                 editor.chain().focus().setHorizontalRule().run()
@@ -572,7 +639,11 @@ export function MarkdownEditor({
                 </div>
 
                 {/* Editor Content */}
-                <EditorContent editor={editor} className="min-h-[400px]" />
+                <EditorContent
+                    editor={editor}
+                    className="min-h-[400px]"
+                    suppressHydrationWarning={true}
+                />
             </div>
 
             <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">

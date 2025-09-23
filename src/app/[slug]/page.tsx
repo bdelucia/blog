@@ -12,6 +12,7 @@ import { MDXRemote } from "next-mdx-remote/rsc";
 import { UnauthorizedToast } from "@/components/shared/UnauthorizedToast";
 import { BlogPostTracker } from "@/components/analytics/BlogPostTracker";
 import { getCurrentUser } from "@/lib/auth";
+import rehypeHighlight from "rehype-highlight";
 
 // Function to convert HTML content to MDX-compatible format
 function convertHtmlToMdx(htmlContent: string): string {
@@ -70,12 +71,38 @@ function convertHtmlToMdx(htmlContent: string): string {
     // Convert horizontal rules
     mdx = mdx.replace(/<hr[^>]*\/?>/g, "\n---\n");
 
-    // Convert code blocks
+    // Convert code blocks with language support
     mdx = mdx.replace(
-        /<pre[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/g,
-        "```\n$1\n```\n"
+        /<pre[^>]*class="[^"]*hljs[^"]*"[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/g,
+        (match, content) => {
+            // Extract language from class attribute if present
+            const langMatch = match.match(/class="[^"]*language-(\w+)[^"]*"/);
+            const language = langMatch ? langMatch[1] : "";
+
+            // Decode HTML entities in code content
+            const decodedContent = content
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .replace(/&amp;/g, "&")
+                .replace(/&quot;/g, '"')
+                .replace(/&#x27;/g, "'");
+
+            return language
+                ? `\`\`\`${language}\n${decodedContent}\n\`\`\`\n`
+                : `\`\`\`\n${decodedContent}\n\`\`\`\n`;
+        }
     );
-    mdx = mdx.replace(/<code[^>]*>(.*?)<\/code>/g, "`$1`");
+
+    // Convert inline code
+    mdx = mdx.replace(/<code[^>]*>(.*?)<\/code>/g, (match, content) => {
+        const decodedContent = content
+            .replace(/&lt;/g, "<")
+            .replace(/&gt;/g, ">")
+            .replace(/&amp;/g, "&")
+            .replace(/&quot;/g, '"')
+            .replace(/&#x27;/g, "'");
+        return `\`${decodedContent}\``;
+    });
 
     // Convert paragraphs to newlines
     mdx = mdx.replace(/<p[^>]*>/g, "").replace(/<\/p>/g, "\n\n");
@@ -252,6 +279,12 @@ export default async function Blog({
                         <MDXRemote
                             source={convertHtmlToMdx(post.content || "")}
                             components={components}
+                            options={{
+                                mdxOptions: {
+                                    remarkPlugins: [],
+                                    rehypePlugins: [rehypeHighlight],
+                                },
+                            }}
                         />
                     </article>
                 </section>
