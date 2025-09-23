@@ -14,7 +14,7 @@ export default function BlogImage({
     src,
     alt,
     baseUrl = BLOG_IMGS_URL,
-    className = "w-full h-auto rounded-lg",
+    className = "rounded-lg",
     caption,
     variant = "default",
 }: BlogImageProps) {

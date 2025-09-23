@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
 
         // Parse the request body
         const body = await request.json();
-        const { title, slug, summary, tags, image } = body;
+        const { title, slug, summary, content, tags, image } = body;
 
         // Validate required fields
         if (!title || !slug) {
@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
             title,
             slug,
             summary: summary || null,
+            content: content || null,
             image: image || null,
             tags: tags && tags.length > 0 ? tags : null,
             status: "draft" as const,

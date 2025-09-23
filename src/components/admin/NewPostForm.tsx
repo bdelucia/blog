@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Header } from "../shared/Header";
+import { MarkdownEditor } from "./MarkdownEditor";
 import { ArrowLeft, Save, Eye, Upload, X } from "lucide-react";
 
 export function NewPostForm() {
@@ -17,6 +18,7 @@ export function NewPostForm() {
     const [slug, setSlug] = useState("");
     const [isSlugManuallyEdited, setIsSlugManuallyEdited] = useState(false);
     const [summary, setSummary] = useState("");
+    const [content, setContent] = useState("");
     const [tags, setTags] = useState<string[]>([]);
     const [tagInput, setTagInput] = useState("");
     const [image, setImage] = useState<File | null>(null);
@@ -160,6 +162,7 @@ export function NewPostForm() {
                     title,
                     slug,
                     summary: summary || null,
+                    content: content || null,
                     tags: tags.length > 0 ? tags : null,
                     image: finalImageUrl,
                 }),
@@ -434,6 +437,13 @@ export function NewPostForm() {
                                             </p>
                                         </div>
                                     </div>
+
+                                    {/* Content Field */}
+                                    <MarkdownEditor
+                                        content={content}
+                                        onChange={setContent}
+                                        placeholder="Write your blog post content here using markdown syntax..."
+                                    />
 
                                     {/* Action Buttons */}
                                     <div className="flex items-center justify-between pt-6 border-t">

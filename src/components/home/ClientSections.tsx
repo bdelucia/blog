@@ -7,6 +7,7 @@ import { TagFilterModal } from "@/components/home/TagFilterModal";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import { TypingAnimation } from "@/components/magicui/typing-animation";
 import { Starfield } from "@/components/magicui/starfield";
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 import { Search } from "lucide-react";
 import { type Article } from "@/data/blog-client";
 
@@ -53,6 +54,39 @@ export function ClientSections({ posts, allTags }: ClientSectionsProps) {
 
                             {/* Tag Filter Row */}
                             <HeroTagFilter allTags={allTags} />
+
+                            {/* Browse All Posts Button */}
+                            <BlurFade delay={BLUR_FADE_DELAY * 3}>
+                                <div className="flex justify-start">
+                                    <InteractiveHoverButton
+                                        onClick={() => {
+                                            setTimeout(() => {
+                                                const blogSection =
+                                                    document.getElementById(
+                                                        "blog-posts"
+                                                    );
+                                                if (blogSection) {
+                                                    const elementPosition =
+                                                        blogSection.getBoundingClientRect()
+                                                            .top;
+                                                    const offsetPosition =
+                                                        elementPosition +
+                                                        window.pageYOffset -
+                                                        100; // 100px offset from top
+
+                                                    window.scrollTo({
+                                                        top: offsetPosition,
+                                                        behavior: "smooth",
+                                                    });
+                                                }
+                                            }, 200);
+                                        }}
+                                        className="[&>svg]:w-2 [&>svg]:h-2 [&>svg]:translate-x-2 [&_.hover-text]:translate-x-2 bg-[#00FFFF] text-black [&>span:first-child]:opacity-0 [&>span:first-child]:text-transparent [&>div>div:first-child]:bg-black [&>div:last-child>span]:text-white [&>div:last-child>svg]:text-white"
+                                    >
+                                        Browse all posts
+                                    </InteractiveHoverButton>
+                                </div>
+                            </BlurFade>
                         </div>
 
                         {/* Recent Posts Grid - Pushed to Bottom */}

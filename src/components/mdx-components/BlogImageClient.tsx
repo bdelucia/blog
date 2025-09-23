@@ -17,7 +17,7 @@ export default function BlogImageClient({
     src,
     alt,
     baseUrl,
-    className = "w-full h-auto rounded-lg",
+    className = "rounded-lg",
     caption,
     variant = "default",
 }: BlogImageClientProps) {
