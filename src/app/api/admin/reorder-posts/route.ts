@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const supabase = await createClient(request);
+        const supabase = await createClient();
 
         // Update the order for each item
         const updatePromises = items.map(
