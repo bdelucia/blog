@@ -59,8 +59,8 @@ type User = {
     fullName: string | null;
     avatarUrl: string | null;
     role: "admin" | "user";
-    createdAt: Date;
-    updatedAt: Date | null;
+    createdAt: string;
+    updatedAt: string;
 };
 
 const columns: ColumnDef<User>[] = [
@@ -116,7 +116,7 @@ const columns: ColumnDef<User>[] = [
         accessorKey: "createdAt",
         header: "Created",
         cell: ({ row }) => {
-            const date = row.getValue("createdAt") as Date;
+            const date = row.getValue("createdAt") as string;
             return <div>{new Date(date).toLocaleDateString()}</div>;
         },
     },

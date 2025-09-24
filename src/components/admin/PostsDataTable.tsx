@@ -76,13 +76,13 @@ type Article = {
     summary: string | null;
     image: string | null;
     tags: string[] | null;
-    datePosted: Date | null;
+    datePosted: string | null;
     status: "draft" | "published";
     content: string | null;
     slug: string;
     order: number | null;
-    createdAt: Date;
-    updatedAt: Date;
+    createdAt: string;
+    updatedAt: string;
 };
 
 // Create a separate component for the drag handle
@@ -219,7 +219,7 @@ const columns: ColumnDef<Article>[] = [
         accessorKey: "datePosted",
         header: "Date Posted",
         cell: ({ row }) => {
-            const date = row.getValue("datePosted") as Date | null;
+            const date = row.getValue("datePosted") as string | null;
             return (
                 <div>
                     {date
@@ -233,7 +233,7 @@ const columns: ColumnDef<Article>[] = [
         accessorKey: "createdAt",
         header: "Created",
         cell: ({ row }) => {
-            const date = row.getValue("createdAt") as Date;
+            const date = row.getValue("createdAt") as string;
             return <div>{new Date(date).toLocaleDateString()}</div>;
         },
     },

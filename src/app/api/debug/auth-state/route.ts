@@ -3,7 +3,7 @@ import { createClient } from "@/utils/supabase/server";
 
 export async function GET(request: NextRequest) {
     try {
-        const supabase = await createClient(request);
+        const supabase = await createClient();
 
         // Get current session
         const {
