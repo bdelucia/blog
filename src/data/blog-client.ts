@@ -14,4 +14,5 @@ export interface Article {
     createdAt: string;
     updatedAt: string | null;
     status: "draft" | "published";
+    order: number | null;
 }
