@@ -10,20 +10,61 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useAdminDashboard } from "@/components/providers/admin-dashboard-provider";
+import { usePathname } from "next/navigation";
 
 export function AdminDashboardHeader() {
-    const { currentView } = useAdminDashboard();
+    const pathname = usePathname();
 
-    const getPageTitle = () => {
-        switch (currentView) {
-            case "create-post":
-                return "Create Post";
-            case "edit-post":
-                return "Edit Post";
-            default:
-                return "Overview";
+    const getBreadcrumbs = () => {
+        const breadcrumbs = [
+            {
+                label: "Admin Dashboard",
+                href: "/admin",
+                isLink: true,
+            },
+        ];
+
+        if (pathname === "/admin") {
+            breadcrumbs.push({
+                label: "Overview",
+                href: "/admin",
+                isLink: false,
+            });
+        } else if (pathname === "/admin/posts/create-post") {
+            breadcrumbs.push(
+                {
+                    label: "Posts",
+                    href: "/admin",
+                    isLink: true,
+                },
+                {
+                    label: "Create Post",
+                    href: "/admin/posts/create-post",
+                    isLink: false,
+                }
+            );
+        } else if (pathname.startsWith("/admin/posts/edit-post/")) {
+            const slug = pathname.replace("/admin/posts/edit-post/", "");
+            breadcrumbs.push(
+                {
+                    label: "Posts",
+                    href: "/admin",
+                    isLink: true,
+                },
+                {
+                    label: "Edit Post",
+                    href: "/admin/posts/edit-post",
+                    isLink: true,
+                },
+                {
+                    label: slug,
+                    href: pathname,
+                    isLink: false,
+                }
+            );
         }
+
+        return breadcrumbs;
     };
 
     return (
@@ -36,15 +77,24 @@ export function AdminDashboardHeader() {
                 />
                 <Breadcrumb>
                     <BreadcrumbList>
-                        <BreadcrumbItem className="hidden md:block">
-                            <BreadcrumbLink href="/admin">
-                                Admin Dashboard
-                            </BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator className="hidden md:block" />
-                        <BreadcrumbItem>
-                            <BreadcrumbPage>{getPageTitle()}</BreadcrumbPage>
-                        </BreadcrumbItem>
+                        {getBreadcrumbs().map((breadcrumb, index) => (
+                            <div key={index} className="flex items-center">
+                                {index > 0 && (
+                                    <BreadcrumbSeparator className="hidden md:block" />
+                                )}
+                                <BreadcrumbItem className="hidden md:block ml-2">
+                                    {breadcrumb.isLink ? (
+                                        <BreadcrumbLink href={breadcrumb.href}>
+                                            {breadcrumb.label}
+                                        </BreadcrumbLink>
+                                    ) : (
+                                        <BreadcrumbPage>
+                                            {breadcrumb.label}
+                                        </BreadcrumbPage>
+                                    )}
+                                </BreadcrumbItem>
+                            </div>
+                        ))}
                     </BreadcrumbList>
                 </Breadcrumb>
             </div>

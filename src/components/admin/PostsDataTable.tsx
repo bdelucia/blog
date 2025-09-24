@@ -69,6 +69,8 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
+import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 
 type Article = {
     id: number;
@@ -130,9 +132,7 @@ function DraggableRow({ row }: { row: Row<Article> }) {
     );
 }
 
-const createColumns = (
-    onEditPost?: (post: Article) => void
-): ColumnDef<Article>[] => [
+const createColumns = (router: AppRouterInstance): ColumnDef<Article>[] => [
     {
         id: "drag",
         header: () => null,
@@ -255,7 +255,14 @@ const createColumns = (
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEditPost?.(article)}>
+                        <DropdownMenuItem
+                            className="hover:cursor-pointer"
+                            onClick={() =>
+                                router.push(
+                                    `/admin/posts/edit-post/${article.slug}`
+                                )
+                            }
+                        >
                             Edit post
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -278,13 +285,10 @@ const createColumns = (
 
 interface PostsDataTableProps {
     data: Article[];
-    onEditPost?: (post: Article) => void;
 }
 
-export function PostsDataTable({
-    data: initialData,
-    onEditPost,
-}: PostsDataTableProps) {
+export function PostsDataTable({ data: initialData }: PostsDataTableProps) {
+    const router = useRouter();
     const [data, setData] = React.useState(() => initialData);
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
@@ -346,7 +350,7 @@ export function PostsDataTable({
         }
     }
 
-    const columns = createColumns(onEditPost);
+    const columns = createColumns(router);
 
     const table = useReactTable({
         data,

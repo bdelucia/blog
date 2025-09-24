@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Radix UI Colors for MDXEditor Admonitions - Direct Variables */
+
 /* Smooth scrolling for the entire application */
 html {
     scroll-behavior: smooth;
@@ -136,6 +138,33 @@ html {
     --color-3: oklch(69.6% 0.165 251);
     --color-4: oklch(80.2% 0.134 225);
     --color-5: oklch(90.7% 0.231 133);
+
+    /* Radix UI Colors for Admonitions */
+    --slate-4: #e8e8ec;
+    --slate-8: #b9bbc6;
+    --cyan-4: #caf1f6;
+    --cyan-8: #3db9cf;
+    --grass-4: #daf1db;
+    --grass-8: #65ba74;
+    --amber-4: #ffee9c;
+    --amber-8: #e2a336;
+    --red-4: #ffdbdc;
+    --red-8: #eb8e90;
+
+    /* Spacing Variables */
+    --spacing-2: 0.5rem;
+
+    /* Admonition Variables */
+    --admonitionNoteBg: var(--slate-4);
+    --admonitionNoteBorder: var(--slate-8);
+    --admonitionTipBg: var(--cyan-4);
+    --admonitionTipBorder: var(--cyan-8);
+    --admonitionInfoBg: var(--grass-4);
+    --admonitionInfoBorder: var(--grass-8);
+    --admonitionCautionBg: var(--amber-4);
+    --admonitionCautionBorder: var(--amber-8);
+    --admonitionDangerBg: var(--red-4);
+    --admonitionDangerBorder: var(--red-8);
 }
 
 .dark {
@@ -175,6 +204,18 @@ html {
     --color-3: oklch(69.6% 0.165 251);
     --color-4: oklch(80.2% 0.134 225);
     --color-5: oklch(90.7% 0.231 133);
+
+    /* Dark mode Radix UI Colors for Admonitions */
+    --slate-4: #272a2d;
+    --slate-8: #5a6169;
+    --cyan-4: #caf1f6;
+    --cyan-8: #3db9cf;
+    --grass-4: #daf1db;
+    --grass-8: #65ba74;
+    --amber-4: #ffee9c;
+    --amber-8: #e2a336;
+    --red-4: #ffdbdc;
+    --red-8: #eb8e90;
 }
 
 @layer base {
@@ -538,4 +579,59 @@ html {
 }
 .dark .prose .hljs-name {
     color: #7ee787;
+}
+
+/* MDXEditor Admonition Styles - Exact Copy */
+.admonitionDanger,
+.admonitionInfo,
+.admonitionNote,
+.admonitionTip,
+.admonitionCaution {
+    padding: var(--spacing-2);
+    margin-top: var(--spacing-2);
+    margin-bottom: var(--spacing-2);
+    border-left: 3px solid var(--admonitionBorder);
+    background-color: var(--admonitionBg);
+}
+
+.admonitionInfo {
+    --admonitionBorder: var(--admonitionInfoBorder);
+    --admonitionBg: var(--admonitionInfoBg);
+}
+
+.admonitionTip {
+    --admonitionBorder: var(--admonitionTipBorder);
+    --admonitionBg: var(--admonitionTipBg);
+}
+
+.admonitionCaution {
+    --admonitionBorder: var(--admonitionCautionBorder);
+    --admonitionBg: var(--admonitionCautionBg);
+}
+
+.admonitionDanger {
+    --admonitionBorder: var(--admonitionDangerBorder);
+    --admonitionBg: var(--admonitionDangerBg);
+}
+
+.admonitionNote {
+    --admonitionBorder: var(--admonitionNoteBorder);
+    --admonitionBg: var(--admonitionNoteBg);
+}
+
+/* Ensure admonition text is always black */
+.admonitionDanger,
+.admonitionInfo,
+.admonitionNote,
+.admonitionTip,
+.admonitionCaution {
+    color: #000000 !important;
+}
+
+.admonitionDanger *,
+.admonitionInfo *,
+.admonitionNote *,
+.admonitionTip *,
+.admonitionCaution * {
+    color: #000000 !important;
 }

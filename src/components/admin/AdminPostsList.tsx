@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Article } from "@/db/articles/functions";
 import { BLOG_IMGS_URL } from "@/lib/constants";
@@ -41,6 +42,7 @@ export function AdminPostsList({
     onPostDeleted,
     onPostUpdated,
 }: AdminPostsListProps) {
+    const router = useRouter();
     const [filter, setFilter] = useState<"all" | "published" | "draft">("all");
     const [deletingPostId, setDeletingPostId] = useState<number | null>(null);
     const [updatingPostId, setUpdatingPostId] = useState<number | null>(null);
@@ -417,15 +419,18 @@ export function AdminPostsList({
                                                                         </Button>
                                                                     </DropdownMenuTrigger>
                                                                     <DropdownMenuContent align="end">
-                                                                        <Link
-                                                                            href={`/admin/posts/edit-post/${post.slug}`}
+                                                                        <DropdownMenuItem
+                                                                            className="hover:cursor-pointer"
+                                                                            onClick={() =>
+                                                                                router.push(
+                                                                                    `/admin/posts/edit-post/${post.slug}`
+                                                                                )
+                                                                            }
                                                                         >
-                                                                            <DropdownMenuItem className="hover:cursor-pointer">
-                                                                                <Edit className="w-4 h-4 mr-2" />
-                                                                                Edit
-                                                                                Post
-                                                                            </DropdownMenuItem>
-                                                                        </Link>
+                                                                            <Edit className="w-4 h-4 mr-2" />
+                                                                            Edit
+                                                                            Post
+                                                                        </DropdownMenuItem>
                                                                         <DropdownMenuItem
                                                                             className="text-red-600 hover:cursor-pointer"
                                                                             onClick={() =>

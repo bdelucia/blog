@@ -12,6 +12,7 @@ import SandpackRenderer from "@/components/mdx-components/SandpackRenderer";
 import DebugContent from "@/components/mdx-components/DebugContent";
 import Highlight from "@/components/mdx-components/Highlight";
 import Checkbox from "@/components/mdx-components/Checkbox";
+import Admonition from "@/components/mdx-components/Admonition";
 import MDXTable, {
     MDXTableHead,
     MDXTableBody,
@@ -24,6 +25,8 @@ import { BlogPostTracker } from "@/components/analytics/BlogPostTracker";
 import { getCurrentUser } from "@/lib/auth";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
+import remarkDirective from "remark-directive";
+import "@mdxeditor/editor/style.css";
 
 // Function to prepare content for MDX rendering
 function prepareContentForMdx(content: string): string {
@@ -37,8 +40,28 @@ function prepareContentForMdx(content: string): string {
     const isMarkdown = !hasHtmlTags;
 
     if (isMarkdown) {
-        // Content is already Markdown, return as-is
-        return content;
+        // Content is already Markdown, but we still need to process directives
+        let processedContent = content;
+
+        // Convert directive syntax to JSX components
+        processedContent = processedContent.replace(
+            /:::(\w+)\s*\n([\s\S]*?)\n:::/g,
+            (match, type, content) => {
+                const trimmedContent = content.trim();
+                return `<Admonition type="${type}">${trimmedContent}</Admonition>`;
+            }
+        );
+
+        // Also try single-line pattern
+        processedContent = processedContent.replace(
+            /:::(\w+)\s+([^:]+):::/g,
+            (match, type, content) => {
+                const trimmedContent = content.trim();
+                return `<Admonition type="${type}">${trimmedContent}</Admonition>`;
+            }
+        );
+
+        return processedContent;
     }
 
     // Content is HTML, convert to Markdown
@@ -303,6 +326,21 @@ function prepareContentForMdx(content: string): string {
     // Convert line breaks
     mdx = mdx.replace(/<br\s*\/?>/g, "\n");
 
+    // Convert directive syntax to JSX components
+    mdx = mdx.replace(
+        /:::(\w+)\s*\n([\s\S]*?)\n:::/g,
+        (match, type, content) => {
+            const trimmedContent = content.trim();
+            return `<Admonition type="${type}">${trimmedContent}</Admonition>`;
+        }
+    );
+
+    // Also try single-line pattern
+    mdx = mdx.replace(/:::(\w+)\s+([^:]+):::/g, (match, type, content) => {
+        const trimmedContent = content.trim();
+        return `<Admonition type="${type}">${trimmedContent}</Admonition>`;
+    });
+
     // Clean up extra whitespace
     mdx = mdx.replace(/\n{3,}/g, "\n\n").trim();
 
@@ -420,6 +458,36 @@ export default async function Blog({
         SandpackRenderer: (props: any) => <SandpackRenderer {...props} />,
         DebugContent: (props: any) => <DebugContent {...props} />,
         mark: (props: any) => <Highlight {...props} />,
+        // Admonition components
+        Admonition: (props: any) => <Admonition {...props} />,
+        admonition: (props: any) => <Admonition {...props} />,
+        admonitionNote: (props: any) => <Admonition {...props} type="note" />,
+        admonitionTip: (props: any) => <Admonition {...props} type="tip" />,
+        admonitionWarning: (props: any) => (
+            <Admonition {...props} type="warning" />
+        ),
+        admonitionDanger: (props: any) => (
+            <Admonition {...props} type="danger" />
+        ),
+        admonitionInfo: (props: any) => <Admonition {...props} type="info" />,
+        admonitionCaution: (props: any) => (
+            <Admonition {...props} type="caution" />
+        ),
+        // Directive components for ::: syntax
+        directive: (props: any) => {
+            const { name, children } = props;
+            if (
+                name === "note" ||
+                name === "tip" ||
+                name === "warning" ||
+                name === "danger" ||
+                name === "info" ||
+                name === "caution"
+            ) {
+                return <Admonition type={name}>{children}</Admonition>;
+            }
+            return <div className="directive">{children}</div>;
+        },
         input: (props: any) => {
             if (props.type === "checkbox") {
                 return <Checkbox checked={props.checked} {...props} />;
@@ -575,7 +643,7 @@ export default async function Blog({
                             components={components}
                             options={{
                                 mdxOptions: {
-                                    remarkPlugins: [remarkGfm],
+                                    remarkPlugins: [remarkGfm, remarkDirective],
                                     rehypePlugins: [rehypeHighlight],
                                 },
                             }}

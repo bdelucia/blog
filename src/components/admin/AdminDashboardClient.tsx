@@ -289,11 +289,6 @@ export function AdminDashboardClient({
         }
     };
 
-    // Handle edit post
-    const handleEditPost = (post: Article) => {
-        openEditPost(post);
-    };
-
     // Handle update post submission
     const handleUpdatePost = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -375,7 +370,7 @@ export function AdminDashboardClient({
                         Dashboard Overview
                     </h2>
                     <Button
-                        onClick={() => setCurrentView("create-post")}
+                        onClick={() => router.push("/admin/posts/create-post")}
                         className="bg-green-600 hover:bg-green-700 hover:cursor-pointer"
                     >
                         <Plus className="w-4 h-4 mr-2" />
@@ -394,7 +389,7 @@ export function AdminDashboardClient({
                 <UsersDataTable data={allUsers} />
             </div>
             <div className="px-4 lg:px-6">
-                <PostsDataTable data={allPosts} onEditPost={handleEditPost} />
+                <PostsDataTable data={allPosts} />
             </div>
         </div>
     );

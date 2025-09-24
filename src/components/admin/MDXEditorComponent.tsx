@@ -27,10 +27,10 @@ import {
     codeBlockPlugin,
     codeMirrorPlugin,
     diffSourcePlugin,
-    frontmatterPlugin,
     toolbarPlugin,
     sandpackPlugin,
     directivesPlugin,
+    frontmatterPlugin,
     UndoRedo,
     BoldItalicUnderlineToggles,
     CodeToggle,
@@ -42,7 +42,6 @@ import {
     BlockTypeSelect,
     CodeMirrorEditor,
     InsertAdmonition,
-    InsertFrontmatter,
     AdmonitionDirectiveDescriptor,
     HighlightToggle,
     InsertCodeBlock,
@@ -50,13 +49,129 @@ import {
     ConditionalContents,
     ChangeCodeMirrorLanguage,
     ShowSandpackInfo,
+    KitchenSinkToolbar,
+    InsertFrontmatter,
 } from "@mdxeditor/editor";
 import "@mdxeditor/editor/style.css";
+import BlogImage from "../mdx-components/BlogImage";
+import Table from "../mdx-components/Table";
+import BlogCarousel from "../mdx-components/BlogCarousel";
 
 interface MDXEditorComponentProps {
     content: string;
     onChange: (content: string) => void;
     placeholder?: string;
+}
+
+// Function to preprocess content for MDXEditor
+function preprocessContentForEditor(content: string): string {
+    if (!content) return "";
+
+    // Convert JSX elements to readable markdown format
+    let processedContent = content;
+
+    // Convert BlogImage components to readable format
+    processedContent = processedContent.replace(
+        /<BlogImage\s+([^>]*?)\s*\/?>/g,
+        (match, attributes) => {
+            // Extract src and alt from attributes
+            const srcMatch = attributes.match(/src="([^"]*)"/);
+            const altMatch = attributes.match(/alt="([^"]*)"/);
+            const captionMatch = attributes.match(/caption="([^"]*)"/);
+            const variantMatch = attributes.match(/variant="([^"]*)"/);
+
+            const src = srcMatch ? srcMatch[1] : "";
+            const alt = altMatch ? altMatch[1] : "";
+            const caption = captionMatch ? captionMatch[1] : "";
+            const variant = variantMatch ? variantMatch[1] : "default";
+
+            let result = `\n---\n**BlogImage Component**\n`;
+            result += `- **Image Source:** ${src}\n`;
+            result += `- **Alt Text:** ${alt}\n`;
+            if (caption) result += `- **Caption:** ${caption}\n`;
+            if (variant !== "default") result += `- **Variant:** ${variant}\n`;
+            result += `---\n`;
+
+            return result;
+        }
+    );
+
+    // Convert Table components to readable format
+    processedContent = processedContent.replace(
+        /<Table\s+([^>]*?)\s*\/?>/g,
+        (match, attributes) => {
+            // Extract headers and rows from attributes
+            const headersMatch = attributes.match(/headers="([^"]*)"/);
+            const rowsMatch = attributes.match(/rows="([^"]*)"/);
+
+            const headers = headersMatch ? headersMatch[1] : "";
+            const rows = rowsMatch ? rowsMatch[1] : "";
+
+            let result = `\n---\n**Table Component**\n`;
+            result += `- **Headers:** ${headers}\n`;
+            result += `- **Rows:** ${rows}\n`;
+            result += `---\n`;
+
+            return result;
+        }
+    );
+
+    // Convert BlogCarousel components to readable format
+    processedContent = processedContent.replace(
+        /<BlogCarousel\s+([^>]*?)\s*\/?>/g,
+        (match, attributes) => {
+            // Extract images from attributes
+            const imagesMatch = attributes.match(/images="([^"]*)"/);
+            const images = imagesMatch ? imagesMatch[1] : "";
+
+            let result = `\n---\n**BlogCarousel Component**\n`;
+            result += `- **Images:** ${images}\n`;
+            result += `---\n`;
+
+            return result;
+        }
+    );
+
+    return processedContent;
+}
+
+// Function to postprocess content from MDXEditor
+function postprocessContentFromEditor(content: string): string {
+    if (!content) return "";
+
+    // Convert readable format back to JSX elements
+    let processedContent = content;
+
+    // Convert BlogImage readable format back to JSX
+    processedContent = processedContent.replace(
+        /---\s*\*\*BlogImage Component\*\*\s*- \*\*Image Source:\*\* ([^\n]*)\s*- \*\*Alt Text:\*\* ([^\n]*)(?:\s*- \*\*Caption:\*\* ([^\n]*))?(?:\s*- \*\*Variant:\*\* ([^\n]*))?\s*---/g,
+        (match, src, alt, caption, variant) => {
+            let jsx = `<BlogImage src="${src}" alt="${alt}"`;
+            if (caption) jsx += ` caption="${caption}"`;
+            if (variant && variant !== "default")
+                jsx += ` variant="${variant}"`;
+            jsx += ` />`;
+            return jsx;
+        }
+    );
+
+    // Convert Table readable format back to JSX
+    processedContent = processedContent.replace(
+        /---\s*\*\*Table Component\*\*\s*- \*\*Headers:\*\* ([^\n]*)\s*- \*\*Rows:\*\* ([^\n]*)\s*---/g,
+        (match, headers, rows) => {
+            return `<Table headers="${headers}" rows="${rows}" />`;
+        }
+    );
+
+    // Convert BlogCarousel readable format back to JSX
+    processedContent = processedContent.replace(
+        /---\s*\*\*BlogCarousel Component\*\*\s*- \*\*Images:\*\* ([^\n]*)\s*---/g,
+        (match, images) => {
+            return `<BlogCarousel images="${images}" />`;
+        }
+    );
+
+    return processedContent;
 }
 
 // Custom Image Upload Component that works with imageUploadHandler
@@ -198,25 +313,30 @@ export function MDXEditorComponent({
     onChange,
     placeholder = "Write your blog post content here...",
 }: MDXEditorComponentProps) {
-    const [markdown, setMarkdown] = useState(content || "");
+    const [markdown, setMarkdown] = useState(
+        preprocessContentForEditor(content || "")
+    );
     const [editorRef, setEditorRef] = useState<any>(null);
 
     // Update markdown when content prop changes (only when switching posts)
     useEffect(() => {
-        if (content !== markdown) {
-            setMarkdown(content || "");
+        const processedContent = preprocessContentForEditor(content || "");
+        if (processedContent !== markdown) {
+            setMarkdown(processedContent);
 
             // Also update the editor directly if it exists
-            if (editorRef && content) {
-                editorRef.setMarkdown(content);
+            if (editorRef && processedContent) {
+                editorRef.setMarkdown(processedContent);
             }
         }
     }, [content, markdown, editorRef]);
 
     // Handle markdown changes from the editor
     const handleMarkdownChange = (newMarkdown: string) => {
-        setMarkdown(newMarkdown);
-        onChange(newMarkdown);
+        const processedMarkdown = preprocessContentForEditor(newMarkdown);
+        setMarkdown(processedMarkdown);
+        const finalContent = postprocessContentFromEditor(processedMarkdown);
+        onChange(finalContent);
     };
 
     return (
@@ -284,9 +404,123 @@ export function MDXEditorComponent({
                 .dark .mdxeditor-root-contenteditable img {
                     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
                 }
+
+                /* Custom highlight styling - keep original background, change text to black */
+                .mdxeditor-root-contenteditable mark {
+                    color: #000000 !important; /* Black text for better readability */
+                }
+
+                .dark .mdxeditor-root-contenteditable mark {
+                    color: #000000 !important; /* Black text in dark mode too */
+                }
+
+                /* Fix black text for highlighted bold text */
+                .mdxeditor-root-contenteditable mark strong,
+                .mdxeditor-root-contenteditable mark b {
+                    color: #000000 !important;
+                }
+
+                .dark .mdxeditor-root-contenteditable mark strong,
+                .dark .mdxeditor-root-contenteditable mark b {
+                    color: #000000 !important;
+                }
+
+                /* Fix black text for highlighted italic text */
+                .mdxeditor-root-contenteditable mark em,
+                .mdxeditor-root-contenteditable mark i {
+                    color: #000000 !important;
+                }
+
+                .dark .mdxeditor-root-contenteditable mark em,
+                .dark .mdxeditor-root-contenteditable mark i {
+                    color: #000000 !important;
+                }
+
+                /* Fix black text for highlighted bold AND italic text */
+                .mdxeditor-root-contenteditable mark strong em,
+                .mdxeditor-root-contenteditable mark strong i,
+                .mdxeditor-root-contenteditable mark b em,
+                .mdxeditor-root-contenteditable mark b i,
+                .mdxeditor-root-contenteditable mark em strong,
+                .mdxeditor-root-contenteditable mark em b,
+                .mdxeditor-root-contenteditable mark i strong,
+                .mdxeditor-root-contenteditable mark i b {
+                    color: #000000 !important;
+                }
+
+                .dark .mdxeditor-root-contenteditable mark strong em,
+                .dark .mdxeditor-root-contenteditable mark strong i,
+                .dark .mdxeditor-root-contenteditable mark b em,
+                .dark .mdxeditor-root-contenteditable mark b i,
+                .dark .mdxeditor-root-contenteditable mark em strong,
+                .dark .mdxeditor-root-contenteditable mark em b,
+                .dark .mdxeditor-root-contenteditable mark i strong,
+                .dark .mdxeditor-root-contenteditable mark i b {
+                    color: #000000 !important;
+                }
+
+                /* Ensure highlighted text remains black on hover */
+                .mdxeditor-root-contenteditable mark:hover {
+                    color: #000000 !important;
+                }
+
+                .dark .mdxeditor-root-contenteditable mark:hover {
+                    color: #000000 !important;
+                }
+
+                /* Fix MDXEditor dropdown visibility - official solution from GitHub issue #276 */
+                .mdxeditor-popup-container {
+                    z-index: 1101 !important;
+                }
+
+                /* Fix Block Type dropdown positioning to drop down instead of up */
+                .mdxeditor-popup-container [data-radix-select-content] {
+                    position: absolute !important;
+                    top: 100% !important;
+                    bottom: auto !important;
+                }
+
+                /* Fix admonition text color to be black in MDXEditor */
+                .mdxeditor-root-contenteditable .admonition,
+                .mdxeditor-root-contenteditable .admonition-note,
+                .mdxeditor-root-contenteditable .admonition-tip,
+                .mdxeditor-root-contenteditable .admonition-danger,
+                .mdxeditor-root-contenteditable .admonition-info,
+                .mdxeditor-root-contenteditable .admonition-caution,
+                .mdxeditor-root-contenteditable .admonition p,
+                .mdxeditor-root-contenteditable .admonition div,
+                .mdxeditor-root-contenteditable .admonition span,
+                .mdxeditor-root-contenteditable .admonition strong,
+                .mdxeditor-root-contenteditable .admonition em,
+                .mdxeditor-root-contenteditable .admonition h1,
+                .mdxeditor-root-contenteditable .admonition h2,
+                .mdxeditor-root-contenteditable .admonition h3,
+                .mdxeditor-root-contenteditable .admonition h4,
+                .mdxeditor-root-contenteditable .admonition h5,
+                .mdxeditor-root-contenteditable .admonition h6 {
+                    color: #000000 !important;
+                }
+
+                .mdxeditor-root-contenteditable .admonition *,
+                .mdxeditor-root-contenteditable .admonition-note *,
+                .mdxeditor-root-contenteditable .admonition-tip *,
+                .mdxeditor-root-contenteditable .admonition-danger *,
+                .mdxeditor-root-contenteditable .admonition-info *,
+                .mdxeditor-root-contenteditable .admonition-caution * {
+                    color: #000000 !important;
+                }
+
+                /* Force all text within admonitions to be black */
+                .mdxeditor-root-contenteditable [class*="admonition"] {
+                    color: #000000 !important;
+                }
+
+                .mdxeditor-root-contenteditable [class*="admonition"] * {
+                    color: #000000 !important;
+                }
             `}</style>
 
-            <div className="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
+            <div className="border border-gray-300 dark:border-gray-600 rounded-md overflow-visible">
                 <MDXEditor
                     ref={setEditorRef}
                     markdown={markdown}
@@ -359,7 +593,6 @@ export function MDXEditorComponent({
                             viewMode: "rich-text",
                             diffMarkdown: "",
                         }),
-                        frontmatterPlugin(),
                         sandpackPlugin({
                             sandpackConfig: {
                                 defaultPreset: "react",
@@ -390,59 +623,9 @@ export function MDXEditorComponent({
                                 AdmonitionDirectiveDescriptor,
                             ],
                         }),
+                        frontmatterPlugin(),
                         toolbarPlugin({
-                            toolbarContents: () => (
-                                <ConditionalContents
-                                    options={[
-                                        {
-                                            when: (editor) =>
-                                                editor?.editorType ===
-                                                "codeblock",
-                                            contents: () => (
-                                                <ChangeCodeMirrorLanguage />
-                                            ),
-                                        },
-                                        {
-                                            when: (editor) =>
-                                                editor?.editorType ===
-                                                "sandpack",
-                                            contents: () => (
-                                                <ShowSandpackInfo />
-                                            ),
-                                        },
-                                        {
-                                            fallback: () => (
-                                                <>
-                                                    <UndoRedo />
-                                                    <Separator />
-                                                    <BoldItalicUnderlineToggles />
-                                                    <HighlightToggle />
-                                                    <CodeToggle />
-                                                    <Separator />
-                                                    <CreateLink />
-                                                    <CustomImageUpload
-                                                        editorRef={editorRef}
-                                                    />
-                                                    <Separator />
-                                                    <ListsToggle />
-                                                    <Separator />
-                                                    <InsertTable />
-                                                    <InsertThematicBreak />
-                                                    <Separator />
-                                                    <InsertCodeBlock />
-                                                    <Separator />
-                                                    <InsertSandpack />
-                                                    <Separator />
-                                                    <InsertAdmonition />
-                                                    <InsertFrontmatter />
-                                                    <Separator />
-                                                    <BlockTypeSelect />
-                                                </>
-                                            ),
-                                        },
-                                    ]}
-                                />
-                            ),
+                            toolbarContents: () => <KitchenSinkToolbar />,
                         }),
                     ]}
                     contentEditableClassName="prose max-w-none min-h-[400px] p-4 text-gray-900 dark:text-white bg-transparent"
