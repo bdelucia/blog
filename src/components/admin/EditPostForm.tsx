@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Header } from "../shared/Header";
-import { MarkdownEditor } from "./MarkdownEditor";
+import { MDXEditorComponent } from "./MDXEditorComponent";
 import { ArrowLeft, Save, Eye, Upload, X } from "lucide-react";
 import { type Article } from "@/data/blog-client";
 
@@ -486,10 +486,9 @@ export function EditPostForm({ post }: EditPostFormProps) {
                                     </div>
 
                                     {/* Content Field */}
-                                    <MarkdownEditor
+                                    <MDXEditorComponent
                                         content={content}
                                         onChange={setContent}
-                                        placeholder="Write your blog post content here using markdown syntax..."
                                     />
 
                                     {/* Action Buttons */}
