@@ -130,7 +130,9 @@ function DraggableRow({ row }: { row: Row<Article> }) {
     );
 }
 
-const columns: ColumnDef<Article>[] = [
+const createColumns = (
+    onEditPost?: (post: Article) => void
+): ColumnDef<Article>[] => [
     {
         id: "drag",
         header: () => null,
@@ -253,14 +255,7 @@ const columns: ColumnDef<Article>[] = [
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                            onClick={() =>
-                                window.open(
-                                    `/admin/posts/edit-post/${article.slug}`,
-                                    "_blank"
-                                )
-                            }
-                        >
+                        <DropdownMenuItem onClick={() => onEditPost?.(article)}>
                             Edit post
                         </DropdownMenuItem>
                         <DropdownMenuItem
@@ -283,9 +278,13 @@ const columns: ColumnDef<Article>[] = [
 
 interface PostsDataTableProps {
     data: Article[];
+    onEditPost?: (post: Article) => void;
 }
 
-export function PostsDataTable({ data: initialData }: PostsDataTableProps) {
+export function PostsDataTable({
+    data: initialData,
+    onEditPost,
+}: PostsDataTableProps) {
     const [data, setData] = React.useState(() => initialData);
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] =
@@ -346,6 +345,8 @@ export function PostsDataTable({ data: initialData }: PostsDataTableProps) {
             }
         }
     }
+
+    const columns = createColumns(onEditPost);
 
     const table = useReactTable({
         data,

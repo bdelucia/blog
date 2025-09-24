@@ -13,6 +13,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useAdminDashboard } from "@/components/providers/admin-dashboard-provider";
 
 export function NavMain({
     items,
@@ -24,6 +25,7 @@ export function NavMain({
     }[];
 }) {
     const [isDark, setIsDark] = React.useState(false);
+    const { openCreatePost } = useAdminDashboard();
 
     React.useEffect(() => {
         // Check if dark mode is enabled
@@ -50,14 +52,12 @@ export function NavMain({
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton
-                            asChild
+                            onClick={openCreatePost}
                             tooltip="Quick Create"
                             className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear cursor-pointer"
                         >
-                            <Link href="/admin/posts/new-post">
-                                <IconCirclePlusFilled />
-                                <span>Quick Create</span>
-                            </Link>
+                            <IconCirclePlusFilled />
+                            <span>Quick Create</span>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>

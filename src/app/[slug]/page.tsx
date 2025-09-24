@@ -1,26 +1,48 @@
 import { getBlogPosts, getPost } from "@/data/blog";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { Suspense } from "react";
+import React, { Suspense } from "react";
 import { BLOG_IMGS_URL } from "@/lib/constants";
 import { Header } from "@/components/shared/Header";
 import Footer from "@/components/shared/Footer";
 import BlogCarousel from "@/components/mdx-components/BlogCarousel";
 import Table from "@/components/mdx-components/Table";
 import BlogImage from "@/components/mdx-components/BlogImage";
+import SandpackRenderer from "@/components/mdx-components/SandpackRenderer";
+import DebugContent from "@/components/mdx-components/DebugContent";
+import Highlight from "@/components/mdx-components/Highlight";
+import Checkbox from "@/components/mdx-components/Checkbox";
+import MDXTable, {
+    MDXTableHead,
+    MDXTableBody,
+    MDXTableRow,
+    MDXTableCell,
+} from "@/components/mdx-components/MDXTable";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { UnauthorizedToast } from "@/components/shared/UnauthorizedToast";
 import { BlogPostTracker } from "@/components/analytics/BlogPostTracker";
 import { getCurrentUser } from "@/lib/auth";
 import rehypeHighlight from "rehype-highlight";
+import remarkGfm from "remark-gfm";
 
-// Function to convert HTML content to MDX-compatible format
-function convertHtmlToMdx(htmlContent: string): string {
-    if (!htmlContent || htmlContent.trim() === "") {
+// Function to prepare content for MDX rendering
+function prepareContentForMdx(content: string): string {
+    if (!content || content.trim() === "") {
         return "";
     }
 
-    let mdx = htmlContent;
+    // Check if content is already Markdown
+    // If it contains HTML tags, it's HTML; otherwise it's Markdown
+    const hasHtmlTags = /<[^>]+>/.test(content);
+    const isMarkdown = !hasHtmlTags;
+
+    if (isMarkdown) {
+        // Content is already Markdown, return as-is
+        return content;
+    }
+
+    // Content is HTML, convert to Markdown
+    let mdx = content;
 
     // Convert img tags to proper MDX format (self-closing with space before />)
     mdx = mdx.replace(/<img([^>]*?)\s*\/?>/g, (match, attributes) => {
@@ -43,9 +65,40 @@ function convertHtmlToMdx(htmlContent: string): string {
     mdx = mdx.replace(/<em[^>]*>(.*?)<\/em>/g, "*$1*");
     mdx = mdx.replace(/<i[^>]*>(.*?)<\/i>/g, "*$1*");
 
+    // Convert highlighting - handle both HTML and markdown syntax
+    mdx = mdx.replace(/<mark[^>]*>(.*?)<\/mark>/g, "<mark>$1</mark>");
+    // Convert markdown highlighting syntax ==text== to <mark>text</mark>
+    mdx = mdx.replace(/==([^=]+)==/g, "<mark>$1</mark>");
+
     // Convert lists
     mdx = mdx.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/g, (match, content) => {
-        return content.replace(/<li[^>]*>([\s\S]*?)<\/li>/g, "- $1\n") + "\n";
+        return (
+            content.replace(
+                /<li[^>]*>([\s\S]*?)<\/li>/g,
+                (liMatch: string, liContent: string) => {
+                    // Check if this is a checkbox list item
+                    const checkboxMatch = liContent.match(
+                        /<input[^>]*type="checkbox"[^>]*checked[^>]*\/?>/
+                    );
+                    if (checkboxMatch) {
+                        const textContent = liContent
+                            .replace(/<input[^>]*type="checkbox"[^>]*\/?>/g, "")
+                            .trim();
+                        return `- [x] ${textContent}\n`;
+                    }
+                    const uncheckedMatch = liContent.match(
+                        /<input[^>]*type="checkbox"[^>]*\/?>/
+                    );
+                    if (uncheckedMatch) {
+                        const textContent = liContent
+                            .replace(/<input[^>]*type="checkbox"[^>]*\/?>/g, "")
+                            .trim();
+                        return `- [ ] ${textContent}\n`;
+                    }
+                    return `- ${liContent}\n`;
+                }
+            ) + "\n"
+        );
     });
     mdx = mdx.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/g, (match, content) => {
         let counter = 1;
@@ -70,6 +123,146 @@ function convertHtmlToMdx(htmlContent: string): string {
 
     // Convert horizontal rules
     mdx = mdx.replace(/<hr[^>]*\/?>/g, "\n---\n");
+
+    // Convert tables - handle both HTML and markdown tables
+    mdx = mdx.replace(/<table[^>]*>([\s\S]*?)<\/table>/g, (match, content) => {
+        // Convert HTML table to markdown table
+        const rows = content.match(/<tr[^>]*>([\s\S]*?)<\/tr>/g);
+        if (!rows) return match;
+
+        let markdownTable = "\n";
+        let isHeader = true;
+
+        rows.forEach((row: string, index: number) => {
+            const cells = row.match(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/g);
+            if (!cells) return;
+
+            const cellContents = cells.map((cell: string) =>
+                cell.replace(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/g, "$1").trim()
+            );
+
+            markdownTable += "| " + cellContents.join(" | ") + " |\n";
+
+            if (isHeader && index === 0) {
+                markdownTable +=
+                    "| " + cellContents.map(() => "---").join(" | ") + " |\n";
+                isHeader = false;
+            }
+        });
+
+        return markdownTable + "\n";
+    });
+
+    // Convert sandpack blocks first (before regular code blocks)
+    // Try multiple patterns to catch different sandpack formats
+
+    // Pattern 1: Standard sandpack div wrapper
+    mdx = mdx.replace(
+        /<div[^>]*class="[^"]*sandpack[^"]*"[^>]*><pre[^>]*class="[^"]*hljs[^"]*"[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre><\/div>/g,
+        (match, content) => {
+            console.log("Found sandpack block (div wrapper):", match);
+            // Extract language from class attribute if present
+            const langMatch = match.match(/class="[^"]*language-(\w+)[^"]*"/);
+            const language = langMatch ? langMatch[1] : "react";
+
+            // Decode HTML entities in code content
+            const decodedContent = content
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .replace(/&amp;/g, "&")
+                .replace(/&quot;/g, '"')
+                .replace(/&#x27;/g, "'");
+
+            return `<Sandpack template="${language}">\n${decodedContent}\n</Sandpack>\n`;
+        }
+    );
+
+    // Pattern 2: Direct sandpack pre tag
+    mdx = mdx.replace(
+        /<pre[^>]*class="[^"]*sandpack[^"]*"[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre>/g,
+        (match, content) => {
+            console.log("Found sandpack block (direct pre):", match);
+            // Extract language from class attribute if present
+            const langMatch = match.match(/class="[^"]*language-(\w+)[^"]*"/);
+            const language = langMatch ? langMatch[1] : "react";
+
+            // Decode HTML entities in code content
+            const decodedContent = content
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .replace(/&amp;/g, "&")
+                .replace(/&quot;/g, '"')
+                .replace(/&#x27;/g, "'");
+
+            return `<Sandpack template="${language}">\n${decodedContent}\n</Sandpack>\n`;
+        }
+    );
+
+    // Pattern 3: Markdown-style sandpack blocks (```jsx live react)
+    mdx = mdx.replace(
+        /```(\w+)\s+live\s+(\w+)\n([\s\S]*?)```/g,
+        (match, language, template, content) => {
+            console.log("Found sandpack block (markdown):", match);
+            // Use base64 encoding to avoid escaping issues
+            const encodedContent = Buffer.from(content.trim()).toString(
+                "base64"
+            );
+            return `<SandpackRenderer template="${template}" data-code="${encodedContent}" />`;
+        }
+    );
+
+    // Pattern 3b: More flexible markdown sandpack pattern
+    mdx = mdx.replace(
+        /```jsx\s+live\s+react\n([\s\S]*?)```/g,
+        (match, content) => {
+            console.log("Found sandpack block (jsx live react):", match);
+            // Use base64 encoding to avoid escaping issues
+            const encodedContent = Buffer.from(content.trim()).toString(
+                "base64"
+            );
+            return `<SandpackRenderer template="react" data-code="${encodedContent}" />`;
+        }
+    );
+
+    // Pattern 3c: Even more flexible - handle any spacing
+    mdx = mdx.replace(
+        /```jsx\s+live\s+react\s*\n([\s\S]*?)```/g,
+        (match, content) => {
+            console.log("Found sandpack block (flexible):", match);
+            // Use base64 encoding to avoid escaping issues
+            const encodedContent = Buffer.from(content.trim()).toString(
+                "base64"
+            );
+            return `<SandpackRenderer template="react" data-code="${encodedContent}" />`;
+        }
+    );
+
+    // Debug: Check if we have any sandpack patterns left
+    if (mdx.includes("```jsx live react")) {
+        console.log(
+            "Still contains sandpack pattern after conversion attempts"
+        );
+    }
+
+    // Pattern 4: Fallback - any code block that looks like React/JSX
+    mdx = mdx.replace(
+        /```(jsx?|react)\n([\s\S]*?)```/g,
+        (match, language, content) => {
+            // Check if it looks like a React component
+            if (
+                content.includes("export default") ||
+                content.includes("function") ||
+                content.includes("return (")
+            ) {
+                console.log(
+                    "Found React-like code block, converting to sandpack:",
+                    match
+                );
+                return `<Sandpack template="react">\n${content.trim()}\n</Sandpack>\n`;
+            }
+            return match; // Keep as regular code block if not React-like
+        }
+    );
 
     // Convert code blocks with language support
     mdx = mdx.replace(
@@ -223,6 +416,106 @@ export default async function Blog({
         BlogImage: (props: any) => (
             <BlogImage {...props} baseUrl={BLOG_IMGS_URL} />
         ),
+        Sandpack: (props: any) => <SandpackRenderer {...props} />,
+        SandpackRenderer: (props: any) => <SandpackRenderer {...props} />,
+        DebugContent: (props: any) => <DebugContent {...props} />,
+        mark: (props: any) => <Highlight {...props} />,
+        input: (props: any) => {
+            if (props.type === "checkbox") {
+                return <Checkbox checked={props.checked} {...props} />;
+            }
+            return <input {...props} />;
+        },
+        // MDX Table components
+        table: (props: any) => <MDXTable {...props} />,
+        thead: (props: any) => <MDXTableHead {...props} />,
+        tbody: (props: any) => <MDXTableBody {...props} />,
+        tr: (props: any) => <MDXTableRow {...props} />,
+        th: (props: any) => <MDXTableCell {...props} isHeader={true} />,
+        td: (props: any) => <MDXTableCell {...props} isHeader={false} />,
+        // Handle markdown checkbox syntax
+        li: (props: any) => {
+            const children = props.children;
+
+            // Handle string children (markdown checkbox syntax)
+            if (typeof children === "string") {
+                // Check for markdown checkbox syntax: - [x] or - [ ]
+                const checkboxMatch = children.match(
+                    /^(\s*)\[([ x])\]\s*(.*)$/
+                );
+                if (checkboxMatch) {
+                    const [, indent, checked, text] = checkboxMatch;
+                    return (
+                        <li className="flex items-start space-x-1 my-1">
+                            <input
+                                type="checkbox"
+                                checked={checked === "x"}
+                                readOnly
+                                className="mt-0.5 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <span className="text-gray-900 dark:text-gray-100">
+                                {text}
+                            </span>
+                        </li>
+                    );
+                }
+            }
+
+            // Handle React element children (HTML checkbox input)
+            if (React.isValidElement(children)) {
+                const childProps = children.props as any;
+                if (childProps?.type === "checkbox") {
+                    return (
+                        <li className="flex items-start space-x-1 my-1">
+                            <input
+                                type="checkbox"
+                                checked={childProps.checked}
+                                readOnly
+                                className="mt-0.5 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <span className="text-gray-900 dark:text-gray-100">
+                                {childProps.children || ""}
+                            </span>
+                        </li>
+                    );
+                }
+            }
+
+            // Handle array of children (mixed content)
+            if (Array.isArray(children)) {
+                // Check if any child is a checkbox input
+                const checkboxChild = children.find(
+                    (child) =>
+                        React.isValidElement(child) &&
+                        (child.props as any)?.type === "checkbox"
+                );
+
+                if (checkboxChild) {
+                    const textChildren = children
+                        .filter(
+                            (child) => typeof child === "string" && child.trim()
+                        )
+                        .join(" ");
+
+                    return (
+                        <li className="flex items-start space-x-1 my-1">
+                            <input
+                                type="checkbox"
+                                checked={(checkboxChild.props as any).checked}
+                                readOnly
+                                className="mt-0.5 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            />
+                            <span className="text-gray-900 dark:text-gray-100">
+                                {textChildren}
+                            </span>
+                        </li>
+                    );
+                }
+            }
+
+            // Default list item rendering
+            return <li {...props} />;
+        },
     };
 
     return (
@@ -275,13 +568,14 @@ export default async function Blog({
                             </p>
                         </Suspense>
                     </div>
-                    <article className="prose max-w-[650px] mx-auto">
+                    <article className="prose max-w-[650px] mx-auto [&_.contains-task-list]:pl-0 [&_.contains-task-list]:list-none [&_.contains-task-list_li]:list-none">
+                        <DebugContent content={post.content || ""} />
                         <MDXRemote
-                            source={convertHtmlToMdx(post.content || "")}
+                            source={prepareContentForMdx(post.content || "")}
                             components={components}
                             options={{
                                 mdxOptions: {
-                                    remarkPlugins: [],
+                                    remarkPlugins: [remarkGfm],
                                     rehypePlugins: [rehypeHighlight],
                                 },
                             }}

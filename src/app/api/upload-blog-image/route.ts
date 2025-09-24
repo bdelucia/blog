@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
+import { validateImageFile } from "@/lib/image-validation";
 
 export async function POST(request: NextRequest) {
     try {
@@ -49,30 +50,19 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Validate file type
-        const allowedTypes = [
-            "image/jpeg",
-            "image/jpg",
-            "image/png",
-            "image/webp",
-        ];
-        if (!allowedTypes.includes(file.type)) {
+        // Validate file using Supabase Edge Function
+        const validation = await validateImageFile(file);
+        if (!validation.isValid) {
             return NextResponse.json(
                 {
-                    error: "Invalid file type. Only JPEG, PNG, and WebP are allowed.",
+                    error: validation.error,
+                    fileInfo: validation.fileInfo,
                 },
                 { status: 400 }
             );
         }
 
-        // Validate file size (5MB max)
-        const maxSize = 5 * 1024 * 1024; // 5MB
-        if (file.size > maxSize) {
-            return NextResponse.json(
-                { error: "File too large. Maximum size is 5MB." },
-                { status: 400 }
-            );
-        }
+        console.log("File validation passed:", validation.fileInfo);
 
         // Generate unique filename
         const timestamp = Date.now();
