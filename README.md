@@ -103,19 +103,6 @@ This project is deployed on AWS using ECS (Elastic Container Service) with Farga
 -   **Target Group**: Health checks and load balancing
 -   **VPC**: Isolated network with public subnets across 3 AZs
 
-### Infrastructure Setup
-
-The AWS infrastructure is defined in `aws-deployment/cloudformation-template.yaml`:
-
-```bash
-# Deploy infrastructure
-aws cloudformation create-stack \
-  --stack-name blog-app-infrastructure \
-  --template-body file://aws-deployment/cloudformation-template.yaml \
-  --capabilities CAPABILITY_IAM \
-  --region us-east-2
-```
-
 ### CI/CD Pipeline
 
 The GitHub Actions workflow (`.github/workflows/aws-deploy.yml`) provides automated testing, building, and deployment with comprehensive error handling and monitoring.
@@ -251,14 +238,6 @@ The admin dashboard provides comprehensive analytics and management capabilities
 
 ### Google Analytics Integration
 
-#### Required Environment Variables
-
-```env
-GA_PROPERTY_ID=your_ga4_property_id
-GA_SERVICE_ACCOUNT_EMAIL=your_service_account_email
-GA_PRIVATE_KEY=your_private_key
-```
-
 #### Authentication Method
 
 -   **Service Account** - Secure server-to-server authentication
@@ -294,20 +273,6 @@ GA_PRIVATE_KEY=your_private_key
 -   **API Protection** - All admin routes require authentication
 -   **Data Validation** - Input sanitization and validation
 
-### Required GitHub Secrets
-
-Configure these secrets in your GitHub repository:
-
-```bash
-AWS_ACCESS_KEY_ID=your_aws_access_key
-AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-GA_PROPERTY_ID=your_ga4_property_id
-GA_SERVICE_ACCOUNT_EMAIL=your_service_account_email
-GA_PRIVATE_KEY=your_private_key
-```
-
 ### Health Checks
 
 The application includes comprehensive health check endpoints:
@@ -323,34 +288,6 @@ The pipeline provides detailed logging and monitoring:
 -   **Container Logs**: Available in CloudWatch Logs (`/ecs/blog-app`)
 -   **Health Check Status**: Monitored by Application Load Balancer
 -   **Deployment Status**: Real-time status in GitHub Actions
-
-### Troubleshooting
-
-Common issues and solutions:
-
-1. **IAM Role Errors**: Pipeline automatically creates missing roles
-2. **Health Check Failures**: ALB health check path is automatically updated
-3. **Task Definition Conflicts**: Old definitions are automatically cleaned up
-4. **Deployment Timeouts**: Extended timeout (15 minutes) with detailed logging
-
-### Manual Deployment
-
-If needed, you can manually deploy:
-
-```bash
-# Build and push image
-docker build -t blog-app:latest .
-docker tag blog-app:latest 423623853941.dkr.ecr.us-east-2.amazonaws.com/blog-app:latest
-aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 423623853941.dkr.ecr.us-east-2.amazonaws.com
-docker push 423623853941.dkr.ecr.us-east-2.amazonaws.com/blog-app:latest
-
-# Update ECS service
-aws ecs update-service \
-  --cluster bob-with-a-blog \
-  --service blog-app-task-service-u66yqxeg \
-  --force-new-deployment \
-  --region us-east-2
-```
 
 ## Contributing
 

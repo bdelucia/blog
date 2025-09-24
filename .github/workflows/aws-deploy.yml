@@ -39,6 +39,13 @@ jobs:
                   NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
                   NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
                   NEXT_PUBLIC_GA_ID: ${{ secrets.NEXT_PUBLIC_GA_ID }}
+                  GA_PROPERTY_ID: ${{ secrets.GA_PROPERTY_ID }}
+                  GA_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GA_SERVICE_ACCOUNT_EMAIL }}
+                  GA_PRIVATE_KEY: ${{ secrets.GA_PRIVATE_KEY }}
+                  R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+                  R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+                  R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+                  R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
 
             - name: Run linting
               run: pnpm run lint || echo "No lint script found"
