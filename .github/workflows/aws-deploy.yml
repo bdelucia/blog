@@ -73,6 +73,13 @@ jobs:
                     --build-arg NEXT_PUBLIC_SUPABASE_URL="${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" \
                     --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" \
                     --build-arg NEXT_PUBLIC_GA_ID="${{ secrets.NEXT_PUBLIC_GA_ID }}" \
+                    --build-arg GA_PROPERTY_ID="${{ secrets.GA_PROPERTY_ID }}" \
+                    --build-arg GA_SERVICE_ACCOUNT_EMAIL="${{ secrets.GA_SERVICE_ACCOUNT_EMAIL }}" \
+                    --build-arg GA_PRIVATE_KEY="${{ secrets.GA_PRIVATE_KEY }}" \
+                    --build-arg R2_ACCESS_KEY_ID="${{ secrets.R2_ACCESS_KEY_ID }}" \
+                    --build-arg R2_SECRET_ACCESS_KEY="${{ secrets.R2_SECRET_ACCESS_KEY }}" \
+                    --build-arg R2_ENDPOINT="${{ secrets.R2_ENDPOINT }}" \
+                    --build-arg R2_BUCKET_NAME="${{ secrets.R2_BUCKET_NAME }}" \
                     -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
                   docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
                   docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
