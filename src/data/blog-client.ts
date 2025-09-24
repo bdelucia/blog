@@ -12,7 +12,7 @@ export interface Article {
     tags: string[] | null;
     datePosted: string | null;
     createdAt: string;
-    updatedAt: string | null;
+    updatedAt: string;
     status: "draft" | "published";
     order: number | null;
 }
