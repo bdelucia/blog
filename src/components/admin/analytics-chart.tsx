@@ -214,13 +214,13 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
                         variant="outline"
                         className="hidden *:data-[slot=toggle-group-item]:!px-4 @[767px]/card:flex"
                     >
-                        <ToggleGroupItem value="90d">
+                        <ToggleGroupItem value="90d" className="cursor-pointer">
                             Last 3 months
                         </ToggleGroupItem>
-                        <ToggleGroupItem value="30d">
+                        <ToggleGroupItem value="30d" className="cursor-pointer">
                             Last 30 days
                         </ToggleGroupItem>
-                        <ToggleGroupItem value="7d">
+                        <ToggleGroupItem value="7d" className="cursor-pointer">
                             Last 7 days
                         </ToggleGroupItem>
                     </ToggleGroup>
@@ -233,13 +233,22 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
                             <SelectValue placeholder="Last 30 days" />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
-                            <SelectItem value="90d" className="rounded-lg">
+                            <SelectItem
+                                value="90d"
+                                className="rounded-lg cursor-pointer"
+                            >
                                 Last 3 months
                             </SelectItem>
-                            <SelectItem value="30d" className="rounded-lg">
+                            <SelectItem
+                                value="30d"
+                                className="rounded-lg cursor-pointer"
+                            >
                                 Last 30 days
                             </SelectItem>
-                            <SelectItem value="7d" className="rounded-lg">
+                            <SelectItem
+                                value="7d"
+                                className="rounded-lg cursor-pointer"
+                            >
                                 Last 7 days
                             </SelectItem>
                         </SelectContent>

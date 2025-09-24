@@ -36,7 +36,31 @@ export function getSupabaseAuthOptions() {
             autoRefreshToken: SUPABASE_CONFIG.auth.autoRefreshToken,
             detectSessionInUrl: SUPABASE_CONFIG.auth.detectSessionInUrl,
             storage:
-                typeof window !== "undefined" ? window.localStorage : undefined,
+                typeof window !== "undefined"
+                    ? {
+                          getItem: (key: string) => {
+                              try {
+                                  return window.localStorage.getItem(key);
+                              } catch {
+                                  return null;
+                              }
+                          },
+                          setItem: (key: string, value: string) => {
+                              try {
+                                  window.localStorage.setItem(key, value);
+                              } catch {
+                                  // Ignore storage errors
+                              }
+                          },
+                          removeItem: (key: string) => {
+                              try {
+                                  window.localStorage.removeItem(key);
+                              } catch {
+                                  // Ignore storage errors
+                              }
+                          },
+                      }
+                    : undefined,
         },
     };
 }

@@ -5,6 +5,8 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { AdminCards } from "@/components/admin-cards";
 import { AnalyticsChart } from "@/components/admin/analytics-chart";
 import { PageViewsChart } from "@/components/admin/page-views-chart";
+import { UsersDataTable } from "@/components/admin/UsersDataTable";
+import { PostsDataTable } from "@/components/admin/PostsDataTable";
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -144,7 +146,7 @@ async function fetchAnalyticsSummary() {
             uniqueVisitors = parseInt(row.metricValues[0]?.value || "0");
             pageViews = parseInt(row.metricValues[1]?.value || "0");
             sessions = parseInt(row.metricValues[2]?.value || "0");
-            bounceRate = parseFloat(row.metricValues[3]?.value || "0");
+            bounceRate = parseFloat(row.metricValues[3]?.value || "0") * 100;
         }
 
         // Calculate growth percentage
@@ -264,6 +266,12 @@ export default async function AdminDashboard() {
                                         </div>
                                         <div className="px-4 lg:px-6">
                                             <PageViewsChart />
+                                        </div>
+                                        <div className="px-4 lg:px-6">
+                                            <UsersDataTable data={allUsers} />
+                                        </div>
+                                        <div className="px-4 lg:px-6">
+                                            <PostsDataTable data={allPosts} />
                                         </div>
                                     </div>
                                 </div>

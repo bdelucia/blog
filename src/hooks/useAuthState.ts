@@ -84,6 +84,7 @@ export function useAuthState() {
                     if (mountedRef) {
                         setIsAuthenticated(false);
                         clearUser(); // Clear React Query cache
+                        console.log("User signed out, cleared all cached data");
                     }
                 }
             });

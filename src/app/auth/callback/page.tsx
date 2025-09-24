@@ -88,26 +88,116 @@ export default function AuthCallbackPage() {
                         );
 
                         if (userCheckResponse.ok) {
-                            // User exists in database - don't call create-user to avoid overriding data
+                            // User exists in database - check if the email matches
+                            const existingUserData =
+                                await userCheckResponse.json();
                             console.log(
-                                "User already exists in database - preserving existing data"
+                                "User already exists in database:",
+                                existingUserData.email
+                            );
+                            console.log(
+                                "New session user email:",
+                                data.session.user.email
                             );
 
-                            // Get the current user data from the response and update cache
-                            const userData = await userCheckResponse.json();
-                            console.log(
-                                "Raw user data from get-user API:",
-                                userData
-                            );
-                            console.log("User data structure:", {
-                                hasId: !!userData.id,
-                                hasEmail: !!userData.email,
-                                hasFullName: !!userData.fullName,
-                                hasAvatarUrl: !!userData.avatarUrl,
-                                fullName: userData.fullName,
-                                avatarUrl: userData.avatarUrl,
-                            });
-                            updateUserCache(userData);
+                            // If the emails match, update with latest Google data
+                            if (
+                                existingUserData.email ===
+                                data.session.user.email
+                            ) {
+                                console.log(
+                                    "Same user - updating with latest Google data"
+                                );
+
+                                const updatedUserData = {
+                                    userId: data.session.user.id,
+                                    email: data.session.user.email,
+                                    fullName:
+                                        data.session.user.user_metadata
+                                            ?.full_name ||
+                                        data.session.user.user_metadata?.name ||
+                                        data.session.user.user_metadata
+                                            ?.display_name ||
+                                        existingUserData.fullName,
+                                    avatarUrl:
+                                        data.session.user.user_metadata
+                                            ?.avatar_url ||
+                                        existingUserData.avatarUrl,
+                                };
+
+                                // Update the user record with latest Google data
+                                const updateResponse = await fetch(
+                                    "/api/auth/update-oauth-data",
+                                    {
+                                        method: "POST",
+                                        headers: {
+                                            "Content-Type": "application/json",
+                                        },
+                                        body: JSON.stringify(updatedUserData),
+                                    }
+                                );
+
+                                if (updateResponse.ok) {
+                                    const result = await updateResponse.json();
+                                    console.log(
+                                        "Updated user with Google data:",
+                                        result.user
+                                    );
+                                    updateUserCache(result.user);
+                                } else {
+                                    console.log(
+                                        "Failed to update user data, using existing data"
+                                    );
+                                    updateUserCache(existingUserData);
+                                }
+                            } else {
+                                // Different user - this is a different Google account
+                                console.log(
+                                    "Different Google account detected - creating new user record"
+                                );
+
+                                // Create a new user record for this different Google account
+                                const newUserData = {
+                                    userId: data.session.user.id,
+                                    email: data.session.user.email,
+                                    fullName:
+                                        data.session.user.user_metadata
+                                            ?.full_name ||
+                                        data.session.user.user_metadata?.name ||
+                                        data.session.user.user_metadata
+                                            ?.display_name ||
+                                        "User",
+                                    avatarUrl:
+                                        data.session.user.user_metadata
+                                            ?.avatar_url || null,
+                                };
+
+                                // Create the new user record
+                                const createResponse = await fetch(
+                                    "/api/auth/create-user",
+                                    {
+                                        method: "POST",
+                                        headers: {
+                                            "Content-Type": "application/json",
+                                        },
+                                        body: JSON.stringify(newUserData),
+                                    }
+                                );
+
+                                if (createResponse.ok) {
+                                    const result = await createResponse.json();
+                                    console.log(
+                                        "Created new user for different Google account:",
+                                        result.user
+                                    );
+                                    updateUserCache(result.user);
+                                } else {
+                                    console.error(
+                                        "Failed to create new user record"
+                                    );
+                                    updateUserCache(existingUserData);
+                                }
+                            }
                         } else {
                             // User doesn't exist - create new user record
                             const userData = {

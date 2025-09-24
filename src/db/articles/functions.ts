@@ -25,6 +25,7 @@ export interface Article {
     status: "draft" | "published";
     content: string | null;
     slug: string;
+    order: number | null;
     createdAt: string;
     updatedAt: string;
 }
@@ -99,6 +100,7 @@ export async function getAllPosts(): Promise<Article[]> {
     const { data, error } = await supabase
         .from("articles")
         .select("*")
+        .order("order", { ascending: true })
         .order("createdAt", { ascending: false });
 
     if (error) {

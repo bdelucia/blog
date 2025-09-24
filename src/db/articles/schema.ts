@@ -24,6 +24,7 @@ export const articles = pgTable("articles", {
     status: articleStatusEnum("status").notNull().default("draft"),
     content: text("content"), // MDX content - text type allows for large content
     slug: varchar("slug", { length: 255 }).notNull().unique(),
+    order: integer("order").default(0), // For drag and drop ordering
     createdAt: timestamp("createdAt", { withTimezone: true })
         .notNull()
         .defaultNow(),

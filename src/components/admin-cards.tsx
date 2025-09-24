@@ -47,7 +47,7 @@ export function AdminCards({ stats, analytics }: AdminCardsProps) {
                         />
                     </CardTitle>
                     <CardAction>
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="gap-2">
                             <IconTrendingUp />
                             {analytics?.uniqueVisitorsGrowth !== undefined
                                 ? `${
@@ -82,7 +82,7 @@ export function AdminCards({ stats, analytics }: AdminCardsProps) {
                         />
                     </CardTitle>
                     <CardAction>
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="gap-2">
                             <IconUsers />
                             {stats.adminUsers} admins
                         </Badge>
@@ -109,7 +109,7 @@ export function AdminCards({ stats, analytics }: AdminCardsProps) {
                         />
                     </CardTitle>
                     <CardAction>
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="gap-2">
                             <IconFileText />
                             {stats.draftPosts} drafts
                         </Badge>
@@ -136,7 +136,7 @@ export function AdminCards({ stats, analytics }: AdminCardsProps) {
                         />
                     </CardTitle>
                     <CardAction>
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="gap-2">
                             <IconEye />
                             {analytics?.bounceRate?.toFixed(1) || "42.3"}%
                             bounce
