@@ -153,7 +153,7 @@ export function AdminPostsList({
                                         </Button>
                                     </Link>
                                 </div>
-                                <Link href="/admin/posts/new-post">
+                                <Link href="/admin/posts/create-post">
                                     <Button className="bg-green-600 hover:bg-green-700 hover:cursor-pointer">
                                         <Plus className="w-4 h-4 mr-2" />
                                         New Post

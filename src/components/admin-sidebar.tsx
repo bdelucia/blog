@@ -76,7 +76,7 @@ export function AdminSidebar({
                                 tooltip="Quick Create"
                                 className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground cursor-pointer group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:px-1"
                             >
-                                <Link href="/admin/posts/new-post">
+                                <Link href="/admin/posts/create-post">
                                     <IconCirclePlusFilled />
                                     <span>Quick Create</span>
                                 </Link>
@@ -108,7 +108,7 @@ export function AdminSidebar({
                                 tooltip="Posts"
                                 className="cursor-pointer group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:px-1"
                             >
-                                <Link href="/admin/posts">
+                                <Link href="/admin">
                                     <IconFileText />
                                     <span>Posts</span>
                                 </Link>
