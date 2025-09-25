@@ -237,6 +237,8 @@ Resources:
                         ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:blog/supabase-url"
                       - Name: NEXT_PUBLIC_SUPABASE_ANON_KEY
                         ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:blog/supabase-anon-key"
+                      - Name: SUPABASE_SERVICE_ROLE_KEY
+                        ValueFrom: !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:blog/supabase-service-role-key"
                   LogConfiguration:
                       LogDriver: awslogs
                       Options:
