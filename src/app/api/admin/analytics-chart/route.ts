@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
 
         const { searchParams } = new URL(request.url);
         const days = parseInt(searchParams.get("days") || "90"); // Default to 90 days to get more data
+        const viewType = searchParams.get("viewType") || "cumulative"; // Default to cumulative
 
         // Google Analytics 4 Data API configuration
         const GA_PROPERTY_ID = process.env.GA_PROPERTY_ID;
@@ -75,7 +76,12 @@ export async function GET(request: NextRequest) {
         const gaData = await gaResponse.json();
 
         // Transform GA data to chart format
-        const chartData = transformGAData(gaData, startDateStr, endDateStr);
+        const chartData = transformGAData(
+            gaData,
+            startDateStr,
+            endDateStr,
+            viewType
+        );
 
         return NextResponse.json({
             success: true,
@@ -94,7 +100,12 @@ export async function GET(request: NextRequest) {
     }
 }
 
-function transformGAData(gaData: any, startDate: string, endDate: string) {
+function transformGAData(
+    gaData: any,
+    startDate: string,
+    endDate: string,
+    viewType: string
+) {
     const dataMap = new Map();
 
     // Initialize all dates with zero values
@@ -131,5 +142,27 @@ function transformGAData(gaData: any, startDate: string, endDate: string) {
         });
     }
 
-    return Array.from(dataMap.values());
+    // Convert to cumulative data
+    const sortedData = Array.from(dataMap.values()).sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    // Return daily data if viewType is "daily"
+    if (viewType === "daily") {
+        return sortedData;
+    }
+
+    // Convert to cumulative data for "cumulative" view
+    let cumulativeDesktop = 0;
+    let cumulativeMobile = 0;
+
+    return sortedData.map((item) => {
+        cumulativeDesktop += item.desktop;
+        cumulativeMobile += item.mobile;
+        return {
+            date: item.date,
+            desktop: cumulativeDesktop,
+            mobile: cumulativeMobile,
+        };
+    });
 }

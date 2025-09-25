@@ -26,6 +26,8 @@ interface AdminDashboardClientProps {
         publishedPosts: number;
         totalPosts: number;
         draftPosts: number;
+        weeklyUsersGained: number;
+        weeklyUsers: any[];
     };
     analytics: {
         uniqueVisitors: number;
@@ -33,6 +35,8 @@ interface AdminDashboardClientProps {
         sessions: number;
         bounceRate: number;
         uniqueVisitorsGrowth: number;
+        weeklyVisitorsGained: number;
+        weeklyPageViewsGained: number;
     };
     allUsers: any[];
     allPosts: Article[];

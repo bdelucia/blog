@@ -25,6 +25,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface ChartDataPoint {
@@ -54,6 +55,9 @@ const chartConfig = {
 export function AnalyticsChart({ className }: AnalyticsChartProps) {
     const isMobile = useIsMobile();
     const [timeRange, setTimeRange] = React.useState("30d");
+    const [viewType, setViewType] = React.useState<"cumulative" | "daily">(
+        "cumulative"
+    );
     const [chartData, setChartData] = React.useState<ChartDataPoint[]>([]);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
@@ -73,36 +77,39 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
     };
 
     // Fetch chart data
-    const fetchChartData = React.useCallback(async (days: number) => {
-        try {
-            setLoading(true);
-            setError(null);
+    const fetchChartData = React.useCallback(
+        async (days: number, viewType: "cumulative" | "daily") => {
+            try {
+                setLoading(true);
+                setError(null);
 
-            const response = await fetch(
-                `/api/admin/analytics-chart?days=${days}`
-            );
-            const result = await response.json();
+                const response = await fetch(
+                    `/api/admin/analytics-chart?days=${days}&viewType=${viewType}`
+                );
+                const result = await response.json();
 
-            if (result.success) {
-                setChartData(result.data);
-            } else {
-                throw new Error("Failed to fetch analytics data");
+                if (result.success) {
+                    setChartData(result.data);
+                } else {
+                    throw new Error("Failed to fetch analytics data");
+                }
+            } catch (err) {
+                console.error("Error fetching chart data:", err);
+                setError("Failed to load analytics data");
+                // Set empty data on error
+                setChartData([]);
+            } finally {
+                setLoading(false);
             }
-        } catch (err) {
-            console.error("Error fetching chart data:", err);
-            setError("Failed to load analytics data");
-            // Set empty data on error
-            setChartData([]);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+        },
+        []
+    );
 
-    // Fetch data when time range changes
+    // Fetch data when time range or view type changes
     React.useEffect(() => {
         const days = getDaysFromRange(timeRange);
-        fetchChartData(days);
-    }, [timeRange, fetchChartData]);
+        fetchChartData(days, viewType);
+    }, [timeRange, viewType, fetchChartData]);
 
     // Set default time range for mobile
     React.useEffect(() => {
@@ -129,7 +136,11 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
         return (
             <Card className={`@container/card ${className}`}>
                 <CardHeader>
-                    <CardTitle>Total Visitors</CardTitle>
+                    <CardTitle>
+                        {viewType === "cumulative"
+                            ? "Cumulative Visitors"
+                            : "Daily Visitors"}
+                    </CardTitle>
                     <CardDescription>Loading analytics data...</CardDescription>
                 </CardHeader>
                 <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
@@ -147,7 +158,11 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
         return (
             <Card className={`@container/card ${className}`}>
                 <CardHeader>
-                    <CardTitle>Total Visitors</CardTitle>
+                    <CardTitle>
+                        {viewType === "cumulative"
+                            ? "Cumulative Visitors"
+                            : "Daily Visitors"}
+                    </CardTitle>
                     <CardDescription className="text-destructive">
                         {error}
                     </CardDescription>
@@ -167,7 +182,11 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
         return (
             <Card className={`@container/card ${className}`}>
                 <CardHeader>
-                    <CardTitle>Total Visitors</CardTitle>
+                    <CardTitle>
+                        {viewType === "cumulative"
+                            ? "Cumulative Visitors"
+                            : "Daily Visitors"}
+                    </CardTitle>
                     <CardDescription>
                         No analytics data available. Configure Google Analytics
                         to view visitor data.
@@ -187,10 +206,15 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
     return (
         <Card className={`@container/card ${className}`}>
             <CardHeader>
-                <CardTitle>Total Visitors</CardTitle>
+                <CardTitle>
+                    {viewType === "cumulative"
+                        ? "Cumulative Visitors"
+                        : "Daily Visitors"}
+                </CardTitle>
                 <CardDescription>
                     <span className="hidden @[540px]/card:block">
-                        Total for the last{" "}
+                        {viewType === "cumulative" ? "Cumulative" : "Daily"}{" "}
+                        visitors for the last{" "}
                         {timeRange === "7d"
                             ? "7 days"
                             : timeRange === "30d"
@@ -207,52 +231,93 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
                     </span>
                 </CardDescription>
                 <CardAction>
-                    <ToggleGroup
-                        type="single"
-                        value={timeRange}
-                        onValueChange={setTimeRange}
-                        variant="outline"
-                        className="hidden *:data-[slot=toggle-group-item]:!px-4 @[767px]/card:flex"
-                    >
-                        <ToggleGroupItem value="90d" className="cursor-pointer">
-                            Last 3 months
-                        </ToggleGroupItem>
-                        <ToggleGroupItem value="30d" className="cursor-pointer">
-                            Last 30 days
-                        </ToggleGroupItem>
-                        <ToggleGroupItem value="7d" className="cursor-pointer">
-                            Last 7 days
-                        </ToggleGroupItem>
-                    </ToggleGroup>
-                    <Select value={timeRange} onValueChange={setTimeRange}>
-                        <SelectTrigger
-                            className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
-                            size="sm"
-                            aria-label="Select a value"
+                    <div className="flex items-center gap-2">
+                        <ToggleGroup
+                            type="single"
+                            value={timeRange}
+                            onValueChange={setTimeRange}
+                            variant="outline"
+                            className="hidden *:data-[slot=toggle-group-item]:!px-4 @[767px]/card:flex"
                         >
-                            <SelectValue placeholder="Last 30 days" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                            <SelectItem
+                            <ToggleGroupItem
                                 value="90d"
-                                className="rounded-lg cursor-pointer"
+                                className="cursor-pointer"
                             >
                                 Last 3 months
-                            </SelectItem>
-                            <SelectItem
+                            </ToggleGroupItem>
+                            <ToggleGroupItem
                                 value="30d"
-                                className="rounded-lg cursor-pointer"
+                                className="cursor-pointer"
                             >
                                 Last 30 days
-                            </SelectItem>
-                            <SelectItem
+                            </ToggleGroupItem>
+                            <ToggleGroupItem
                                 value="7d"
-                                className="rounded-lg cursor-pointer"
+                                className="cursor-pointer"
                             >
                                 Last 7 days
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
+                            </ToggleGroupItem>
+                        </ToggleGroup>
+                        <div className="hidden @[767px]/card:flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">
+                                {viewType === "cumulative"
+                                    ? "📈 Cumulative"
+                                    : "📊 Daily"}
+                            </span>
+                            <Switch
+                                checked={viewType === "cumulative"}
+                                onCheckedChange={(checked) =>
+                                    setViewType(
+                                        checked ? "cumulative" : "daily"
+                                    )
+                                }
+                            />
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 @[767px]/card:hidden">
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">
+                                {viewType === "cumulative" ? "📈" : "📊"}
+                            </span>
+                            <Switch
+                                checked={viewType === "cumulative"}
+                                onCheckedChange={(checked) =>
+                                    setViewType(
+                                        checked ? "cumulative" : "daily"
+                                    )
+                                }
+                            />
+                        </div>
+                        <Select value={timeRange} onValueChange={setTimeRange}>
+                            <SelectTrigger
+                                className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate"
+                                size="sm"
+                                aria-label="Select a value"
+                            >
+                                <SelectValue placeholder="Last 30 days" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                                <SelectItem
+                                    value="90d"
+                                    className="rounded-lg cursor-pointer"
+                                >
+                                    Last 3 months
+                                </SelectItem>
+                                <SelectItem
+                                    value="30d"
+                                    className="rounded-lg cursor-pointer"
+                                >
+                                    Last 30 days
+                                </SelectItem>
+                                <SelectItem
+                                    value="7d"
+                                    className="rounded-lg cursor-pointer"
+                                >
+                                    Last 7 days
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </CardAction>
             </CardHeader>
             <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">

@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
 
         const { searchParams } = new URL(request.url);
         const days = parseInt(searchParams.get("days") || "90"); // Default to 90 days to get more data
+        const viewType = searchParams.get("viewType") || "cumulative"; // Default to cumulative
 
         // Google Analytics 4 Data API configuration
         const GA_PROPERTY_ID = process.env.GA_PROPERTY_ID;
@@ -78,7 +79,8 @@ export async function GET(request: NextRequest) {
         const chartData = transformGAPageViewsData(
             gaData,
             startDateStr,
-            endDateStr
+            endDateStr,
+            viewType
         );
 
         return NextResponse.json({
@@ -101,7 +103,8 @@ export async function GET(request: NextRequest) {
 function transformGAPageViewsData(
     gaData: any,
     startDate: string,
-    endDate: string
+    endDate: string,
+    viewType: string
 ) {
     const dataMap = new Map();
 
@@ -133,5 +136,24 @@ function transformGAPageViewsData(
         });
     }
 
-    return Array.from(dataMap.values());
+    // Convert to cumulative data
+    const sortedData = Array.from(dataMap.values()).sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    // Return daily data if viewType is "daily"
+    if (viewType === "daily") {
+        return sortedData;
+    }
+
+    // Convert to cumulative data for "cumulative" view
+    let cumulativePageViews = 0;
+
+    return sortedData.map((item) => {
+        cumulativePageViews += item.pageViews;
+        return {
+            date: item.date,
+            pageViews: cumulativePageViews,
+        };
+    });
 }
