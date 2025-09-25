@@ -378,8 +378,8 @@ export function PostsDataTable({ data: initialData }: PostsDataTableProps) {
         <Card>
             <CardHeader>
                 <CardTitle>Posts</CardTitle>
-                <div className="flex items-center justify-between mt-4">
-                    <div className="flex items-center space-x-2">
+                <div className="flex flex-col [@media(min-width:1050px)]:flex-row [@media(min-width:1050px)]:items-center [@media(min-width:1050px)]:justify-between mt-4 gap-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-2">
                         <Input
                             placeholder="Filter posts..."
                             value={
@@ -392,7 +392,7 @@ export function PostsDataTable({ data: initialData }: PostsDataTableProps) {
                                     .getColumn("title")
                                     ?.setFilterValue(event.target.value)
                             }
-                            className="max-w-sm"
+                            className="w-full sm:w-auto sm:max-w-sm [@media(min-width:1050px)]:max-w-sm"
                         />
                         <Select
                             value={
@@ -408,7 +408,7 @@ export function PostsDataTable({ data: initialData }: PostsDataTableProps) {
                                     )
                             }
                         >
-                            <SelectTrigger className="w-[180px]">
+                            <SelectTrigger className="w-full sm:w-[140px] [@media(min-width:1050px)]:w-[180px]">
                                 <SelectValue placeholder="All statuses" />
                             </SelectTrigger>
                             <SelectContent>
@@ -425,10 +425,12 @@ export function PostsDataTable({ data: initialData }: PostsDataTableProps) {
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="outline"
-                                    className="cursor-pointer"
+                                    className="cursor-pointer w-full sm:w-auto"
                                 >
                                     <IconLayoutColumns className="mr-2 h-4 w-4" />
-                                    View
+                                    <span className="hidden sm:inline">
+                                        View
+                                    </span>
                                     <IconChevronDown className="ml-2 h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
@@ -457,7 +459,7 @@ export function PostsDataTable({ data: initialData }: PostsDataTableProps) {
                     </div>
                     <Button
                         onClick={() => router.push("/admin/posts/create-post")}
-                        className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground cursor-pointer"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground cursor-pointer w-full sm:w-auto"
                     >
                         <IconCirclePlusFilled className="w-4 h-4 mr-2" />
                         Create Post

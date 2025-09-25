@@ -35,6 +35,11 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface AppSidebarProps {
     user?: {
@@ -116,14 +121,21 @@ export function AppSidebar({
                     </Link>
 
                     {/* Home Icon for Collapsed State */}
-                    <Link
-                        href="/"
-                        className="group-data-[collapsible=icon]:block hidden"
-                    >
-                        <div className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-accent">
-                            <IconHome className="w-4 h-4" />
-                        </div>
-                    </Link>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Link
+                                href="/"
+                                className="group-data-[collapsible=icon]:block hidden"
+                            >
+                                <div className="flex items-center justify-center w-8 h-8 rounded-md hover:bg-accent">
+                                    <IconHome className="w-4 h-4" />
+                                </div>
+                            </Link>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                            <p>Go to Home</p>
+                        </TooltipContent>
+                    </Tooltip>
                 </div>
             </SidebarHeader>
             <SidebarContent>
