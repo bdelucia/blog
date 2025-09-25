@@ -8,6 +8,7 @@ import { DashboardEditPostForm } from "./DashboardEditPostForm";
 import { useEffect, useState } from "react";
 import { Article } from "@/db/articles/functions";
 import { getPost } from "@/data/blog";
+import { LoadingSpinner } from "@/components/ui/spinner";
 
 interface AdminSPAContentProps {
     stats: {
@@ -131,7 +132,10 @@ export function AdminSPAContent({
                         <AdminDashboardHeader />
                         <div className="flex flex-1 flex-col relative z-10">
                             <div className="flex items-center justify-center h-full">
-                                <p className="text-gray-500">Loading...</p>
+                                <LoadingSpinner
+                                    text="Loading post..."
+                                    size="lg"
+                                />
                             </div>
                         </div>
                     </>

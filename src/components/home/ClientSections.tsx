@@ -247,7 +247,10 @@ export function ClientSections({ posts, allTags }: ClientSectionsProps) {
 
                                                         {/* Read button */}
                                                         <div className="flex justify-end min-h-[20px]">
-                                                            <div className="flex items-center text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors cursor-pointer">
+                                                            <a
+                                                                href={`/${post.slug}`}
+                                                                className="flex items-center text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors cursor-pointer"
+                                                            >
                                                                 <span>
                                                                     Read
                                                                 </span>
@@ -266,7 +269,7 @@ export function ClientSections({ posts, allTags }: ClientSectionsProps) {
                                                                         d="M9 5l7 7-7 7"
                                                                     />
                                                                 </svg>
-                                                            </div>
+                                                            </a>
                                                         </div>
                                                     </div>
                                                 </div>

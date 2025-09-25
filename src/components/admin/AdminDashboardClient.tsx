@@ -369,13 +369,6 @@ export function AdminDashboardClient({
                     <h2 className="text-lg font-semibold">
                         Dashboard Overview
                     </h2>
-                    <Button
-                        onClick={() => router.push("/admin/posts/create-post")}
-                        className="bg-green-600 hover:bg-green-700 hover:cursor-pointer"
-                    >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create Post
-                    </Button>
                 </div>
             </div>
             <AdminCards stats={stats} analytics={analytics} />

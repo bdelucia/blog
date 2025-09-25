@@ -21,6 +21,7 @@ import {
     IconLayoutColumns,
     IconDotsVertical,
     IconGripVertical,
+    IconCirclePlusFilled,
 } from "@tabler/icons-react";
 import {
     closestCenter,
@@ -377,7 +378,7 @@ export function PostsDataTable({ data: initialData }: PostsDataTableProps) {
         <Card>
             <CardHeader>
                 <CardTitle>Posts</CardTitle>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center space-x-2">
                         <Input
                             placeholder="Filter posts..."
@@ -420,13 +421,10 @@ export function PostsDataTable({ data: initialData }: PostsDataTableProps) {
                                 <SelectItem value="draft">Draft</SelectItem>
                             </SelectContent>
                         </Select>
-                    </div>
-                    <div className="flex items-center space-x-2">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
                                     variant="outline"
-                                    size="sm"
                                     className="cursor-pointer"
                                 >
                                     <IconLayoutColumns className="mr-2 h-4 w-4" />
@@ -457,6 +455,13 @@ export function PostsDataTable({ data: initialData }: PostsDataTableProps) {
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>
+                    <Button
+                        onClick={() => router.push("/admin/posts/create-post")}
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground cursor-pointer"
+                    >
+                        <IconCirclePlusFilled className="w-4 h-4 mr-2" />
+                        Create Post
+                    </Button>
                 </div>
             </CardHeader>
             <CardContent>

@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 import {
     validateCreateUser,
     validateUpdateUser,
@@ -138,11 +139,15 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 }
 
 export async function getAllUsers(): Promise<User[]> {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
     const { data, error } = await supabase
         .from("users")
         .select("*")
         .order("created_at", { ascending: false });
+
+    console.log("getAllUsers: Raw data from Supabase:", data);
+    console.log("getAllUsers: Error from Supabase:", error);
+    console.log("getAllUsers: Data count:", data?.length || 0);
 
     if (error) {
         console.error("Error fetching users:", error);
@@ -150,7 +155,7 @@ export async function getAllUsers(): Promise<User[]> {
     }
 
     // Map database column names to interface field names
-    return (data || []).map((user) => ({
+    const mappedUsers = (data || []).map((user) => ({
         id: user.id,
         email: user.email,
         fullName: user.full_name,
@@ -159,11 +164,14 @@ export async function getAllUsers(): Promise<User[]> {
         createdAt: user.created_at,
         updatedAt: user.updated_at,
     }));
+
+    console.log("getAllUsers: Mapped users:", mappedUsers);
+    return mappedUsers;
 }
 
 export async function getUsersByRole(role: "admin" | "user"): Promise<User[]> {
     try {
-        const supabase = await createClient();
+        const supabase = createAdminClient();
         const { data, error } = await supabase
             .from("users")
             .select("*")
