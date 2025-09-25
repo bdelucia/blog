@@ -16,6 +16,8 @@ import {
     CardTitle,
 } from "@/components/ui/card";
 import { NumberTicker } from "@/components/ui/number-ticker";
+import { AvatarCircles } from "@/components/ui/avatar-circles";
+import { User } from "@/db/users/functions";
 
 interface AdminCardsProps {
     stats: {
@@ -23,6 +25,8 @@ interface AdminCardsProps {
         adminUsers: number;
         publishedPosts: number;
         draftPosts: number;
+        weeklyUsersGained: number;
+        weeklyUsers: User[];
     };
     analytics?: {
         uniqueVisitors: number;
@@ -30,6 +34,8 @@ interface AdminCardsProps {
         sessions: number;
         bounceRate: number;
         uniqueVisitorsGrowth?: number;
+        weeklyVisitorsGained?: number;
+        weeklyPageViewsGained?: number;
     };
 }
 
@@ -45,16 +51,15 @@ export function AdminCards({ stats, analytics }: AdminCardsProps) {
                             value={analytics?.uniqueVisitors || 1247}
                             className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl"
                         />
+                        <sup className="text-sm font-medium text-green-600 dark:text-green-400 ml-1 -mt-2">
+                            +{analytics?.weeklyVisitorsGained || 0}
+                        </sup>
                     </CardTitle>
-                    <CardAction>
+                    <CardAction className="flex gap-2">
                         <Badge variant="outline" className="gap-2">
                             <IconTrendingUp />
                             {analytics?.uniqueVisitorsGrowth !== undefined
-                                ? `${
-                                      analytics.uniqueVisitorsGrowth >= 0
-                                          ? "+"
-                                          : ""
-                                  }${analytics.uniqueVisitorsGrowth.toFixed(
+                                ? `+${analytics.uniqueVisitorsGrowth.toFixed(
                                       1
                                   )}%`
                                 : "+12.5%"}
@@ -66,7 +71,11 @@ export function AdminCards({ stats, analytics }: AdminCardsProps) {
                         Growing audience <IconTrendingUp className="size-4" />
                     </div>
                     <div className="text-muted-foreground">
-                        Last 30 days from Google Analytics
+                        Visitors gained in the past week
+                    </div>
+                    <div className="text-green-600 dark:text-green-400 text-xs font-medium">
+                        +{analytics?.weeklyVisitorsGained || 0} visitors gained
+                        this week
                     </div>
                 </CardFooter>
             </Card>
@@ -80,12 +89,27 @@ export function AdminCards({ stats, analytics }: AdminCardsProps) {
                             value={stats.totalUsers}
                             className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl"
                         />
+                        <sup className="text-sm font-medium text-green-600 dark:text-green-400 ml-1 -mt-2">
+                            +{stats.weeklyUsersGained}
+                        </sup>
                     </CardTitle>
-                    <CardAction>
-                        <Badge variant="outline" className="gap-2">
-                            <IconUsers />
-                            {stats.adminUsers} admins
-                        </Badge>
+                    <CardAction className="flex gap-2">
+                        <div className="flex items-center gap-2">
+                            <AvatarCircles
+                                numPeople={Math.max(
+                                    0,
+                                    stats.weeklyUsersGained - 3
+                                )}
+                                avatarUrls={stats.weeklyUsers
+                                    .slice(0, 3)
+                                    .map((user) => ({
+                                        imageUrl:
+                                            user.avatarUrl ||
+                                            "/images/avatars/default-avatar.png",
+                                        profileUrl: "#",
+                                    }))}
+                            />
+                        </div>
                     </CardAction>
                 </CardHeader>
                 <CardFooter className="flex-col items-start gap-1.5 text-sm">
@@ -94,6 +118,44 @@ export function AdminCards({ stats, analytics }: AdminCardsProps) {
                     </div>
                     <div className="text-muted-foreground">
                         Platform user base
+                    </div>
+                    <div className="text-green-600 dark:text-green-400 text-xs font-medium">
+                        +{stats.weeklyUsersGained} users gained this week
+                    </div>
+                </CardFooter>
+            </Card>
+
+            {/* Page Views Card */}
+            <Card className="@container/card">
+                <CardHeader>
+                    <CardDescription>Page Views</CardDescription>
+                    <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+                        <NumberTicker
+                            value={analytics?.pageViews || 0}
+                            className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl"
+                        />
+                        <sup className="text-sm font-medium text-green-600 dark:text-green-400 ml-1 -mt-2">
+                            +{analytics?.weeklyPageViewsGained || 0}
+                        </sup>
+                    </CardTitle>
+                    <CardAction>
+                        <Badge variant="outline" className="gap-2">
+                            <IconEye />
+                            {analytics?.bounceRate?.toFixed(1) || "42.3"}%
+                            bounce
+                        </Badge>
+                    </CardAction>
+                </CardHeader>
+                <CardFooter className="flex-col items-start gap-1.5 text-sm">
+                    <div className="line-clamp-1 flex gap-2 font-medium">
+                        Content engagement <IconEye className="size-4" />
+                    </div>
+                    <div className="text-muted-foreground">
+                        Total page views last day
+                    </div>
+                    <div className="text-green-600 dark:text-green-400 text-xs font-medium">
+                        +{analytics?.weeklyPageViewsGained || 0} page views
+                        gained this week
                     </div>
                 </CardFooter>
             </Card>
@@ -121,34 +183,6 @@ export function AdminCards({ stats, analytics }: AdminCardsProps) {
                     </div>
                     <div className="text-muted-foreground">
                         Publicly available posts
-                    </div>
-                </CardFooter>
-            </Card>
-
-            {/* Page Views Card */}
-            <Card className="@container/card">
-                <CardHeader>
-                    <CardDescription>Page Views</CardDescription>
-                    <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                        <NumberTicker
-                            value={analytics?.pageViews || 3842}
-                            className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl"
-                        />
-                    </CardTitle>
-                    <CardAction>
-                        <Badge variant="outline" className="gap-2">
-                            <IconEye />
-                            {analytics?.bounceRate?.toFixed(1) || "42.3"}%
-                            bounce
-                        </Badge>
-                    </CardAction>
-                </CardHeader>
-                <CardFooter className="flex-col items-start gap-1.5 text-sm">
-                    <div className="line-clamp-1 flex gap-2 font-medium">
-                        Content engagement <IconEye className="size-4" />
-                    </div>
-                    <div className="text-muted-foreground">
-                        Total page views last 30 days
                     </div>
                 </CardFooter>
             </Card>

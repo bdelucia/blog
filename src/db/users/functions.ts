@@ -228,6 +228,53 @@ export async function getUsersByRole(role: "admin" | "user"): Promise<User[]> {
     }
 }
 
+export async function getUsersCreatedInLastWeek(): Promise<User[]> {
+    try {
+        // Try admin client first, fallback to regular client if service role key is missing
+        let supabase;
+        try {
+            supabase = createAdminClient();
+        } catch (adminError) {
+            console.log(
+                "Admin client failed, falling back to regular client:",
+                adminError
+            );
+            const { createClient } = await import("@/utils/supabase/server");
+            supabase = await createClient();
+        }
+
+        // Calculate date 7 days ago
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        const oneWeekAgoISO = oneWeekAgo.toISOString();
+
+        const { data, error } = await supabase
+            .from("users")
+            .select("*")
+            .gte("created_at", oneWeekAgoISO)
+            .order("created_at", { ascending: false });
+
+        if (error) {
+            console.error("Error fetching users created in last week:", error);
+            return [];
+        }
+
+        // Map database column names to interface field names
+        return (data || []).map((user) => ({
+            id: user.id,
+            email: user.email,
+            fullName: user.full_name,
+            avatarUrl: user.avatar_url,
+            role: user.role,
+            createdAt: user.created_at,
+            updatedAt: user.updated_at,
+        }));
+    } catch (error) {
+        console.error("Failed to fetch users created in last week:", error);
+        return [];
+    }
+}
+
 // CREATE operations
 export async function createUser(
     userData: CreateUserData

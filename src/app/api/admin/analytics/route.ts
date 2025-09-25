@@ -19,22 +19,27 @@ export async function GET() {
 
         // Calculate date ranges for current and previous periods
         const endDate = new Date();
-        const currentStartDate = new Date();
-        currentStartDate.setDate(currentStartDate.getDate() - 30);
+        const lastWeekStartDate = new Date();
+        lastWeekStartDate.setDate(lastWeekStartDate.getDate() - 7); // Last 7 days
 
-        const previousEndDate = new Date(currentStartDate);
-        previousEndDate.setDate(previousEndDate.getDate() - 1);
-        const previousStartDate = new Date(previousEndDate);
-        previousStartDate.setDate(previousStartDate.getDate() - 30);
+        // For total visitors, we'll use a longer period (last 30 days as a proxy for "recent total")
+        const totalVisitorsStartDate = new Date();
+        totalVisitorsStartDate.setDate(totalVisitorsStartDate.getDate() - 30);
 
-        const currentStartDateStr = currentStartDate
+        // For all-time comparison, we'll use a much longer period (last 365 days as proxy for all-time)
+        const allTimeStartDate = new Date();
+        allTimeStartDate.setDate(allTimeStartDate.getDate() - 365);
+
+        const lastWeekStartDateStr = lastWeekStartDate
             .toISOString()
             .split("T")[0];
         const currentEndDateStr = endDate.toISOString().split("T")[0];
-        const previousStartDateStr = previousStartDate
+        const totalVisitorsStartDateStr = totalVisitorsStartDate
             .toISOString()
             .split("T")[0];
-        const previousEndDateStr = previousEndDate.toISOString().split("T")[0];
+        const allTimeStartDateStr = allTimeStartDate
+            .toISOString()
+            .split("T")[0];
 
         // Create Google Auth client
         const { GoogleAuth } = await import("google-auth-library");
@@ -50,8 +55,8 @@ export async function GET() {
         const authClient = await auth.getClient();
         const accessToken = await authClient.getAccessToken();
 
-        // Fetch current period data
-        const currentResponse = await fetch(
+        // Fetch current period data (last 7 days)
+        const lastWeekResponse = await fetch(
             `https://analyticsdata.googleapis.com/v1beta/properties/${GA_PROPERTY_ID}:runReport`,
             {
                 method: "POST",
@@ -62,12 +67,12 @@ export async function GET() {
                 body: JSON.stringify({
                     dateRanges: [
                         {
-                            startDate: currentStartDateStr,
+                            startDate: lastWeekStartDateStr,
                             endDate: currentEndDateStr,
                         },
                     ],
                     metrics: [
-                        { name: "totalUsers" }, // Unique visitors
+                        { name: "totalUsers" }, // Unique visitors from last week
                         { name: "screenPageViews" }, // Page views
                         { name: "sessions" }, // Sessions
                         { name: "bounceRate" }, // Bounce rate
@@ -76,8 +81,8 @@ export async function GET() {
             }
         );
 
-        // Fetch previous period data for growth calculation
-        const previousResponse = await fetch(
+        // Fetch all-time data (last 365 days as proxy)
+        const allTimeResponse = await fetch(
             `https://analyticsdata.googleapis.com/v1beta/properties/${GA_PROPERTY_ID}:runReport`,
             {
                 method: "POST",
@@ -88,58 +93,102 @@ export async function GET() {
                 body: JSON.stringify({
                     dateRanges: [
                         {
-                            startDate: previousStartDateStr,
-                            endDate: previousEndDateStr,
+                            startDate: allTimeStartDateStr,
+                            endDate: currentEndDateStr,
                         },
                     ],
                     metrics: [
-                        { name: "totalUsers" }, // Unique visitors
+                        { name: "totalUsers" }, // All-time unique visitors
                     ],
                 }),
             }
         );
 
-        if (!currentResponse.ok || !previousResponse.ok) {
-            throw new Error(`GA API error: ${currentResponse.statusText}`);
+        // Fetch total visitors data (last 30 days as proxy for total)
+        const totalVisitorsResponse = await fetch(
+            `https://analyticsdata.googleapis.com/v1beta/properties/${GA_PROPERTY_ID}:runReport`,
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${accessToken.token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    dateRanges: [
+                        {
+                            startDate: totalVisitorsStartDateStr,
+                            endDate: currentEndDateStr,
+                        },
+                    ],
+                    metrics: [
+                        { name: "totalUsers" }, // Total unique visitors
+                        { name: "screenPageViews" }, // Total page views
+                    ],
+                }),
+            }
+        );
+
+        if (
+            !lastWeekResponse.ok ||
+            !allTimeResponse.ok ||
+            !totalVisitorsResponse.ok
+        ) {
+            throw new Error(`GA API error: ${lastWeekResponse.statusText}`);
         }
 
-        const currentData = await currentResponse.json();
-        const previousData = await previousResponse.json();
+        const lastWeekData = await lastWeekResponse.json();
+        const allTimeData = await allTimeResponse.json();
+        const totalVisitorsData = await totalVisitorsResponse.json();
 
-        // Extract current period data
-        let uniqueVisitors = 0;
+        // Extract data
+        let lastWeekVisitors = 0;
         let pageViews = 0;
         let sessions = 0;
         let bounceRate = 0;
-        let uniqueVisitorsGrowth = 0;
+        let totalVisitors = 0;
+        let allTimeVisitors = 0;
+        let allTimeGrowthPercentage = 0;
+        let weeklyPageViews = 0;
 
-        if (currentData.rows && currentData.rows.length > 0) {
-            const row = currentData.rows[0];
-            uniqueVisitors = parseInt(row.metricValues[0]?.value || "0");
-            pageViews = parseInt(row.metricValues[1]?.value || "0");
+        if (lastWeekData.rows && lastWeekData.rows.length > 0) {
+            const row = lastWeekData.rows[0];
+            lastWeekVisitors = parseInt(row.metricValues[0]?.value || "0");
+            weeklyPageViews = parseInt(row.metricValues[1]?.value || "0");
             sessions = parseInt(row.metricValues[2]?.value || "0");
             bounceRate = parseFloat(row.metricValues[3]?.value || "0") * 100;
         }
 
-        // Calculate growth percentage
-        if (previousData.rows && previousData.rows.length > 0) {
-            const previousUniqueVisitors = parseInt(
-                previousData.rows[0].metricValues[0]?.value || "0"
+        // Extract total visitors data
+        if (totalVisitorsData.rows && totalVisitorsData.rows.length > 0) {
+            totalVisitors = parseInt(
+                totalVisitorsData.rows[0].metricValues[0]?.value || "0"
             );
-            if (previousUniqueVisitors > 0) {
-                uniqueVisitorsGrowth =
-                    ((uniqueVisitors - previousUniqueVisitors) /
-                        previousUniqueVisitors) *
-                    100;
-            }
+            pageViews = parseInt(
+                totalVisitorsData.rows[0].metricValues[1]?.value || "0"
+            );
+        }
+
+        // Extract all-time visitors data
+        if (allTimeData.rows && allTimeData.rows.length > 0) {
+            allTimeVisitors = parseInt(
+                allTimeData.rows[0].metricValues[0]?.value || "0"
+            );
+        }
+
+        // Calculate growth percentage (last week vs all-time)
+        if (allTimeVisitors > 0) {
+            allTimeGrowthPercentage =
+                (lastWeekVisitors / allTimeVisitors) * 100;
         }
 
         return NextResponse.json({
-            uniqueVisitors,
+            uniqueVisitors: totalVisitors, // Return total visitors as the main number
             pageViews,
             sessions,
             bounceRate,
-            uniqueVisitorsGrowth,
+            uniqueVisitorsGrowth: allTimeGrowthPercentage, // Last week vs all-time percentage
+            weeklyVisitorsGained: lastWeekVisitors, // Last week visitors count
+            weeklyPageViewsGained: weeklyPageViews, // Last week page views count
         });
     } catch (error) {
         console.error("Error fetching analytics summary:", error);
@@ -149,6 +198,8 @@ export async function GET() {
             sessions: 0,
             bounceRate: 0,
             uniqueVisitorsGrowth: 0,
+            weeklyVisitorsGained: 0,
+            weeklyPageViewsGained: 0,
         });
     }
 }

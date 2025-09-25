@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Article } from "@/db/articles/functions";
+import { User } from "@/db/users/functions";
 
 interface AdminStats {
     totalUsers: number;
@@ -10,6 +11,8 @@ interface AdminStats {
     publishedPosts: number;
     totalPosts: number;
     draftPosts: number;
+    weeklyUsersGained: number;
+    weeklyUsers: User[];
 }
 
 interface AnalyticsSummary {
@@ -18,6 +21,8 @@ interface AnalyticsSummary {
     sessions: number;
     bounceRate: number;
     uniqueVisitorsGrowth: number;
+    weeklyVisitorsGained: number;
+    weeklyPageViewsGained: number;
 }
 
 interface AdminData {

@@ -1,19 +1,30 @@
 import { NextResponse } from "next/server";
-import { getAllUsers, getUsersByRole } from "@/db/users/functions";
+import {
+    getAllUsers,
+    getUsersByRole,
+    getUsersCreatedInLastWeek,
+} from "@/db/users/functions";
 import { getBlogPosts, getAllPosts } from "@/db/articles/functions";
 
 export async function GET() {
     try {
         console.log("Admin stats API: Starting data fetch...");
 
-        const [allUsers, adminUsers, regularUsers, publishedPosts, allPosts] =
-            await Promise.all([
-                getAllUsers(),
-                getUsersByRole("admin"),
-                getUsersByRole("user"),
-                getBlogPosts(),
-                getAllPosts(),
-            ]);
+        const [
+            allUsers,
+            adminUsers,
+            regularUsers,
+            publishedPosts,
+            allPosts,
+            weeklyUsers,
+        ] = await Promise.all([
+            getAllUsers(),
+            getUsersByRole("admin"),
+            getUsersByRole("user"),
+            getBlogPosts(),
+            getAllPosts(),
+            getUsersCreatedInLastWeek(),
+        ]);
 
         console.log("Admin stats API: Data fetched successfully");
         console.log("Admin stats API: Users count:", allUsers.length);
@@ -26,6 +37,8 @@ export async function GET() {
             publishedPosts: publishedPosts.length,
             totalPosts: allPosts.length,
             draftPosts: allPosts.length - publishedPosts.length,
+            weeklyUsersGained: weeklyUsers.length,
+            weeklyUsers: weeklyUsers, // Include the actual user data
         };
 
         return NextResponse.json(stats);
