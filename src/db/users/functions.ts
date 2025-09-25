@@ -139,39 +139,68 @@ export async function getUserByEmail(email: string): Promise<User | null> {
 }
 
 export async function getAllUsers(): Promise<User[]> {
-    const supabase = createAdminClient();
-    const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .order("created_at", { ascending: false });
+    try {
+        // Try admin client first, fallback to regular client if service role key is missing
+        let supabase;
+        try {
+            supabase = createAdminClient();
+        } catch (adminError) {
+            console.log(
+                "Admin client failed, falling back to regular client:",
+                adminError
+            );
+            const { createClient } = await import("@/utils/supabase/server");
+            supabase = await createClient();
+        }
 
-    console.log("getAllUsers: Raw data from Supabase:", data);
-    console.log("getAllUsers: Error from Supabase:", error);
-    console.log("getAllUsers: Data count:", data?.length || 0);
+        const { data, error } = await supabase
+            .from("users")
+            .select("*")
+            .order("created_at", { ascending: false });
 
-    if (error) {
-        console.error("Error fetching users:", error);
+        console.log("getAllUsers: Raw data from Supabase:", data);
+        console.log("getAllUsers: Error from Supabase:", error);
+        console.log("getAllUsers: Data count:", data?.length || 0);
+
+        if (error) {
+            console.error("Error fetching users:", error);
+            return [];
+        }
+
+        // Map database column names to interface field names
+        const mappedUsers = (data || []).map((user) => ({
+            id: user.id,
+            email: user.email,
+            fullName: user.full_name,
+            avatarUrl: user.avatar_url,
+            role: user.role,
+            createdAt: user.created_at,
+            updatedAt: user.updated_at,
+        }));
+
+        console.log("getAllUsers: Mapped users:", mappedUsers);
+        return mappedUsers;
+    } catch (error) {
+        console.error("Failed to fetch users:", error);
         return [];
     }
-
-    // Map database column names to interface field names
-    const mappedUsers = (data || []).map((user) => ({
-        id: user.id,
-        email: user.email,
-        fullName: user.full_name,
-        avatarUrl: user.avatar_url,
-        role: user.role,
-        createdAt: user.created_at,
-        updatedAt: user.updated_at,
-    }));
-
-    console.log("getAllUsers: Mapped users:", mappedUsers);
-    return mappedUsers;
 }
 
 export async function getUsersByRole(role: "admin" | "user"): Promise<User[]> {
     try {
-        const supabase = createAdminClient();
+        // Try admin client first, fallback to regular client if service role key is missing
+        let supabase;
+        try {
+            supabase = createAdminClient();
+        } catch (adminError) {
+            console.log(
+                "Admin client failed, falling back to regular client:",
+                adminError
+            );
+            const { createClient } = await import("@/utils/supabase/server");
+            supabase = await createClient();
+        }
+
         const { data, error } = await supabase
             .from("users")
             .select("*")
@@ -194,7 +223,7 @@ export async function getUsersByRole(role: "admin" | "user"): Promise<User[]> {
             updatedAt: user.updated_at,
         }));
     } catch (error) {
-        console.error("Unexpected error fetching users by role:", error);
+        console.error("Failed to fetch users by role:", error);
         return [];
     }
 }

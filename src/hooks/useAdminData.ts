@@ -51,13 +51,25 @@ export function useAdminData() {
                     fetch("/api/admin/posts"),
                 ]);
 
-                if (
-                    !statsResponse.ok ||
-                    !analyticsResponse.ok ||
-                    !usersResponse.ok ||
-                    !postsResponse.ok
-                ) {
-                    throw new Error("Failed to fetch admin data");
+                // Check each response individually to provide specific error details
+                const responses = [
+                    { name: "stats", response: statsResponse },
+                    { name: "analytics", response: analyticsResponse },
+                    { name: "users", response: usersResponse },
+                    { name: "posts", response: postsResponse },
+                ];
+
+                const failedResponses = responses.filter((r) => !r.response.ok);
+                if (failedResponses.length > 0) {
+                    const errorDetails = failedResponses
+                        .map(
+                            (r) =>
+                                `${r.name}: ${r.response.status} ${r.response.statusText}`
+                        )
+                        .join(", ");
+                    throw new Error(
+                        `Failed to fetch admin data - ${errorDetails}`
+                    );
                 }
 
                 const [stats, analytics, allUsers, allPosts] =
