@@ -1,9 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { Line, LineChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import {
+    Line,
+    LineChart,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    XAxis,
+    YAxis,
+} from "recharts";
 
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePageViewsChartData } from "@/hooks/usePageViewsChartData";
+import { TrendingUp, BarChart3 } from "lucide-react";
 import {
     Card,
     CardAction,
@@ -50,9 +60,6 @@ export function PageViewsChart({ className }: PageViewsChartProps) {
     const [viewType, setViewType] = React.useState<"cumulative" | "daily">(
         "cumulative"
     );
-    const [chartData, setChartData] = React.useState<PageViewsDataPoint[]>([]);
-    const [loading, setLoading] = React.useState(true);
-    const [error, setError] = React.useState<string | null>(null);
 
     // Convert time range to days
     const getDaysFromRange = (range: string) => {
@@ -68,40 +75,12 @@ export function PageViewsChart({ className }: PageViewsChartProps) {
         }
     };
 
-    // Fetch chart data
-    const fetchChartData = React.useCallback(
-        async (days: number, viewType: "cumulative" | "daily") => {
-            try {
-                setLoading(true);
-                setError(null);
-
-                const response = await fetch(
-                    `/api/admin/page-views?days=${days}&viewType=${viewType}`
-                );
-                const result = await response.json();
-
-                if (result.success) {
-                    setChartData(result.data);
-                } else {
-                    throw new Error("Failed to fetch page views data");
-                }
-            } catch (err) {
-                console.error("Error fetching page views data:", err);
-                setError("Failed to load page views data");
-                // Set empty data on error
-                setChartData([]);
-            } finally {
-                setLoading(false);
-            }
-        },
-        []
-    );
-
-    // Fetch data when time range or view type changes
-    React.useEffect(() => {
-        const days = getDaysFromRange(timeRange);
-        fetchChartData(days, viewType);
-    }, [timeRange, viewType, fetchChartData]);
+    const days = getDaysFromRange(timeRange);
+    const {
+        data: chartData = [],
+        isLoading,
+        error,
+    } = usePageViewsChartData(days, viewType);
 
     // Set default time range for mobile
     React.useEffect(() => {
@@ -124,7 +103,7 @@ export function PageViewsChart({ className }: PageViewsChartProps) {
         return date >= startDate;
     });
 
-    if (loading) {
+    if (isLoading) {
         return (
             <Card className={`@container/card ${className}`}>
                 <CardHeader>
@@ -158,7 +137,9 @@ export function PageViewsChart({ className }: PageViewsChartProps) {
                             : "Daily Page Views"}
                     </CardTitle>
                     <CardDescription className="text-destructive">
-                        {error}
+                        {error instanceof Error
+                            ? error.message
+                            : "Failed to load page views data"}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
@@ -226,6 +207,21 @@ export function PageViewsChart({ className }: PageViewsChartProps) {
                 </CardDescription>
                 <CardAction>
                     <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2">
+                            {viewType === "cumulative" ? (
+                                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                            )}
+                            <Switch
+                                checked={viewType === "cumulative"}
+                                onCheckedChange={(checked) =>
+                                    setViewType(
+                                        checked ? "cumulative" : "daily"
+                                    )
+                                }
+                            />
+                        </div>
                         <ToggleGroup
                             type="single"
                             value={timeRange}
@@ -252,66 +248,36 @@ export function PageViewsChart({ className }: PageViewsChartProps) {
                                 Last 7 days
                             </ToggleGroupItem>
                         </ToggleGroup>
-                        <div className="hidden @[767px]/card:flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">
-                                {viewType === "cumulative"
-                                    ? "📈 Cumulative"
-                                    : "📊 Daily"}
-                            </span>
-                            <Switch
-                                checked={viewType === "cumulative"}
-                                onCheckedChange={(checked) =>
-                                    setViewType(
-                                        checked ? "cumulative" : "daily"
-                                    )
-                                }
-                            />
-                        </div>
                     </div>
-                    <div className="flex items-center gap-2 @[767px]/card:hidden">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">
-                                {viewType === "cumulative" ? "📈" : "📊"}
-                            </span>
-                            <Switch
-                                checked={viewType === "cumulative"}
-                                onCheckedChange={(checked) =>
-                                    setViewType(
-                                        checked ? "cumulative" : "daily"
-                                    )
-                                }
-                            />
-                        </div>
-                        <Select value={timeRange} onValueChange={setTimeRange}>
-                            <SelectTrigger
-                                className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate"
-                                size="sm"
-                                aria-label="Select a value"
+                    <Select value={timeRange} onValueChange={setTimeRange}>
+                        <SelectTrigger
+                            className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
+                            size="sm"
+                            aria-label="Select a value"
+                        >
+                            <SelectValue placeholder="Last 30 days" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-xl">
+                            <SelectItem
+                                value="90d"
+                                className="rounded-lg cursor-pointer"
                             >
-                                <SelectValue placeholder="Last 30 days" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl">
-                                <SelectItem
-                                    value="90d"
-                                    className="rounded-lg cursor-pointer"
-                                >
-                                    Last 3 months
-                                </SelectItem>
-                                <SelectItem
-                                    value="30d"
-                                    className="rounded-lg cursor-pointer"
-                                >
-                                    Last 30 days
-                                </SelectItem>
-                                <SelectItem
-                                    value="7d"
-                                    className="rounded-lg cursor-pointer"
-                                >
-                                    Last 7 days
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+                                Last 3 months
+                            </SelectItem>
+                            <SelectItem
+                                value="30d"
+                                className="rounded-lg cursor-pointer"
+                            >
+                                Last 30 days
+                            </SelectItem>
+                            <SelectItem
+                                value="7d"
+                                className="rounded-lg cursor-pointer"
+                            >
+                                Last 7 days
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
                 </CardAction>
             </CardHeader>
             <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
@@ -319,73 +285,123 @@ export function PageViewsChart({ className }: PageViewsChartProps) {
                     config={chartConfig}
                     className="aspect-auto h-[250px] w-full"
                 >
-                    <LineChart data={filteredData}>
-                        <CartesianGrid vertical={false} />
-                        <XAxis
-                            dataKey="date"
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={8}
-                            minTickGap={32}
-                            tickFormatter={(value) => {
-                                const date = new Date(value);
-                                return date.toLocaleDateString("en-US", {
-                                    month: "short",
-                                    day: "numeric",
-                                });
-                            }}
-                        />
-                        <YAxis
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={8}
-                            tickFormatter={(value) => {
-                                if (value >= 1000) {
-                                    return `${(value / 1000).toFixed(1)}k`;
+                    {viewType === "cumulative" ? (
+                        <LineChart data={filteredData}>
+                            <CartesianGrid vertical={false} />
+                            <XAxis
+                                dataKey="date"
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={8}
+                                minTickGap={32}
+                                tickFormatter={(value) => {
+                                    const date = new Date(value);
+                                    return date.toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                    });
+                                }}
+                            />
+                            <YAxis
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={8}
+                                tickFormatter={(value) => {
+                                    if (value >= 1000) {
+                                        return `${(value / 1000).toFixed(1)}k`;
+                                    }
+                                    return value.toString();
+                                }}
+                            />
+                            <ChartTooltip
+                                cursor={false}
+                                content={
+                                    <ChartTooltipContent
+                                        labelFormatter={(value) => {
+                                            return new Date(
+                                                value
+                                            ).toLocaleDateString("en-US", {
+                                                month: "short",
+                                                day: "numeric",
+                                            });
+                                        }}
+                                        formatter={(value) => [
+                                            `${value?.toLocaleString()} total views`,
+                                            "Cumulative Page Views",
+                                        ]}
+                                        indicator="dot"
+                                    />
                                 }
-                                return value.toString();
-                            }}
-                        />
-                        <ChartTooltip
-                            cursor={false}
-                            content={
-                                <ChartTooltipContent
-                                    labelFormatter={(value) => {
-                                        return new Date(
-                                            value
-                                        ).toLocaleDateString("en-US", {
-                                            month: "short",
-                                            day: "numeric",
-                                        });
-                                    }}
-                                    formatter={(value) => [
-                                        `${value?.toLocaleString()} ${
-                                            viewType === "cumulative"
-                                                ? "total"
-                                                : ""
-                                        } views`,
-                                        viewType === "cumulative"
-                                            ? "Cumulative Page Views"
-                                            : "Daily Page Views",
-                                    ]}
-                                    indicator="dot"
-                                />
-                            }
-                        />
-                        <Line
-                            dataKey="pageViews"
-                            type="monotone"
-                            stroke="var(--color-pageViews)"
-                            strokeWidth={2}
-                            dot={false}
-                            activeDot={{
-                                r: 4,
-                                stroke: "var(--color-pageViews)",
-                                strokeWidth: 2,
-                                fill: "hsl(var(--background))",
-                            }}
-                        />
-                    </LineChart>
+                            />
+                            <Line
+                                dataKey="pageViews"
+                                type="monotone"
+                                stroke="var(--color-pageViews)"
+                                strokeWidth={2}
+                                dot={false}
+                                activeDot={{
+                                    r: 4,
+                                    stroke: "var(--color-pageViews)",
+                                    strokeWidth: 2,
+                                    fill: "hsl(var(--background))",
+                                }}
+                            />
+                        </LineChart>
+                    ) : (
+                        <BarChart data={filteredData}>
+                            <CartesianGrid vertical={false} />
+                            <XAxis
+                                dataKey="date"
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={8}
+                                minTickGap={32}
+                                tickFormatter={(value) => {
+                                    const date = new Date(value);
+                                    return date.toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                    });
+                                }}
+                            />
+                            <YAxis
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={8}
+                                tickFormatter={(value) => {
+                                    if (value >= 1000) {
+                                        return `${(value / 1000).toFixed(1)}k`;
+                                    }
+                                    return value.toString();
+                                }}
+                            />
+                            <ChartTooltip
+                                cursor={false}
+                                content={
+                                    <ChartTooltipContent
+                                        labelFormatter={(value) => {
+                                            return new Date(
+                                                value
+                                            ).toLocaleDateString("en-US", {
+                                                month: "short",
+                                                day: "numeric",
+                                            });
+                                        }}
+                                        formatter={(value) => [
+                                            `${value?.toLocaleString()} views`,
+                                            "Daily Page Views",
+                                        ]}
+                                        indicator="dot"
+                                    />
+                                }
+                            />
+                            <Bar
+                                dataKey="pageViews"
+                                fill="var(--color-pageViews)"
+                                radius={[2, 2, 0, 0]}
+                            />
+                        </BarChart>
+                    )}
                 </ChartContainer>
             </CardContent>
         </Card>

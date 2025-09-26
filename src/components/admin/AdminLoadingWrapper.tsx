@@ -1,11 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
 import { LoadingSpinner } from "@/components/ui/spinner";
 import { useAdminData } from "@/hooks/useAdminData";
+import { usePrefetchChartData } from "@/hooks/usePrefetchChartData";
 import { AdminSPAContent } from "./AdminSPAContent";
 
 export function AdminLoadingWrapper() {
     const { data, isLoading, error } = useAdminData();
+    const { prefetchAllChartData } = usePrefetchChartData();
+
+    // Prefetch all chart data combinations on component mount
+    useEffect(() => {
+        prefetchAllChartData();
+    }, [prefetchAllChartData]);
 
     if (isLoading) {
         return (
