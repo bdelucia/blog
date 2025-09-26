@@ -65,7 +65,7 @@ export function AdminUsersView() {
                                 Error loading users
                             </p>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                                {error}
+                                {error?.message || "An error occurred"}
                             </p>
                         </div>
                     </div>
