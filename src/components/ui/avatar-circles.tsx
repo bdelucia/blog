@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import Image from "next/image";
 
 interface Avatar {
     imageUrl: string;
@@ -20,7 +21,8 @@ export const AvatarCircles = ({
 }: AvatarCirclesProps) => {
     const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
 
-    const handleImageError = (index: number) => {
+    const handleImageError = (index: number, originalUrl: string) => {
+        console.log("Image failed to load:", originalUrl);
         setImageErrors((prev) => new Set(prev).add(index));
     };
 
@@ -73,16 +75,29 @@ export const AvatarCircles = ({
                         target="_blank"
                         rel="noopener noreferrer"
                     >
-                        <img
-                            key={index}
-                            className="h-10 w-10 rounded-full border-2 border-white dark:border-gray-800"
-                            src={hasError ? "" : optimizedUrl}
-                            width={40}
-                            height={40}
-                            alt={`Avatar ${index + 1}`}
-                            onError={() => handleImageError(index)}
-                            crossOrigin="anonymous"
-                        />
+                        {!hasError && (
+                            <Image
+                                key={index}
+                                className="h-10 w-10 rounded-full border-2 border-white dark:border-gray-800"
+                                src={optimizedUrl}
+                                width={40}
+                                height={40}
+                                alt={`Avatar ${index + 1}`}
+                                onError={() =>
+                                    handleImageError(index, url.imageUrl)
+                                }
+                            />
+                        )}
+                        {hasError && (
+                            <Image
+                                key={`fallback-${index}`}
+                                className="h-10 w-10 rounded-full border-2 border-white dark:border-gray-800"
+                                src="/images/avatars/default-avatar.png"
+                                width={40}
+                                height={40}
+                                alt={`Default Avatar ${index + 1}`}
+                            />
+                        )}
                     </a>
                 );
             })}

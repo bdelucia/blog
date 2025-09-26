@@ -13,8 +13,7 @@ import { toast } from "sonner";
 import { AdminCards } from "@/components/admin-cards";
 import { AnalyticsChart } from "./analytics-chart";
 import { PageViewsChart } from "./page-views-chart";
-import { UsersDataTable } from "./UsersDataTable";
-import { PostsDataTable } from "./PostsDataTable";
+import { UsersChart } from "./users-chart";
 import { type Article } from "@/data/blog-client";
 import { useAdminDashboard } from "@/components/providers/admin-dashboard-provider";
 
@@ -91,6 +90,14 @@ export function AdminDashboardClient({
     const [isUploading, setIsUploading] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [slugError, setSlugError] = useState<string | null>(null);
+    const [activeChart, setActiveChart] = useState<
+        "visitors" | "users" | "pageViews" | null
+    >("visitors");
+
+    // Handler for chart switching
+    const handleShowChart = (chartType: "visitors" | "users" | "pageViews") => {
+        setActiveChart(activeChart === chartType ? null : chartType);
+    };
 
     // Function to generate slug from title
     const generateSlug = (title: string) => {
@@ -375,19 +382,19 @@ export function AdminDashboardClient({
                     </h2>
                 </div>
             </div>
-            <AdminCards stats={stats} analytics={analytics} />
-            <div className="px-4 lg:px-6">
-                <AnalyticsChart />
-            </div>
-            <div className="px-4 lg:px-6">
-                <PageViewsChart />
-            </div>
-            <div className="px-4 lg:px-6">
-                <UsersDataTable data={allUsers} />
-            </div>
-            <div className="px-4 lg:px-6">
-                <PostsDataTable data={allPosts} />
-            </div>
+            <AdminCards
+                stats={stats}
+                analytics={analytics}
+                onShowChart={handleShowChart}
+                activeChart={activeChart}
+            />
+            {activeChart && (
+                <div className="px-4 lg:px-6">
+                    {activeChart === "visitors" && <AnalyticsChart />}
+                    {activeChart === "users" && <UsersChart />}
+                    {activeChart === "pageViews" && <PageViewsChart />}
+                </div>
+            )}
         </div>
     );
 

@@ -1,12 +1,42 @@
 "use client";
 
 import { LoadingSpinner } from "@/components/ui/spinner";
-import { useAdminData } from "@/hooks/useAdminData";
+import { useQuery } from "@tanstack/react-query";
 import { AdminDashboardHeader } from "./AdminDashboardHeader";
 import { PostsDataTable } from "./PostsDataTable";
 
+// Helper function to fetch all posts
+async function fetchAllPosts() {
+    const response = await fetch("/api/admin/posts");
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch posts: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return result;
+}
+
 export function AdminPostsView() {
-    const { data, isLoading, error } = useAdminData();
+    const {
+        data: allPosts,
+        isLoading,
+        error,
+        isFetching,
+        isStale,
+    } = useQuery({
+        queryKey: ["admin-posts"],
+        queryFn: fetchAllPosts,
+        staleTime: 5 * 60 * 1000, // 5 minutes - increased for better caching
+        gcTime: 10 * 60 * 1000, // 10 minutes - increased for better caching
+        retry: 1, // Reduced retries for faster fallback
+        refetchOnWindowFocus: false,
+        refetchOnMount: false, // Don't refetch if data exists
+        refetchOnReconnect: false, // Don't refetch on reconnect
+        // Add these for immediate rendering
+        suspense: false, // Don't use suspense to avoid blocking
+        placeholderData: (previousData) => previousData, // Keep previous data while loading
+    });
 
     if (isLoading) {
         return (
@@ -45,7 +75,7 @@ export function AdminPostsView() {
         );
     }
 
-    if (!data) {
+    if (!allPosts) {
         return (
             <>
                 <AdminDashboardHeader />
@@ -63,7 +93,7 @@ export function AdminPostsView() {
             <AdminDashboardHeader />
             <div className="flex flex-1 flex-col relative z-10">
                 <div className="px-4 lg:px-6">
-                    <PostsDataTable data={data.allPosts} />
+                    <PostsDataTable data={allPosts} />
                 </div>
             </div>
         </>

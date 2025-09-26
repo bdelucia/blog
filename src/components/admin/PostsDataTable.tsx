@@ -19,9 +19,11 @@ import {
     IconChevronLeft,
     IconChevronRight,
     IconLayoutColumns,
-    IconDotsVertical,
     IconGripVertical,
     IconCirclePlusFilled,
+    IconEye,
+    IconEdit,
+    IconTrash,
 } from "@tabler/icons-react";
 import {
     closestCenter,
@@ -48,8 +50,6 @@ import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
     DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -69,6 +69,15 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 
@@ -132,7 +141,10 @@ function DraggableRow({ row }: { row: Row<Article> }) {
     );
 }
 
-const createColumns = (router: AppRouterInstance): ColumnDef<Article>[] => [
+const createColumns = (
+    router: AppRouterInstance,
+    onDeleteClick: (article: Article) => void
+): ColumnDef<Article>[] => [
     {
         id: "drag",
         header: () => null,
@@ -216,40 +228,44 @@ const createColumns = (router: AppRouterInstance): ColumnDef<Article>[] => [
         cell: ({ row }) => {
             const article = row.original;
             return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            className="h-8 w-8 p-0 cursor-pointer"
-                        >
-                            <span className="sr-only">Open menu</span>
-                            <IconDotsVertical className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                            className="hover:cursor-pointer"
-                            onClick={() =>
-                                router.push(
-                                    `/admin/posts/edit-post/${article.slug}`
-                                )
-                            }
-                        >
-                            Edit post
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() =>
-                                window.open(`/${article.slug}`, "_blank")
-                            }
-                        >
-                            View post
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600">
-                            Delete post
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex items-center gap-1">
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 cursor-pointer"
+                        onClick={() =>
+                            window.open(`/${article.slug}`, "_blank")
+                        }
+                        title="View post"
+                    >
+                        <IconEye className="h-4 w-4" />
+                        <span className="sr-only">View post</span>
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 cursor-pointer"
+                        onClick={() =>
+                            router.push(
+                                `/admin/posts/edit-post/${article.slug}`
+                            )
+                        }
+                        title="Edit post"
+                    >
+                        <IconEdit className="h-4 w-4" />
+                        <span className="sr-only">Edit post</span>
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                        title="Delete post"
+                        onClick={() => onDeleteClick(article)}
+                    >
+                        <IconTrash className="h-4 w-4" />
+                        <span className="sr-only">Delete post</span>
+                    </Button>
+                </div>
             );
         },
     },
@@ -268,11 +284,59 @@ export function PostsDataTable({ data: initialData }: PostsDataTableProps) {
     const [columnVisibility, setColumnVisibility] =
         React.useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = React.useState({});
+    const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+    const [postToDelete, setPostToDelete] = React.useState<Article | null>(
+        null
+    );
+    const [isDeleting, setIsDeleting] = React.useState(false);
 
     // Update data when initialData prop changes
     React.useEffect(() => {
         setData(initialData);
     }, [initialData]);
+
+    // Handle delete post
+    const handleDeletePost = async () => {
+        if (!postToDelete) return;
+
+        setIsDeleting(true);
+        try {
+            const response = await fetch("/api/admin/delete-post", {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    postId: postToDelete.id,
+                    imagePath: postToDelete.image,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to delete post");
+            }
+
+            // Remove the post from local state
+            setData((prevData) =>
+                prevData.filter((post) => post.id !== postToDelete.id)
+            );
+
+            // Close dialog and reset state
+            setDeleteDialogOpen(false);
+            setPostToDelete(null);
+        } catch (error) {
+            console.error("Error deleting post:", error);
+            // You could add a toast notification here
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    // Handle delete button click
+    const handleDeleteClick = (article: Article) => {
+        setPostToDelete(article);
+        setDeleteDialogOpen(true);
+    };
 
     const sortableId = React.useId();
     const sensors = useSensors(
@@ -322,7 +386,7 @@ export function PostsDataTable({ data: initialData }: PostsDataTableProps) {
         }
     }
 
-    const columns = createColumns(router);
+    const columns = createColumns(router, handleDeleteClick);
 
     const table = useReactTable({
         data,
@@ -524,6 +588,38 @@ export function PostsDataTable({ data: initialData }: PostsDataTableProps) {
                     </div>
                 </div>
             </CardContent>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Delete Post</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete "
+                            {postToDelete?.title}"? This action cannot be
+                            undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeleteDialogOpen(false)}
+                            disabled={isDeleting}
+                            className="cursor-pointer"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDeletePost}
+                            disabled={isDeleting}
+                            className="cursor-pointer"
+                        >
+                            {isDeleting ? "Deleting..." : "Delete"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </Card>
     );
 }

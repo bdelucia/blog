@@ -1,12 +1,42 @@
 "use client";
 
 import { LoadingSpinner } from "@/components/ui/spinner";
-import { useAdminData } from "@/hooks/useAdminData";
+import { useQuery } from "@tanstack/react-query";
 import { AdminDashboardHeader } from "./AdminDashboardHeader";
 import { UsersDataTable } from "./UsersDataTable";
 
+// Helper function to fetch all users
+async function fetchAllUsers() {
+    const response = await fetch("/api/admin/users");
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch users: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    return result;
+}
+
 export function AdminUsersView() {
-    const { data, isLoading, error } = useAdminData();
+    const {
+        data: allUsers,
+        isLoading,
+        error,
+        isFetching,
+        isStale,
+    } = useQuery({
+        queryKey: ["admin-users"],
+        queryFn: fetchAllUsers,
+        staleTime: 5 * 60 * 1000, // 5 minutes - increased for better caching
+        gcTime: 10 * 60 * 1000, // 10 minutes - increased for better caching
+        retry: 1, // Reduced retries for faster fallback
+        refetchOnWindowFocus: false,
+        refetchOnMount: false, // Don't refetch if data exists
+        refetchOnReconnect: false, // Don't refetch on reconnect
+        // Add these for immediate rendering
+        suspense: false, // Don't use suspense to avoid blocking
+        placeholderData: (previousData) => previousData, // Keep previous data while loading
+    });
 
     if (isLoading) {
         return (
@@ -45,7 +75,7 @@ export function AdminUsersView() {
         );
     }
 
-    if (!data) {
+    if (!allUsers) {
         return (
             <>
                 <AdminDashboardHeader />
@@ -63,7 +93,7 @@ export function AdminUsersView() {
             <AdminDashboardHeader />
             <div className="flex flex-1 flex-col relative z-10">
                 <div className="px-4 lg:px-6">
-                    <UsersDataTable data={data.allUsers} />
+                    <UsersDataTable data={allUsers} />
                 </div>
             </div>
         </>

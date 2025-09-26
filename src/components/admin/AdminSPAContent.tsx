@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { Article } from "@/db/articles/functions";
 import { getPost } from "@/data/blog";
 import { LoadingSpinner } from "@/components/ui/spinner";
+import { useAdminDashboard } from "@/components/providers/admin-dashboard-provider";
 
 interface AdminSPAContentProps {
     stats: {
@@ -45,6 +46,7 @@ export function AdminSPAContent({
     const pathname = usePathname();
     const [editingPost, setEditingPost] = useState<Article | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const { currentView } = useAdminDashboard();
 
     // Extract slug from pathname for edit routes
     const getSlugFromPath = (path: string) => {
@@ -88,23 +90,8 @@ export function AdminSPAContent({
     }, [pathname, allPosts]);
 
     const renderContent = () => {
-        if (pathname === "/admin") {
-            return (
-                <>
-                    <AdminDashboardHeader />
-                    <div className="flex flex-1 flex-col relative z-10">
-                        <AdminDashboardClient
-                            stats={stats}
-                            analytics={analytics}
-                            allUsers={allUsers}
-                            allPosts={allPosts}
-                        />
-                    </div>
-                </>
-            );
-        }
-
-        if (pathname === "/admin/posts") {
+        // Handle SPA views first
+        if (currentView === "posts") {
             return (
                 <>
                     <AdminDashboardHeader />
@@ -127,7 +114,7 @@ export function AdminSPAContent({
             );
         }
 
-        if (pathname === "/admin/users") {
+        if (currentView === "users") {
             return (
                 <>
                     <AdminDashboardHeader />
@@ -145,6 +132,22 @@ export function AdminSPAContent({
                                 </div>
                             )}
                         </div>
+                    </div>
+                </>
+            );
+        }
+
+        if (pathname === "/admin" || currentView === "overview") {
+            return (
+                <>
+                    <AdminDashboardHeader />
+                    <div className="flex flex-1 flex-col relative z-10">
+                        <AdminDashboardClient
+                            stats={stats}
+                            analytics={analytics}
+                            allUsers={allUsers}
+                            allPosts={allPosts}
+                        />
                     </div>
                 </>
             );

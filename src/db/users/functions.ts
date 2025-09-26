@@ -270,6 +270,93 @@ export async function getUsersCreatedInLastWeek(): Promise<User[]> {
     }
 }
 
+export interface UsersChartDataPoint {
+    date: string;
+    users: number;
+}
+
+export async function getUsersChartData(
+    days: number,
+    viewType: "cumulative" | "daily"
+): Promise<UsersChartDataPoint[]> {
+    try {
+        // Try admin client first, fallback to regular client if service role key is missing
+        let supabase;
+        try {
+            supabase = createAdminClient();
+        } catch (adminError) {
+            console.log(
+                "Admin client failed, falling back to regular client:",
+                adminError
+            );
+            const { createClient } = await import("@/utils/supabase/server");
+            supabase = await createClient();
+        }
+
+        // Calculate date range
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
+        const startDateISO = startDate.toISOString();
+
+        // Fetch users created within the date range
+        const { data: usersData, error } = await supabase
+            .from("users")
+            .select("created_at")
+            .gte("created_at", startDateISO)
+            .order("created_at", { ascending: true });
+
+        if (error) {
+            console.error("Error fetching users chart data:", error);
+            return [];
+        }
+
+        // Create a map to count users per day
+        const dailyCounts = new Map<string, number>();
+
+        // Initialize all days in the range with 0
+        for (let i = 0; i < days; i++) {
+            const date = new Date(endDate);
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split("T")[0];
+            dailyCounts.set(dateStr, 0);
+        }
+
+        // Count users per day
+        (usersData || []).forEach((user) => {
+            const dateStr = user.created_at.split("T")[0];
+            const currentCount = dailyCounts.get(dateStr) || 0;
+            dailyCounts.set(dateStr, currentCount + 1);
+        });
+
+        // Convert to array and sort by date
+        const chartData = Array.from(dailyCounts.entries())
+            .map(([date, count]) => ({
+                date,
+                users: count,
+            }))
+            .sort((a, b) => a.date.localeCompare(b.date));
+
+        // If cumulative view, calculate running total
+        if (viewType === "cumulative") {
+            let runningTotal = 0;
+            return chartData.map((item) => {
+                runningTotal += item.users;
+                return {
+                    date: item.date,
+                    users: runningTotal,
+                };
+            });
+        }
+
+        // Return daily data
+        return chartData;
+    } catch (error) {
+        console.error("Failed to fetch users chart data:", error);
+        return [];
+    }
+}
+
 // CREATE operations
 export async function createUser(
     userData: CreateUserData

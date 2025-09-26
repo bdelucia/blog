@@ -3,6 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useAnalyticsChartData } from "./useAnalyticsChartData";
 import { usePageViewsChartData } from "./usePageViewsChartData";
+import { useUsersChartData } from "./useUsersChartData";
 
 // Helper function to fetch analytics chart data
 async function fetchAnalyticsChartData(
@@ -52,6 +53,30 @@ async function fetchPageViewsChartData(
     return result.data;
 }
 
+// Helper function to fetch users chart data
+async function fetchUsersChartData(
+    days: number,
+    viewType: "cumulative" | "daily"
+) {
+    const response = await fetch(
+        `/api/admin/users-chart?days=${days}&viewType=${viewType}`
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            `Failed to fetch users chart data: ${response.statusText}`
+        );
+    }
+
+    const result = await response.json();
+
+    if (!result.success) {
+        throw new Error("Failed to fetch users data");
+    }
+
+    return result.data;
+}
+
 export function usePrefetchChartData() {
     const queryClient = useQueryClient();
 
@@ -79,6 +104,15 @@ export function usePrefetchChartData() {
                     queryFn: () => fetchPageViewsChartData(30, viewType),
                     staleTime: 5 * 60 * 1000,
                     gcTime: 30 * 60 * 1000,
+                })
+            );
+
+            priorityPrefetchPromises.push(
+                queryClient.prefetchQuery({
+                    queryKey: ["users-chart", 30, viewType],
+                    queryFn: () => fetchUsersChartData(30, viewType),
+                    staleTime: 2 * 60 * 1000, // 2 minutes - user data changes more frequently
+                    gcTime: 10 * 60 * 1000, // 10 minutes
                 })
             );
         }
@@ -112,6 +146,15 @@ export function usePrefetchChartData() {
                         queryFn: () => fetchPageViewsChartData(days, viewType),
                         staleTime: 5 * 60 * 1000,
                         gcTime: 30 * 60 * 1000,
+                    })
+                );
+
+                backgroundPrefetchPromises.push(
+                    queryClient.prefetchQuery({
+                        queryKey: ["users-chart", days, viewType],
+                        queryFn: () => fetchUsersChartData(days, viewType),
+                        staleTime: 2 * 60 * 1000, // 2 minutes - user data changes more frequently
+                        gcTime: 10 * 60 * 1000, // 10 minutes
                     })
                 );
             }

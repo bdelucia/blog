@@ -7,6 +7,7 @@ import {
     IconEye,
 } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
     Card,
     CardAction,
@@ -18,6 +19,7 @@ import {
 import { NumberTicker } from "@/components/ui/number-ticker";
 import { AvatarCircles } from "@/components/ui/avatar-circles";
 import { User } from "@/db/users/functions";
+import { BarChart3 } from "lucide-react";
 
 interface AdminCardsProps {
     stats: {
@@ -37,9 +39,16 @@ interface AdminCardsProps {
         weeklyVisitorsGained?: number;
         weeklyPageViewsGained?: number;
     };
+    onShowChart?: (chartType: "visitors" | "users" | "pageViews") => void;
+    activeChart?: "visitors" | "users" | "pageViews" | null;
 }
 
-export function AdminCards({ stats, analytics }: AdminCardsProps) {
+export function AdminCards({
+    stats,
+    analytics,
+    onShowChart,
+    activeChart,
+}: AdminCardsProps) {
     return (
         <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
             {/* Unique Visitors Card */}
@@ -77,6 +86,17 @@ export function AdminCards({ stats, analytics }: AdminCardsProps) {
                         +{analytics?.weeklyVisitorsGained || 0} visitors gained
                         this week
                     </div>
+                    {onShowChart && activeChart !== "visitors" && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onShowChart("visitors")}
+                            className="mt-2 w-full cursor-pointer"
+                        >
+                            <BarChart3 className="w-4 h-4 mr-2" />
+                            Show Graph
+                        </Button>
+                    )}
                 </CardFooter>
             </Card>
 
@@ -122,6 +142,17 @@ export function AdminCards({ stats, analytics }: AdminCardsProps) {
                     <div className="text-green-600 dark:text-green-400 text-xs font-medium">
                         +{stats.weeklyUsersGained} users gained this week
                     </div>
+                    {onShowChart && activeChart !== "users" && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onShowChart("users")}
+                            className="mt-2 w-full cursor-pointer"
+                        >
+                            <BarChart3 className="w-4 h-4 mr-2" />
+                            Show Graph
+                        </Button>
+                    )}
                 </CardFooter>
             </Card>
 
@@ -157,6 +188,17 @@ export function AdminCards({ stats, analytics }: AdminCardsProps) {
                         +{analytics?.weeklyPageViewsGained || 0} page views
                         gained this week
                     </div>
+                    {onShowChart && activeChart !== "pageViews" && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => onShowChart("pageViews")}
+                            className="mt-2 w-full cursor-pointer"
+                        >
+                            <BarChart3 className="w-4 h-4 mr-2" />
+                            Show Graph
+                        </Button>
+                    )}
                 </CardFooter>
             </Card>
 

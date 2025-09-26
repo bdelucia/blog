@@ -1,8 +1,9 @@
 "use client";
 
 import { IconCirclePlusFilled, type Icon } from "@tabler/icons-react";
-import Link from "next/link";
 import * as React from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +15,24 @@ import {
 } from "@/components/ui/sidebar";
 import { useAdminDashboard } from "@/components/providers/admin-dashboard-provider";
 
+// Helper function to fetch all posts
+async function fetchAllPosts() {
+    const response = await fetch("/api/admin/posts");
+    if (!response.ok) {
+        throw new Error(`Failed to fetch posts: ${response.statusText}`);
+    }
+    return response.json();
+}
+
+// Helper function to fetch all users
+async function fetchAllUsers() {
+    const response = await fetch("/api/admin/users");
+    if (!response.ok) {
+        throw new Error(`Failed to fetch users: ${response.statusText}`);
+    }
+    return response.json();
+}
+
 export function NavMain({
     items,
 }: {
@@ -23,7 +42,57 @@ export function NavMain({
         icon?: Icon;
     }[];
 }) {
-    const { openCreatePost } = useAdminDashboard();
+    const {
+        openCreatePost,
+        openPostsView,
+        openUsersView,
+        openOverview,
+        currentView,
+    } = useAdminDashboard();
+    const queryClient = useQueryClient();
+    const pathname = usePathname();
+
+    // Prefetch data on hover
+    const handleMouseEnter = (url: string) => {
+        if (url === "/admin/posts") {
+            queryClient.prefetchQuery({
+                queryKey: ["admin-posts"],
+                queryFn: fetchAllPosts,
+                staleTime: 5 * 60 * 1000, // 5 minutes - match component settings
+                gcTime: 10 * 60 * 1000, // 10 minutes - match component settings
+            });
+        } else if (url === "/admin/users") {
+            queryClient.prefetchQuery({
+                queryKey: ["admin-users"],
+                queryFn: fetchAllUsers,
+                staleTime: 5 * 60 * 1000, // 5 minutes - match component settings
+                gcTime: 10 * 60 * 1000, // 10 minutes - match component settings
+            });
+        }
+    };
+
+    // Handle navigation clicks for SPA
+    const handleNavigationClick = (e: React.MouseEvent, url: string) => {
+        e.preventDefault();
+
+        if (url === "/admin/posts") {
+            openPostsView();
+        } else if (url === "/admin/users") {
+            openUsersView();
+        } else if (url === "/admin") {
+            // Use SPA navigation for dashboard too - no refetch!
+            openOverview();
+        }
+    };
+
+    // Determine if a nav item is active
+    const isActive = (url: string) => {
+        if (url === "/admin/posts") return currentView === "posts";
+        if (url === "/admin/users") return currentView === "users";
+        if (url === "/admin")
+            return currentView === "overview" || pathname === "/admin";
+        return false;
+    };
 
     return (
         <SidebarGroup>
@@ -44,14 +113,17 @@ export function NavMain({
                     {items.map((item) => (
                         <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton
-                                asChild
                                 tooltip={item.title}
-                                className="cursor-pointer"
+                                className={`cursor-pointer ${
+                                    isActive(item.url) ? "bg-accent" : ""
+                                }`}
+                                onMouseEnter={() => handleMouseEnter(item.url)}
+                                onClick={(e) =>
+                                    handleNavigationClick(e, item.url)
+                                }
                             >
-                                <Link href={item.url}>
-                                    {item.icon && <item.icon />}
-                                    <span>{item.title}</span>
-                                </Link>
+                                {item.icon && <item.icon />}
+                                <span>{item.title}</span>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     ))}
