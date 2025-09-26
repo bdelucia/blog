@@ -1,6 +1,7 @@
 "use client";
 
 import { IconCirclePlusFilled, type Icon } from "@tabler/icons-react";
+import Link from "next/link";
 import * as React from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePathname } from "next/navigation";
@@ -42,13 +43,7 @@ export function NavMain({
         icon?: Icon;
     }[];
 }) {
-    const {
-        openCreatePost,
-        openPostsView,
-        openUsersView,
-        openOverview,
-        currentView,
-    } = useAdminDashboard();
+    const { openCreatePost } = useAdminDashboard();
     const queryClient = useQueryClient();
     const pathname = usePathname();
 
@@ -71,29 +66,6 @@ export function NavMain({
         }
     };
 
-    // Handle navigation clicks for SPA
-    const handleNavigationClick = (e: React.MouseEvent, url: string) => {
-        e.preventDefault();
-
-        if (url === "/admin/posts") {
-            openPostsView();
-        } else if (url === "/admin/users") {
-            openUsersView();
-        } else if (url === "/admin") {
-            // Use SPA navigation for dashboard too - no refetch!
-            openOverview();
-        }
-    };
-
-    // Determine if a nav item is active
-    const isActive = (url: string) => {
-        if (url === "/admin/posts") return currentView === "posts";
-        if (url === "/admin/users") return currentView === "users";
-        if (url === "/admin")
-            return currentView === "overview" || pathname === "/admin";
-        return false;
-    };
-
     return (
         <SidebarGroup>
             <SidebarGroupContent className="flex flex-col gap-2">
@@ -113,17 +85,17 @@ export function NavMain({
                     {items.map((item) => (
                         <SidebarMenuItem key={item.title}>
                             <SidebarMenuButton
+                                asChild
                                 tooltip={item.title}
                                 className={`cursor-pointer ${
-                                    isActive(item.url) ? "bg-accent" : ""
+                                    pathname === item.url ? "bg-accent" : ""
                                 }`}
                                 onMouseEnter={() => handleMouseEnter(item.url)}
-                                onClick={(e) =>
-                                    handleNavigationClick(e, item.url)
-                                }
                             >
-                                {item.icon && <item.icon />}
-                                <span>{item.title}</span>
+                                <Link href={item.url} prefetch={true}>
+                                    {item.icon && <item.icon />}
+                                    <span>{item.title}</span>
+                                </Link>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     ))}

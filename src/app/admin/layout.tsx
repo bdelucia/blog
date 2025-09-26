@@ -4,9 +4,6 @@ import { AdminDashboardProvider } from "@/components/providers/admin-dashboard-p
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Starfield } from "@/components/magicui/starfield";
 import { ShineBorder } from "@/components/magicui/shine-border";
-import { AdminLoadingWrapper } from "@/components/admin/AdminLoadingWrapper";
-import { ImmediatePrefetcher } from "@/components/admin/ImmediatePrefetcher";
-import { CacheDebugger } from "@/components/admin/CacheDebugger";
 
 // Force dynamic rendering for admin layout
 export const dynamic = "force-dynamic";
@@ -21,8 +18,6 @@ export default async function AdminLayout({
     return (
         <div className="min-h-screen">
             <AdminDashboardProvider>
-                <ImmediatePrefetcher />
-                <CacheDebugger />
                 <SidebarProvider>
                     <AppSidebar
                         user={{
@@ -41,7 +36,7 @@ export default async function AdminLayout({
                                     starSize={[1, 4]}
                                     className="dark:opacity-100 opacity-0"
                                 />
-                                <AdminLoadingWrapper />
+                                {children}
                             </div>
                             <ShineBorder
                                 shineColor={["#A07CFE", "#FE8FB5", "#FFBE7B"]}

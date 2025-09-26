@@ -46,13 +46,24 @@ export function AdminSPAContent({
     const pathname = usePathname();
     const [editingPost, setEditingPost] = useState<Article | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const { currentView } = useAdminDashboard();
+    const { currentView, setCurrentView } = useAdminDashboard();
 
     // Extract slug from pathname for edit routes
     const getSlugFromPath = (path: string) => {
         const match = path.match(/\/admin\/posts\/edit-post\/(.+)$/);
         return match ? match[1] : null;
     };
+
+    // Sync URL with current view for direct navigation
+    useEffect(() => {
+        if (pathname === "/admin/posts" && currentView !== "posts") {
+            setCurrentView("posts");
+        } else if (pathname === "/admin/users" && currentView !== "users") {
+            setCurrentView("users");
+        } else if (pathname === "/admin" && currentView !== "overview") {
+            setCurrentView("overview");
+        }
+    }, [pathname, currentView, setCurrentView]);
 
     // Load post data when on edit route
     useEffect(() => {
