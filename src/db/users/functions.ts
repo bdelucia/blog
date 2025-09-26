@@ -158,10 +158,6 @@ export async function getAllUsers(): Promise<User[]> {
             .select("*")
             .order("created_at", { ascending: false });
 
-        console.log("getAllUsers: Raw data from Supabase:", data);
-        console.log("getAllUsers: Error from Supabase:", error);
-        console.log("getAllUsers: Data count:", data?.length || 0);
-
         if (error) {
             console.error("Error fetching users:", error);
             return [];
@@ -178,7 +174,6 @@ export async function getAllUsers(): Promise<User[]> {
             updatedAt: user.updated_at,
         }));
 
-        console.log("getAllUsers: Mapped users:", mappedUsers);
         return mappedUsers;
     } catch (error) {
         console.error("Failed to fetch users:", error);

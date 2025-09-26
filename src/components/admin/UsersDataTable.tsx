@@ -25,7 +25,6 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -52,6 +51,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type User = {
     id: string;
@@ -65,28 +65,39 @@ type User = {
 
 const columns: ColumnDef<User>[] = [
     {
-        id: "select",
-        header: ({ table }) => (
-            <Checkbox
-                checked={
-                    table.getIsAllPageRowsSelected() ||
-                    (table.getIsSomePageRowsSelected() && "indeterminate")
+        accessorKey: "avatarUrl",
+        header: "Avatar",
+        cell: ({ row }) => {
+            const avatarUrl = row.getValue("avatarUrl") as string | null;
+            const fullName = row.getValue("fullName") as string | null;
+            const email = row.getValue("email") as string;
+
+            // Generate initials from fullName or email
+            const getInitials = (name: string | null, email: string) => {
+                if (name) {
+                    return name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2);
                 }
-                onCheckedChange={(value) =>
-                    table.toggleAllPageRowsSelected(!!value)
-                }
-                aria-label="Select all"
-            />
-        ),
-        cell: ({ row }) => (
-            <Checkbox
-                checked={row.getIsSelected()}
-                onCheckedChange={(value) => row.toggleSelected(!!value)}
-                aria-label="Select row"
-            />
-        ),
+                return email.slice(0, 2).toUpperCase();
+            };
+
+            return (
+                <Avatar className="h-8 w-8">
+                    <AvatarImage
+                        src={avatarUrl || undefined}
+                        alt={fullName || email}
+                    />
+                    <AvatarFallback className="text-xs">
+                        {getInitials(fullName, email)}
+                    </AvatarFallback>
+                </Avatar>
+            );
+        },
         enableSorting: false,
-        enableHiding: false,
     },
     {
         accessorKey: "email",

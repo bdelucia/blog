@@ -5,6 +5,8 @@ import { AdminDashboardClient } from "./AdminDashboardClient";
 import { AdminDashboardHeader } from "./AdminDashboardHeader";
 import { DashboardNewPostForm } from "./DashboardNewPostForm";
 import { DashboardEditPostForm } from "./DashboardEditPostForm";
+import { PostsDataTable } from "./PostsDataTable";
+import { UsersDataTable } from "./UsersDataTable";
 import { useEffect, useState } from "react";
 import { Article } from "@/db/articles/functions";
 import { getPost } from "@/data/blog";
@@ -97,6 +99,52 @@ export function AdminSPAContent({
                             allUsers={allUsers}
                             allPosts={allPosts}
                         />
+                    </div>
+                </>
+            );
+        }
+
+        if (pathname === "/admin/posts") {
+            return (
+                <>
+                    <AdminDashboardHeader />
+                    <div className="flex flex-1 flex-col relative z-10">
+                        <div className="px-4 lg:px-6">
+                            {allPosts ? (
+                                <PostsDataTable data={allPosts} />
+                            ) : (
+                                <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
+                                    <LoadingSpinner
+                                        text="Loading Posts..."
+                                        size="lg"
+                                        className="text-center"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </>
+            );
+        }
+
+        if (pathname === "/admin/users") {
+            return (
+                <>
+                    <AdminDashboardHeader />
+                    <div className="flex flex-1 flex-col relative z-10">
+                        <div className="px-4 lg:px-6">
+                            {allUsers ? (
+                                <UsersDataTable data={allUsers} />
+                            ) : (
+                                <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
+                                    <LoadingSpinner
+                                        text="Loading Users..."
+                                        size="lg"
+                                        className="text-center"
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </>
             );

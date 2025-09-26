@@ -8,8 +8,6 @@ import { getBlogPosts, getAllPosts } from "@/db/articles/functions";
 
 export async function GET() {
     try {
-        console.log("Admin stats API: Starting data fetch...");
-
         const [
             allUsers,
             adminUsers,
@@ -25,10 +23,6 @@ export async function GET() {
             getAllPosts(),
             getUsersCreatedInLastWeek(),
         ]);
-
-        console.log("Admin stats API: Data fetched successfully");
-        console.log("Admin stats API: Users count:", allUsers.length);
-        console.log("Admin stats API: Posts count:", allPosts.length);
 
         const stats = {
             totalUsers: allUsers.length,

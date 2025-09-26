@@ -104,14 +104,46 @@ export function AdminSidebar({
                     <SidebarMenu>
                         <SidebarMenuItem>
                             <SidebarMenuButton
-                                asChild
                                 tooltip="Posts"
                                 className="cursor-pointer group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:px-1"
+                                onClick={() => {
+                                    const postsSection =
+                                        document.getElementById(
+                                            "posts-section"
+                                        );
+                                    if (postsSection) {
+                                        postsSection.scrollIntoView({
+                                            behavior: "smooth",
+                                        });
+                                    }
+                                }}
                             >
-                                <Link href="/admin">
-                                    <IconFileText />
-                                    <span>Posts</span>
-                                </Link>
+                                <IconFileText />
+                                <span>Posts</span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+
+                    {/* Users Button */}
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton
+                                tooltip="Users"
+                                className="cursor-pointer group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:px-1"
+                                onClick={() => {
+                                    const usersSection =
+                                        document.getElementById(
+                                            "users-section"
+                                        );
+                                    if (usersSection) {
+                                        usersSection.scrollIntoView({
+                                            behavior: "smooth",
+                                        });
+                                    }
+                                }}
+                            >
+                                <IconUsers />
+                                <span>Users</span>
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                     </SidebarMenu>

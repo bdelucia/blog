@@ -30,11 +30,23 @@ export function AdminDashboardHeader() {
                 href: "/admin",
                 isLink: false,
             });
+        } else if (pathname === "/admin/posts") {
+            breadcrumbs.push({
+                label: "Posts",
+                href: "/admin/posts",
+                isLink: false,
+            });
+        } else if (pathname === "/admin/users") {
+            breadcrumbs.push({
+                label: "Users",
+                href: "/admin/users",
+                isLink: false,
+            });
         } else if (pathname === "/admin/posts/create-post") {
             breadcrumbs.push(
                 {
                     label: "Posts",
-                    href: "/admin",
+                    href: "/admin/posts",
                     isLink: true,
                 },
                 {
@@ -48,7 +60,7 @@ export function AdminDashboardHeader() {
             breadcrumbs.push(
                 {
                     label: "Posts",
-                    href: "/admin",
+                    href: "/admin/posts",
                     isLink: true,
                 },
                 {

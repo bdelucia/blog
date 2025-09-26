@@ -183,7 +183,6 @@ function prepareContentForMdx(content: string): string {
     mdx = mdx.replace(
         /<div[^>]*class="[^"]*sandpack[^"]*"[^>]*><pre[^>]*class="[^"]*hljs[^"]*"[^>]*><code[^>]*>([\s\S]*?)<\/code><\/pre><\/div>/g,
         (match, content) => {
-            console.log("Found sandpack block (div wrapper):", match);
             // Extract language from class attribute if present
             const langMatch = match.match(/class="[^"]*language-(\w+)[^"]*"/);
             const language = langMatch ? langMatch[1] : "react";

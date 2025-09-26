@@ -86,7 +86,6 @@ export function usePrefetchChartData() {
         // Execute priority prefetch first
         try {
             await Promise.allSettled(priorityPrefetchPromises);
-            console.log("Priority chart data prefetching completed");
         } catch (error) {
             console.error("Error prefetching priority chart data:", error);
         }
@@ -119,16 +118,9 @@ export function usePrefetchChartData() {
         }
 
         // Execute background prefetch (don't await to avoid blocking)
-        Promise.allSettled(backgroundPrefetchPromises)
-            .then(() => {
-                console.log("Background chart data prefetching completed");
-            })
-            .catch((error) => {
-                console.error(
-                    "Error prefetching background chart data:",
-                    error
-                );
-            });
+        Promise.allSettled(backgroundPrefetchPromises).catch((error) => {
+            console.error("Error prefetching background chart data:", error);
+        });
     };
 
     return { prefetchAllChartData };
