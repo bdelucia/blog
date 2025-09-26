@@ -34,7 +34,6 @@ export function AdminPostsView() {
         refetchOnMount: false, // Don't refetch if data exists
         refetchOnReconnect: false, // Don't refetch on reconnect
         // Add these for immediate rendering
-        suspense: false, // Don't use suspense to avoid blocking
         placeholderData: (previousData) => previousData, // Keep previous data while loading
     });
 

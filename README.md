@@ -14,8 +14,13 @@ A modern blog built with Next.js, React, TypeScript, Drizzle ORM, and Supabase, 
 -   🚀 **AWS Deployment**: Production-ready deployment on AWS ECS
 -   🔄 **CI/CD Pipeline**: Automated testing and deployment with GitHub Actions
 -   📊 **Admin Dashboard**: Real-time analytics with Google Analytics 4 integration
--   📈 **Analytics Charts**: Interactive visitor and page view tracking
+-   📈 **Interactive Charts**: Toggleable visitor, user, and page view analytics
 -   🎯 **Real-time Metrics**: Live visitor counts and growth percentages
+-   🗂️ **Data Tables**: Comprehensive posts and users management with search/filter
+-   🚀 **SPA Navigation**: Fast client-side navigation with shared layouts
+-   💾 **Smart Caching**: React Query with aggressive prefetching and caching
+-   🎛️ **Chart Controls**: Time range filters (7/30/90 days) and view types
+-   🗑️ **Delete Confirmations**: Safe deletion with confirmation dialogs
 
 ## Tech Stack
 
