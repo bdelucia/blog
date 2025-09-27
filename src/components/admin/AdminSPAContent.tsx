@@ -60,6 +60,16 @@ export function AdminSPAContent({
             setCurrentView("posts");
         } else if (pathname === "/admin/users" && currentView !== "users") {
             setCurrentView("users");
+        } else if (
+            pathname === "/admin/posts/create-post" &&
+            currentView !== "create-post"
+        ) {
+            setCurrentView("create-post");
+        } else if (
+            pathname.startsWith("/admin/posts/edit-post/") &&
+            currentView !== "edit-post"
+        ) {
+            setCurrentView("edit-post");
         } else if (pathname === "/admin" && currentView !== "overview") {
             setCurrentView("overview");
         }
@@ -142,6 +152,62 @@ export function AdminSPAContent({
                                     />
                                 </div>
                             )}
+                        </div>
+                    </div>
+                </>
+            );
+        }
+
+        if (currentView === "create-post") {
+            return (
+                <>
+                    <AdminDashboardHeader />
+                    <div className="flex flex-1 flex-col relative z-10">
+                        <div className="px-4 lg:px-6">
+                            <DashboardNewPostForm />
+                        </div>
+                    </div>
+                </>
+            );
+        }
+
+        if (currentView === "edit-post") {
+            if (isLoading) {
+                return (
+                    <>
+                        <AdminDashboardHeader />
+                        <div className="flex flex-1 flex-col relative z-10">
+                            <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
+                                <LoadingSpinner
+                                    text="Loading post..."
+                                    size="lg"
+                                    className="text-center"
+                                />
+                            </div>
+                        </div>
+                    </>
+                );
+            }
+
+            if (!editingPost) {
+                return (
+                    <>
+                        <AdminDashboardHeader />
+                        <div className="flex flex-1 flex-col relative z-10">
+                            <div className="flex items-center justify-center min-h-[calc(100vh-8rem)]">
+                                <p className="text-gray-500">Post not found</p>
+                            </div>
+                        </div>
+                    </>
+                );
+            }
+
+            return (
+                <>
+                    <AdminDashboardHeader />
+                    <div className="flex flex-1 flex-col relative z-10">
+                        <div className="px-4 lg:px-6">
+                            <DashboardEditPostForm post={editingPost} />
                         </div>
                     </div>
                 </>

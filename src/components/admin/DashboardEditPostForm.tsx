@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Save, Upload, X } from "lucide-react";
+import { Save, Upload, X } from "lucide-react";
 import { MDXEditorComponent } from "./MDXEditorComponent";
 import { Article } from "@/db/articles/functions";
 
@@ -239,20 +239,9 @@ export function DashboardEditPostForm({ post }: DashboardEditPostFormProps) {
         <div className="py-6">
             {/* Page Header */}
             <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-4">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => router.push("/admin")}
-                        className="hover:cursor-pointer"
-                    >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Back to Dashboard
-                    </Button>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                        Edit Post
-                    </h1>
-                </div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                    Edit Post
+                </h1>
             </div>
 
             <Card>

@@ -72,7 +72,14 @@ export function NavMain({
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton
-                            onClick={openCreatePost}
+                            onClick={() => {
+                                openCreatePost();
+                                window.history.pushState(
+                                    null,
+                                    "",
+                                    "/admin/posts/create-post"
+                                );
+                            }}
                             tooltip="Quick Create"
                             className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear cursor-pointer"
                         >

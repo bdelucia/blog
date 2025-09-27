@@ -245,11 +245,11 @@ const createColumns = (
                         variant="ghost"
                         size="sm"
                         className="h-8 w-8 p-0 cursor-pointer"
-                        onClick={() =>
+                        onClick={() => {
                             router.push(
                                 `/admin/posts/edit-post/${article.slug}`
-                            )
-                        }
+                            );
+                        }}
                         title="Edit post"
                     >
                         <IconEdit className="h-4 w-4" />

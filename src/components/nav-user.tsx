@@ -51,6 +51,22 @@ export function NavUser({
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton
+                        onClick={toggleTheme}
+                        tooltip={isDark ? "Switch to Light" : "Switch to Dark"}
+                        className="cursor-pointer"
+                    >
+                        {isDark ? (
+                            <Moon className="h-4 w-4" />
+                        ) : (
+                            <Sun className="h-4 w-4" />
+                        )}
+                        <span>{isDark ? "Dark" : "Light"}</span>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
                         size="lg"
                         className="cursor-default group-data-[collapsible=icon]:ml-0 -ml-2"
                     >
@@ -73,22 +89,6 @@ export function NavUser({
                                 {user.email}
                             </span>
                         </div>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton
-                        onClick={toggleTheme}
-                        tooltip={isDark ? "Switch to Light" : "Switch to Dark"}
-                        className="cursor-pointer"
-                    >
-                        {isDark ? (
-                            <Moon className="h-4 w-4" />
-                        ) : (
-                            <Sun className="h-4 w-4" />
-                        )}
-                        <span>{isDark ? "Dark" : "Light"}</span>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>

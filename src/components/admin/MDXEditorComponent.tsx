@@ -30,7 +30,7 @@ import {
     toolbarPlugin,
     sandpackPlugin,
     directivesPlugin,
-    frontmatterPlugin,
+    // frontmatterPlugin, // Removed - we use database fields instead
     UndoRedo,
     BoldItalicUnderlineToggles,
     CodeToggle,
@@ -50,7 +50,7 @@ import {
     ChangeCodeMirrorLanguage,
     ShowSandpackInfo,
     KitchenSinkToolbar,
-    InsertFrontmatter,
+    // InsertFrontmatter, // Removed - we use database fields instead
 } from "@mdxeditor/editor";
 import "@mdxeditor/editor/style.css";
 import BlogImage from "../mdx-components/BlogImage";
@@ -623,7 +623,7 @@ export function MDXEditorComponent({
                                 AdmonitionDirectiveDescriptor,
                             ],
                         }),
-                        frontmatterPlugin(),
+                        // frontmatterPlugin removed - we use database fields instead of YAML frontmatter
                         toolbarPlugin({
                             toolbarContents: () => <KitchenSinkToolbar />,
                         }),

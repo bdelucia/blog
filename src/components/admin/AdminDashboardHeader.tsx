@@ -66,7 +66,7 @@ export function AdminDashboardHeader() {
                 {
                     label: "Edit Post",
                     href: "/admin/posts/edit-post",
-                    isLink: true,
+                    isLink: false,
                 },
                 {
                     label: slug,
@@ -100,7 +100,14 @@ export function AdminDashboardHeader() {
                                             {breadcrumb.label}
                                         </BreadcrumbLink>
                                     ) : (
-                                        <BreadcrumbPage>
+                                        <BreadcrumbPage
+                                            className={
+                                                // Edit Post gets muted color, all other non-clickable items get white styling
+                                                breadcrumb.label === "Edit Post"
+                                                    ? "text-muted-foreground" // Same as clickable links
+                                                    : "" // Original white styling
+                                            }
+                                        >
                                             {breadcrumb.label}
                                         </BreadcrumbPage>
                                     )}
