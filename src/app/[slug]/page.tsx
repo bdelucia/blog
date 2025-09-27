@@ -3,8 +3,11 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import React, { Suspense } from "react";
 import { BLOG_IMGS_URL } from "@/lib/constants";
+import { generateSEOData, validateSEOData } from "@/lib/seo-utils";
 import { Header } from "@/components/shared/Header";
 import Footer from "@/components/shared/Footer";
+import { Breadcrumb } from "@/components/shared/Breadcrumb";
+import { TableOfContents } from "@/components/shared/TableOfContents";
 import BlogCarousel from "@/components/mdx-components/BlogCarousel";
 import Table from "@/components/mdx-components/Table";
 import BlogImage from "@/components/mdx-components/BlogImage";
@@ -13,6 +16,14 @@ import DebugContent from "@/components/mdx-components/DebugContent";
 import Highlight from "@/components/mdx-components/Highlight";
 import Checkbox from "@/components/mdx-components/Checkbox";
 import Admonition from "@/components/mdx-components/Admonition";
+import {
+    H1,
+    H2,
+    H3,
+    H4,
+    H5,
+    H6,
+} from "@/components/mdx-components/HeaderWithId";
 import MDXTable, {
     MDXTableHead,
     MDXTableBody,
@@ -376,38 +387,71 @@ export async function generateMetadata({
             return undefined;
         }
 
-        let {
+        const {
             title,
             datePosted: publishedTime,
-            summary: description,
+            summary,
             image,
+            content,
+            tags,
         } = post;
-        let ogImage = image
+
+        // Generate optimized SEO data
+        const seoData = validateSEOData(
+            generateSEOData(title || "Untitled", content || "", tags || [], {
+                title: title || "Untitled",
+                description: summary || undefined,
+                canonicalUrl: `${DATA.url}/${post.slug}`,
+                image: image || undefined,
+                publishedTime: publishedTime || undefined,
+                modifiedTime: post.updatedAt || undefined,
+                tags: tags || undefined,
+            })
+        );
+
+        const ogImage = image
             ? image.startsWith("http")
                 ? image
                 : `${DATA.url}${image}`
-            : `${DATA.url}/og?title=${title}`;
+            : `${DATA.url}/images/og-default.jpg`;
 
         return {
-            title: title || "Untitled",
-            description: description || undefined,
+            title: seoData.title,
+            description: seoData.description,
+            keywords: seoData.keywords,
+            authors: [{ name: seoData.author }],
+            alternates: {
+                canonical: seoData.canonicalUrl,
+            },
             openGraph: {
-                title: title || "Untitled",
-                description: description || undefined,
+                title: seoData.title,
+                description: seoData.description,
                 type: "article",
-                publishedTime: publishedTime || undefined,
-                url: `${DATA.url}/${post.slug}`,
+                publishedTime: seoData.publishedTime || undefined,
+                modifiedTime: seoData.modifiedTime || undefined,
+                url: seoData.canonicalUrl,
+                siteName: "Bob with a Blog",
                 images: [
                     {
                         url: ogImage,
+                        width: 1200,
+                        height: 630,
+                        alt: seoData.title,
                     },
                 ],
+                authors: seoData.author ? [seoData.author] : undefined,
+                tags: seoData.tags || [],
             },
             twitter: {
                 card: "summary_large_image",
-                title: title || "Untitled",
-                description: description || undefined,
+                title: seoData.title,
+                description: seoData.description,
                 images: [ogImage],
+                creator: "@yourusername",
+            },
+            robots: {
+                index: post.status === "published",
+                follow: true,
             },
         };
     } catch (error) {
@@ -448,6 +492,13 @@ export default async function Blog({
 
     // Define MDX components directly
     const components = {
+        // Custom header components with IDs
+        h1: (props: any) => <H1 {...props} />,
+        h2: (props: any) => <H2 {...props} />,
+        h3: (props: any) => <H3 {...props} />,
+        h4: (props: any) => <H4 {...props} />,
+        h5: (props: any) => <H5 {...props} />,
+        h6: (props: any) => <H6 {...props} />,
         BlogCarousel: (props: any) => <BlogCarousel {...props} />,
         Table: (props: any) => <Table {...props} />,
         BlogImage: (props: any) => (
@@ -587,68 +638,129 @@ export default async function Blog({
 
     return (
         <div className="flex flex-col h-screen">
-            <Header title="Bob with a Blog" />
+            <Header title="Bob with a Blog" scrollProgress={true} />
             <UnauthorizedToast />
             <BlogPostTracker postTitle={post.title} postSlug={post.slug} />
 
             <div className="flex-1">
-                <section
-                    id="blog"
-                    className="px-4 py-4 rounded-lg bg-gray-50 dark:bg-gray-50/10 max-w-4xl mx-auto my-24"
-                >
-                    <script
-                        type="application/ld+json"
-                        suppressHydrationWarning
-                        dangerouslySetInnerHTML={{
-                            __html: JSON.stringify({
-                                "@context": "https://schema.org",
-                                "@type": "BlogPosting",
-                                headline: post.title,
-                                datePublished:
-                                    post.datePosted || post.createdAt,
-                                dateModified: post.updatedAt,
-                                description: post.summary,
-                                image: post.image
-                                    ? post.image.startsWith("http")
-                                        ? post.image
-                                        : `${DATA.url}${post.image}`
-                                    : `${DATA.url}/og?title=${post.title}`,
-                                url: `${DATA.url}/${post.slug}`,
-                                author: {
-                                    "@type": "Person",
-                                    name: DATA.name,
-                                },
-                            }),
-                        }}
+                <div className="max-w-6xl mx-auto px-4 pt-8">
+                    <Breadcrumb
+                        items={[
+                            { label: "Home", href: "/" },
+                            { label: "Blog", href: "/" },
+                            { label: post.title },
+                        ]}
+                        className="mb-6"
                     />
-                    <h1 className="title font-medium text-2xl tracking-tighter max-w-[650px]">
-                        {post.title}
-                    </h1>
-                    <div className="flex justify-between items-center mt-2 mb-8 text-sm max-w-[650px]">
-                        <Suspense fallback={<p className="h-5" />}>
-                            <p className="text-sm text-neutral-600 dark:text-neutral-400">
-                                {post.datePosted
-                                    ? new Date(
-                                          post.datePosted
-                                      ).toLocaleDateString()
-                                    : "No date"}
-                            </p>
-                        </Suspense>
+                </div>
+
+                {/* Main content with TOC sidebar */}
+                <div className="max-w-7xl mx-auto px-4 my-24">
+                    <div className="flex gap-8 justify-center">
+                        {/* Article content - centered */}
+                        <section
+                            id="blog"
+                            className="w-full max-w-4xl px-6 py-4 rounded-lg bg-gray-50 dark:bg-gray-50/10"
+                        >
+                            <script
+                                type="application/ld+json"
+                                suppressHydrationWarning
+                                dangerouslySetInnerHTML={{
+                                    __html: JSON.stringify({
+                                        "@context": "https://schema.org",
+                                        "@type": "BlogPosting",
+                                        headline: post.title,
+                                        datePublished:
+                                            post.datePosted || post.createdAt,
+                                        dateModified: post.updatedAt,
+                                        description: post.summary,
+                                        image: post.image
+                                            ? post.image.startsWith("http")
+                                                ? post.image
+                                                : `${DATA.url}${post.image}`
+                                            : `${DATA.url}/images/og-default.jpg`,
+                                        url: `${DATA.url}/${post.slug}`,
+                                        mainEntityOfPage: {
+                                            "@type": "WebPage",
+                                            "@id": `${DATA.url}/${post.slug}`,
+                                        },
+                                        author: {
+                                            "@type": "Person",
+                                            name: DATA.name,
+                                            url: DATA.url,
+                                        },
+                                        publisher: {
+                                            "@type": "Organization",
+                                            name: "Bob with a Blog",
+                                            url: DATA.url,
+                                            logo: {
+                                                "@type": "ImageObject",
+                                                url: `${DATA.url}/android-chrome-512x512.png`,
+                                                width: 512,
+                                                height: 512,
+                                            },
+                                        },
+                                        keywords:
+                                            post.tags?.join(", ") ||
+                                            "blog, technology, programming",
+                                        articleSection:
+                                            post.tags?.[0] || "Technology",
+                                        wordCount:
+                                            post.content?.split(" ").length ||
+                                            0,
+                                        inLanguage: "en-US",
+                                        isAccessibleForFree: true,
+                                        ...(post.tags && {
+                                            about: post.tags.map((tag) => ({
+                                                "@type": "Thing",
+                                                name: tag,
+                                            })),
+                                        }),
+                                    }),
+                                }}
+                            />
+                            <h1 className="title font-medium text-2xl tracking-tighter max-w-[650px]">
+                                {post.title}
+                            </h1>
+                            <div className="flex justify-between items-center mt-2 mb-8 text-sm max-w-[650px]">
+                                <Suspense fallback={<p className="h-5" />}>
+                                    <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                                        {post.datePosted
+                                            ? new Date(
+                                                  post.datePosted
+                                              ).toLocaleDateString()
+                                            : "No date"}
+                                    </p>
+                                </Suspense>
+                            </div>
+                            <article className="prose max-w-[650px] mx-auto [&_.contains-task-list]:pl-0 [&_.contains-task-list]:list-none [&_.contains-task-list_li]:list-none">
+                                <DebugContent content={post.content || ""} />
+                                <MDXRemote
+                                    source={prepareContentForMdx(
+                                        post.content || ""
+                                    )}
+                                    components={components}
+                                    options={{
+                                        mdxOptions: {
+                                            remarkPlugins: [
+                                                remarkGfm,
+                                                remarkDirective,
+                                            ],
+                                            rehypePlugins: [rehypeHighlight],
+                                        },
+                                    }}
+                                />
+                            </article>
+                        </section>
+
+                        {/* Table of Contents Sidebar - positioned absolutely */}
+                        <aside className="relative">
+                            <div className="absolute left-full ml-8 top-0">
+                                <TableOfContents content={post.content || ""} />
+                            </div>
+                        </aside>
                     </div>
-                    <article className="prose max-w-[650px] mx-auto [&_.contains-task-list]:pl-0 [&_.contains-task-list]:list-none [&_.contains-task-list_li]:list-none">
-                        <DebugContent content={post.content || ""} />
-                        <MDXRemote
-                            source={prepareContentForMdx(post.content || "")}
-                            components={components}
-                            options={{
-                                mdxOptions: {
-                                    remarkPlugins: [remarkGfm, remarkDirective],
-                                    rehypePlugins: [rehypeHighlight],
-                                },
-                            }}
-                        />
-                    </article>
-                </section>
+                </div>
             </div>
 
             <Footer />

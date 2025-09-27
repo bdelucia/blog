@@ -6,8 +6,34 @@ import { UnauthorizedToast } from "@/components/shared/UnauthorizedToast";
 import { ClientSections } from "@/components/home/ClientSections";
 
 export const metadata = {
-    title: "Bob with a Blog",
-    description: "My thoughts on software development, life, and more.",
+    title: "Home",
+    description:
+        "Welcome to Bob with a Blog! Discover insights on software development, programming tips, and personal experiences. Explore the latest posts about technology, coding, and life adventures.",
+    keywords: [
+        "blog",
+        "homepage",
+        "technology",
+        "programming",
+        "software development",
+        "coding",
+        "web development",
+    ],
+    alternates: {
+        canonical: "/",
+    },
+    openGraph: {
+        title: "Bob with a Blog - Home",
+        description:
+            "Welcome to Bob with a Blog! Discover insights on software development, programming tips, and personal experiences.",
+        url: "/",
+        type: "website",
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Bob with a Blog - Home",
+        description:
+            "Welcome to Bob with a Blog! Discover insights on software development, programming tips, and personal experiences.",
+    },
 };
 
 // Force dynamic rendering to avoid build-time cookie issues

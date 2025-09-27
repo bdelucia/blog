@@ -16,8 +16,81 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "Bob with a Blog",
-    description: "A modern blog about technology, coding, and life adventures",
+    title: {
+        default: "Bob with a Blog",
+        template: "%s | Bob with a Blog",
+    },
+    description:
+        "A modern blog about technology, coding, and life adventures. Discover insights on software development, programming tips, and personal experiences.",
+    keywords: [
+        "blog",
+        "technology",
+        "programming",
+        "software development",
+        "coding",
+        "web development",
+        "React",
+        "Next.js",
+        "JavaScript",
+    ],
+    authors: [{ name: "Bob", url: "https://github.com/yourusername" }],
+    creator: "Bob",
+    publisher: "Bob with a Blog",
+    formatDetection: {
+        email: false,
+        address: false,
+        telephone: false,
+    },
+    metadataBase: new URL(
+        process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+    ),
+    alternates: {
+        canonical: "/",
+        types: {
+            "application/rss+xml": "/feed.xml",
+        },
+    },
+    openGraph: {
+        type: "website",
+        locale: "en_US",
+        url: "/",
+        title: "Bob with a Blog",
+        description:
+            "A modern blog about technology, coding, and life adventures. Discover insights on software development, programming tips, and personal experiences.",
+        siteName: "Bob with a Blog",
+        images: [
+            {
+                url: "/images/og-default.jpg",
+                width: 1200,
+                height: 630,
+                alt: "Bob with a Blog",
+            },
+        ],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Bob with a Blog",
+        description:
+            "A modern blog about technology, coding, and life adventures. Discover insights on software development, programming tips, and personal experiences.",
+        creator: "@yourusername",
+        images: ["/images/og-default.jpg"],
+    },
+    robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+            index: true,
+            follow: true,
+            "max-video-preview": -1,
+            "max-image-preview": "large",
+            "max-snippet": -1,
+        },
+    },
+    verification: {
+        google: process.env.GOOGLE_VERIFICATION_ID,
+        yandex: process.env.YANDEX_VERIFICATION_ID,
+        yahoo: process.env.YAHOO_VERIFICATION_ID,
+    },
     icons: {
         icon: [
             { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
@@ -115,6 +188,59 @@ export default function RootLayout({
                         />
                     </>
                 )}
+                <script
+                    type="application/ld+json"
+                    suppressHydrationWarning
+                    dangerouslySetInnerHTML={{
+                        __html: JSON.stringify({
+                            "@context": "https://schema.org",
+                            "@type": "WebSite",
+                            name: "Bob with a Blog",
+                            description:
+                                "A modern blog about technology, coding, and life adventures. Discover insights on software development, programming tips, and personal experiences.",
+                            url:
+                                process.env.NEXT_PUBLIC_SITE_URL ||
+                                "http://localhost:3000",
+                            author: {
+                                "@type": "Person",
+                                name: "Bob",
+                                url:
+                                    process.env.NEXT_PUBLIC_SITE_URL ||
+                                    "http://localhost:3000",
+                            },
+                            publisher: {
+                                "@type": "Organization",
+                                name: "Bob with a Blog",
+                                url:
+                                    process.env.NEXT_PUBLIC_SITE_URL ||
+                                    "http://localhost:3000",
+                                logo: {
+                                    "@type": "ImageObject",
+                                    url: `${
+                                        process.env.NEXT_PUBLIC_SITE_URL ||
+                                        "http://localhost:3000"
+                                    }/android-chrome-512x512.png`,
+                                    width: 512,
+                                    height: 512,
+                                },
+                            },
+                            inLanguage: "en-US",
+                            copyrightYear: new Date().getFullYear(),
+                            potentialAction: {
+                                "@type": "SearchAction",
+                                target: {
+                                    "@type": "EntryPoint",
+                                    urlTemplate: `${
+                                        process.env.NEXT_PUBLIC_SITE_URL ||
+                                        "http://localhost:3000"
+                                    }/search?q={search_term_string}`,
+                                },
+                                "query-input":
+                                    "required name=search_term_string",
+                            },
+                        }),
+                    }}
+                />
             </head>
             <body
                 className={`${geistSans.variable} ${geistMono.variable} antialiased`}
