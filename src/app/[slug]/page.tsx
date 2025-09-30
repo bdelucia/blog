@@ -7,7 +7,8 @@ import { generateSEOData, validateSEOData } from "@/lib/seo-utils";
 import { Header } from "@/components/shared/Header";
 import Footer from "@/components/shared/Footer";
 import { Breadcrumb } from "@/components/shared/Breadcrumb";
-import { TableOfContents } from "@/components/shared/TableOfContents";
+import { MobileTableOfContents } from "@/components/shared/MobileTableOfContents";
+import { DesktopTableOfContentsWrapper } from "@/components/shared/DesktopTableOfContentsWrapper";
 import BlogCarousel from "@/components/mdx-components/BlogCarousel";
 import Table from "@/components/mdx-components/Table";
 import BlogImage from "@/components/mdx-components/BlogImage";
@@ -656,11 +657,11 @@ export default async function Blog({
 
                 {/* Main content with TOC sidebar */}
                 <div className="max-w-7xl mx-auto px-4 my-24">
-                    <div className="flex gap-8 justify-center">
+                    <div className="relative flex flex-col items-center gap-12">
                         {/* Article content - centered */}
                         <section
                             id="blog"
-                            className="w-full max-w-4xl px-6 py-4 rounded-lg bg-gray-50 dark:bg-gray-50/10"
+                            className="w-full max-w-4xl mx-auto px-6 py-4 rounded-lg bg-gray-50 dark:bg-gray-50/10"
                         >
                             <script
                                 type="application/ld+json"
@@ -753,15 +754,17 @@ export default async function Blog({
                             </article>
                         </section>
 
-                        {/* Table of Contents Sidebar - positioned absolutely */}
-                        <aside className="relative">
-                            <div className="absolute left-full ml-8 top-0">
-                                <TableOfContents content={post.content || ""} />
-                            </div>
-                        </aside>
+                        {/* Desktop Table of Contents Sidebar - only renders on large screens */}
+                        <DesktopTableOfContentsWrapper
+                            className="xl:absolute xl:top-0 xl:left-full 2xl:-ml-32"
+                            content={post.content || ""}
+                        />
                     </div>
                 </div>
             </div>
+
+            {/* Mobile TOC - rendered outside main layout to avoid affecting margins */}
+            <MobileTableOfContents content={post.content || ""} />
 
             <Footer />
         </div>

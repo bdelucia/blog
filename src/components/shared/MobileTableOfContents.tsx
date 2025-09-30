@@ -1,8 +1,17 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useEffect, useRef, useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ChevronDown, ChevronRight, Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "motion/react";
 
 interface TOCItem {
@@ -12,10 +21,8 @@ interface TOCItem {
     children?: TOCItem[];
 }
 
-interface TableOfContentsProps {
+interface MobileTableOfContentsProps {
     content: string;
-    className?: string;
-    style?: React.CSSProperties;
 }
 
 // Custom hook for exact breakpoint at 1768px
@@ -44,23 +51,12 @@ function useWindowSize() {
     return windowSize;
 }
 
-export function TableOfContents({
-    content,
-    className,
-    style,
-}: TableOfContentsProps) {
+export function MobileTableOfContents({ content }: MobileTableOfContentsProps) {
     const [tocItems, setTocItems] = useState<TOCItem[]>([]);
     const [activeId, setActiveId] = useState<string>("");
     const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
-    const [isSticky, setIsSticky] = useState(false);
-    const containerRef = useRef<HTMLDivElement | null>(null);
-    const [fixedMeta, setFixedMeta] = useState<{
-        left: number;
-        width: number;
-    } | null>(null);
-    const [firstTop, setFirstTop] = useState<number | null>(null);
     const { width } = useWindowSize();
-    const isLargeScreen = (width ?? 0) > 1768;
+    const isLargeScreen = width && width > 1768;
 
     // Parse headers from content and build TOC structure
     useEffect(() => {
@@ -130,74 +126,36 @@ export function TableOfContents({
         setExpandedItems(new Set(h1Ids));
     }, [content]);
 
+    // Handle scroll to update active section
     useEffect(() => {
-        if (!isLargeScreen || firstTop === null) return;
-        const handleScroll = () => setIsSticky(window.scrollY > firstTop - 96);
-        handleScroll();
-        window.addEventListener("scroll", handleScroll, { passive: true });
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, [isLargeScreen, firstTop]);
-
-    // Measure container position and size for sticky/fixed behavior
-    useEffect(() => {
-        if (!isLargeScreen) {
-            setIsSticky(false);
-            setFirstTop(null);
-            setFixedMeta(null);
-            return;
-        }
-
-        const measure = () => {
-            if (!containerRef.current) return;
-            const rect = containerRef.current.getBoundingClientRect();
-            setFirstTop(rect.top + window.scrollY);
-            setFixedMeta({ left: rect.left, width: rect.width });
-        };
-
-        measure();
-        window.addEventListener("resize", measure);
-        return () => window.removeEventListener("resize", measure);
-    }, [isLargeScreen, tocItems]);
-
-    useEffect(() => {
-        if (!isLargeScreen || tocItems.length === 0) {
-            setActiveId("");
-            return;
-        }
-
-        const collectItems = (items: TOCItem[]): TOCItem[] =>
-            items.flatMap((item) => [
-                item,
-                ...(item.children ? collectItems(item.children) : []),
-            ]);
-
-        const allItems = collectItems(tocItems);
-        let ticking = false;
-
         const handleScroll = () => {
-            if (ticking) return;
-            ticking = true;
-            requestAnimationFrame(() => {
-                let current = "";
+            const headerElements = tocItems
+                .flatMap((item) => [item, ...(item.children || [])])
+                .map((item) => document.getElementById(item.id))
+                .filter(Boolean);
 
-                for (const item of allItems) {
-                    const element = document.getElementById(item.id);
-                    if (!element) continue;
+            if (headerElements.length === 0) return;
+
+            // Find the currently visible header
+            let current = "";
+            for (const element of headerElements) {
+                if (element) {
                     const rect = element.getBoundingClientRect();
                     if (rect.top <= 100) {
-                        current = item.id;
+                        // 100px offset from top
+                        current = element.id;
                     }
                 }
+            }
 
-                setActiveId(current);
-                ticking = false;
-            });
+            setActiveId(current);
         };
 
-        handleScroll();
-        window.addEventListener("scroll", handleScroll, { passive: true });
+        window.addEventListener("scroll", handleScroll);
+        handleScroll(); // Initial call
+
         return () => window.removeEventListener("scroll", handleScroll);
-    }, [isLargeScreen, tocItems]);
+    }, [tocItems]);
 
     const scrollToHeader = (id: string) => {
         const element = document.getElementById(id);
@@ -226,7 +184,7 @@ export function TableOfContents({
         });
     };
 
-    const renderTOCItem = (item: TOCItem) => {
+    const renderTOCItem = (item: TOCItem, depth = 0) => {
         const isActive = activeId === item.id;
         const hasChildren = item.children && item.children.length > 0;
         const isExpanded = expandedItems.has(item.id);
@@ -281,7 +239,7 @@ export function TableOfContents({
                             className="mt-1 ml-6 overflow-hidden"
                         >
                             {item.children!.map((child) =>
-                                renderTOCItem(child)
+                                renderTOCItem(child, depth + 1)
                             )}
                         </motion.div>
                     )}
@@ -290,47 +248,39 @@ export function TableOfContents({
         );
     };
 
-    // Reusable TOC content component
-    const TOCContent = () => (
-        <>
-            <h3 className="text-lg font-semibold text-foreground mb-4 pb-2 border-b">
-                Table of Contents
-            </h3>
-            <nav className="space-y-1 pb-8">
-                {tocItems.map((item) => renderTOCItem(item))}
-            </nav>
-        </>
-    );
-
-    if (tocItems.length === 0) {
+    // Only render on mobile/tablet screens
+    if (isLargeScreen || tocItems.length === 0) {
         return null;
     }
 
     return (
-        <>
-            {/* Desktop TOC - visible on screens > 1768px */}
-            {isLargeScreen && (
-                <div
-                    ref={containerRef}
-                    className={cn("w-80 shrink-0", className)}
-                >
-                    <div
-                        className={cn(
-                            "bg-card border rounded-lg p-6 shadow-sm max-h-[calc(100vh-6rem)] overflow-y-auto transition-all",
-                            isSticky ? "fixed top-24" : "sticky top-24"
-                        )}
-                        style={{
-                            ...(style || {}),
-                            ...(fixedMeta ? { width: fixedMeta.width } : {}),
-                            ...(isSticky && fixedMeta
-                                ? { left: fixedMeta.left }
-                                : {}),
-                        }}
+        <div className="fixed bottom-6 right-4 z-50 pointer-events-none">
+            <Sheet>
+                <SheetTrigger asChild>
+                    <Button
+                        className="h-12 w-12 rounded-full shadow-lg bg-primary hover:bg-primary/90 cursor-pointer pointer-events-auto"
+                        size="icon"
                     >
-                        <TOCContent />
+                        <Menu className="h-5 w-5" />
+                    </Button>
+                </SheetTrigger>
+                <SheetContent
+                    side="right"
+                    className="w-80 [&>button]:cursor-pointer flex flex-col"
+                >
+                    <SheetHeader className="pb-4 border-b flex-shrink-0">
+                        <SheetTitle>Table of Contents</SheetTitle>
+                        <SheetDescription>
+                            Navigate through the article sections
+                        </SheetDescription>
+                    </SheetHeader>
+                    <div className="mt-6 px-4 pb-8 flex-1 overflow-y-auto">
+                        <nav className="space-y-1">
+                            {tocItems.map((item) => renderTOCItem(item))}
+                        </nav>
                     </div>
-                </div>
-            )}
-        </>
+                </SheetContent>
+            </Sheet>
+        </div>
     );
 }
