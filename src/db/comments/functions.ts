@@ -2,13 +2,50 @@ import { createClient } from "@/utils/supabase/server";
 import {
     validateCreateComment,
     validateUpdateComment,
-    validateModerateComment,
-    validateCreateCommentReaction,
-    validateCreateCommentMention,
+    validateCreateCommentLike,
     validateCommentId,
-    validateCommentQuery,
-    CommentQueryInput,
+    CreateCommentInput,
+    UpdateCommentInput,
+    CreateCommentLikeInput,
 } from "./validation";
+
+// Helper functions to transform Supabase data to our interface format
+function transformComment(data: any): Comment {
+    return {
+        id: data.id,
+        content: data.content,
+        articleId: data.article_id,
+        userId: data.user_id,
+        parentId: data.parent_id,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at,
+        user: data.users
+            ? {
+                  id: data.users.id,
+                  email: data.users.email,
+                  fullName: data.users.full_name,
+                  avatarUrl: data.users.avatar_url,
+              }
+            : undefined,
+    };
+}
+
+function transformCommentLike(data: any): CommentLike {
+    return {
+        id: data.id,
+        commentId: data.comment_id,
+        userId: data.user_id,
+        createdAt: data.created_at,
+        user: data.users
+            ? {
+                  id: data.users.id,
+                  email: data.users.email,
+                  fullName: data.users.full_name,
+                  avatarUrl: data.users.avatar_url,
+              }
+            : undefined,
+    };
+}
 
 // Types
 export interface Comment {
@@ -17,16 +54,8 @@ export interface Comment {
     articleId: number;
     userId: string;
     parentId: number | null;
-    status: "pending" | "approved" | "rejected" | "spam";
-    isEdited: boolean;
-    editReason: string | null;
-    ipAddress: string | null;
-    userAgent: string | null;
     createdAt: string;
     updatedAt: string;
-    editedAt: string | null;
-    moderatedAt: string | null;
-    moderatedBy: string | null;
     // Joined data
     user?: {
         id: string;
@@ -34,555 +63,439 @@ export interface Comment {
         fullName: string | null;
         avatarUrl: string | null;
     };
-    reactions?: CommentReaction[];
-    mentions?: CommentMention[];
+    likes?: CommentLike[];
     replies?: Comment[];
-    reactionCounts?: Record<string, number>;
-    userReaction?: string | null;
+    likesCount?: number;
+    userLiked?: boolean;
 }
 
-export interface CommentReaction {
+export interface CommentLike {
     id: number;
     commentId: number;
     userId: string;
-    reactionType: string;
     createdAt: string;
     user?: {
         id: string;
+        email: string;
         fullName: string | null;
         avatarUrl: string | null;
     };
 }
 
-export interface CommentMention {
-    id: number;
-    commentId: number;
-    mentionedUserId: string;
-    createdAt: string;
-    mentionedUser?: {
-        id: string;
-        fullName: string | null;
-        avatarUrl: string | null;
-    };
-}
-
-export interface CreateCommentData {
-    content: string;
-    articleId: number;
-    userId: string;
-    parentId?: number;
-    ipAddress?: string;
-    userAgent?: string;
-}
-
-export interface UpdateCommentData {
-    content?: string;
-    editReason?: string;
-}
-
-export interface ModerateCommentData {
-    status: "pending" | "approved" | "rejected" | "spam";
-    moderatedBy: string;
-}
-
-export interface CreateCommentReactionData {
-    commentId: number;
-    userId: string;
-    reactionType: string;
-}
-
-export interface CreateCommentMentionData {
-    commentId: number;
-    mentionedUserId: string;
-}
-
-// READ operations
-export async function getComment(id: number): Promise<Comment | null> {
-    try {
-        const validatedId = validateCommentId(id);
-        const supabase = await createClient();
-
-        const { data, error } = await supabase
-            .from("comments")
-            .select(
-                `
-                *,
-                user:users(id, email, full_name, avatar_url),
-                reactions:comment_reactions(
-                    id,
-                    reaction_type,
-                    created_at,
-                    user:users(id, full_name, avatar_url)
-                )
-            `
-            )
-            .eq("id", validatedId)
-            .single();
-
-        if (error) {
-            console.error("Error fetching comment:", error);
-            return null;
-        }
-
-        return transformCommentData(data);
-    } catch (error) {
-        if (error instanceof Error) {
-            console.error("Validation error fetching comment:", error.message);
-            throw new Error(`Validation failed: ${error.message}`);
-        }
-        console.error("Unexpected error fetching comment:", error);
-        return null;
-    }
-}
-
+// Get comments for an article
 export async function getCommentsByArticle(
     articleId: number,
-    options: Partial<CommentQueryInput> = {}
+    options: {
+        includeLikes?: boolean;
+        limit?: number;
+        offset?: number;
+        sortBy?: "created_at" | "updated_at";
+        sortOrder?: "asc" | "desc";
+    } = {}
 ): Promise<Comment[]> {
-    try {
-        const validatedArticleId = validateCommentId(articleId);
-        const validatedOptions = validateCommentQuery(options);
-        const supabase = await createClient();
+    const supabase = await createClient();
 
-        let query = supabase
-            .from("comments")
-            .select(
-                `
-                *,
-                user:users(id, email, full_name, avatar_url),
-                reactions:comment_reactions(
-                    id,
-                    reaction_type,
-                    created_at,
-                    user:users(id, full_name, avatar_url)
-                )
+    const {
+        includeLikes = false,
+        limit = 20,
+        offset = 0,
+        sortBy = "created_at",
+        sortOrder = "desc",
+    } = options;
+
+    let query = supabase
+        .from("comments")
+        .select(
             `
+            id,
+            content,
+            article_id,
+            user_id,
+            parent_id,
+            created_at,
+            updated_at,
+            users!inner(
+                id,
+                email,
+                full_name,
+                avatar_url
             )
-            .eq("article_id", validatedArticleId)
-            .eq("status", "approved") // Only show approved comments
-            .is("parent_id", null) // Only top-level comments
-            .order(validatedOptions.sortBy, {
-                ascending: validatedOptions.sortOrder === "asc",
-            })
-            .range(
-                validatedOptions.offset,
-                validatedOptions.offset + validatedOptions.limit - 1
-            );
+        `
+        )
+        .eq("article_id", articleId)
+        .is("parent_id", null) // Only top-level comments
+        .order(sortBy, { ascending: sortOrder === "asc" })
+        .range(offset, offset + limit - 1);
 
-        const { data, error } = await query;
+    const { data, error } = await query;
 
-        if (error) {
-            console.error("Error fetching comments:", error);
-            return [];
-        }
-
-        const comments = data?.map(transformCommentData) || [];
-
-        // Get replies for each comment
-        if (validatedOptions.includeReactions) {
-            for (const comment of comments) {
-                comment.replies = await getCommentReplies(comment.id);
-            }
-        }
-
-        return comments;
-    } catch (error) {
-        if (error instanceof Error) {
-            console.error("Validation error fetching comments:", error.message);
-            throw new Error(`Validation failed: ${error.message}`);
-        }
-        console.error("Unexpected error fetching comments:", error);
-        return [];
+    if (error) {
+        console.error("Error fetching comments:", error);
+        throw new Error("Failed to fetch comments");
     }
+
+    if (!data) return [];
+
+    // Get replies for each comment
+    const commentsWithReplies = await Promise.all(
+        data.map(async (comment: any) => {
+            const replies = await getCommentReplies(comment.id);
+            return {
+                ...comment,
+                replies,
+            };
+        })
+    );
+
+    // Get likes if requested
+    if (includeLikes) {
+        const commentsWithLikes = await Promise.all(
+            commentsWithReplies.map(async (comment: any) => {
+                const likes = await getCommentLikes(comment.id);
+                return {
+                    ...comment,
+                    likes,
+                    likesCount: likes.length,
+                };
+            })
+        );
+        return commentsWithLikes;
+    }
+
+    return commentsWithReplies;
 }
 
+// Get replies for a specific comment
 export async function getCommentReplies(parentId: number): Promise<Comment[]> {
-    try {
-        const validatedParentId = validateCommentId(parentId);
-        const supabase = await createClient();
+    const supabase = await createClient();
 
-        const { data, error } = await supabase
-            .from("comments")
-            .select(
-                `
-                *,
-                user:users(id, email, full_name, avatar_url),
-                reactions:comment_reactions(
-                    id,
-                    reaction_type,
-                    created_at,
-                    user:users(id, full_name, avatar_url)
-                )
+    const { data, error } = await supabase
+        .from("comments")
+        .select(
             `
+            id,
+            content,
+            article_id,
+            user_id,
+            parent_id,
+            created_at,
+            updated_at,
+            users!inner(
+                id,
+                email,
+                full_name,
+                avatar_url
             )
-            .eq("parent_id", validatedParentId)
-            .eq("status", "approved")
-            .order("created_at", { ascending: true });
+        `
+        )
+        .eq("parent_id", parentId)
+        .order("created_at", { ascending: true });
 
-        if (error) {
-            console.error("Error fetching comment replies:", error);
-            return [];
-        }
-
-        return data?.map(transformCommentData) || [];
-    } catch (error) {
-        if (error instanceof Error) {
-            console.error(
-                "Validation error fetching comment replies:",
-                error.message
-            );
-            throw new Error(`Validation failed: ${error.message}`);
-        }
-        console.error("Unexpected error fetching comment replies:", error);
+    if (error) {
+        console.error("Error fetching comment replies:", error);
         return [];
     }
+
+    return (data || []).map(transformComment);
 }
 
-export async function getCommentsByUser(userId: string): Promise<Comment[]> {
-    try {
-        const supabase = await createClient();
+// Get likes for a specific comment
+export async function getCommentLikes(
+    commentId: number
+): Promise<CommentLike[]> {
+    const supabase = await createClient();
 
-        const { data, error } = await supabase
-            .from("comments")
-            .select(
-                `
-                *,
-                user:users(id, email, full_name, avatar_url),
-                reactions:comment_reactions(
-                    id,
-                    reaction_type,
-                    created_at,
-                    user:users(id, full_name, avatar_url)
-                )
+    const { data, error } = await supabase
+        .from("comment_likes")
+        .select(
             `
+            id,
+            comment_id,
+            user_id,
+            created_at,
+            users!inner(
+                id,
+                email,
+                full_name,
+                avatar_url
             )
-            .eq("user_id", userId)
-            .eq("status", "approved")
-            .order("created_at", { ascending: false });
+        `
+        )
+        .eq("comment_id", commentId)
+        .order("created_at", { ascending: false });
 
-        if (error) {
-            console.error("Error fetching user comments:", error);
-            return [];
-        }
-
-        return data?.map(transformCommentData) || [];
-    } catch (error) {
-        console.error("Unexpected error fetching user comments:", error);
+    if (error) {
+        console.error("Error fetching comment likes:", error);
         return [];
     }
+
+    return (data || []).map(transformCommentLike);
 }
 
-export async function getPendingComments(): Promise<Comment[]> {
-    try {
-        const supabase = await createClient();
-
-        const { data, error } = await supabase
-            .from("comments")
-            .select(
-                `
-                *,
-                user:users(id, email, full_name, avatar_url)
-            `
-            )
-            .eq("status", "pending")
-            .order("created_at", { ascending: false });
-
-        if (error) {
-            console.error("Error fetching pending comments:", error);
-            return [];
-        }
-
-        return data?.map(transformCommentData) || [];
-    } catch (error) {
-        console.error("Unexpected error fetching pending comments:", error);
-        return [];
-    }
-}
-
-// CREATE operations
+// Create a new comment
 export async function createComment(
-    commentData: CreateCommentData
+    data: CreateCommentInput
 ): Promise<Comment | null> {
-    try {
-        const validatedData = validateCreateComment(commentData);
-        const supabase = await createClient();
+    const supabase = await createClient();
+    const validatedData = validateCreateComment(data);
 
-        const { data, error } = await supabase
-            .from("comments")
-            .insert({
-                content: validatedData.content,
-                article_id: validatedData.articleId,
-                user_id: validatedData.userId,
-                parent_id: validatedData.parentId || null,
-                ip_address: validatedData.ipAddress || null,
-                user_agent: validatedData.userAgent || null,
-            })
-            .select(
-                `
-                *,
-                user:users(id, email, full_name, avatar_url)
+    const { data: comment, error } = await supabase
+        .from("comments")
+        .insert({
+            content: validatedData.content,
+            article_id: validatedData.articleId,
+            user_id: validatedData.userId,
+            parent_id: validatedData.parentId || null,
+        })
+        .select(
             `
+            id,
+            content,
+            article_id,
+            user_id,
+            parent_id,
+            created_at,
+            updated_at,
+            users!inner(
+                id,
+                email,
+                full_name,
+                avatar_url
             )
-            .single();
+        `
+        )
+        .single();
 
-        if (error) {
-            console.error("Error creating comment:", error);
-            return null;
-        }
-
-        return transformCommentData(data);
-    } catch (error) {
-        if (error instanceof Error) {
-            console.error("Validation error creating comment:", error.message);
-            throw new Error(`Validation failed: ${error.message}`);
-        }
-        console.error("Unexpected error creating comment:", error);
-        return null;
+    if (error) {
+        console.error("Error creating comment:", error);
+        throw new Error("Failed to create comment");
     }
+
+    return transformComment(comment);
 }
 
-// UPDATE operations
+// Update a comment
 export async function updateComment(
-    id: number,
-    updateData: UpdateCommentData
+    commentId: number,
+    data: UpdateCommentInput,
+    userId: string
 ): Promise<Comment | null> {
-    try {
-        const validatedId = validateCommentId(id);
-        const validatedData = validateUpdateComment(updateData);
-        const supabase = await createClient();
+    const supabase = await createClient();
+    const validatedData = validateUpdateComment(data);
+    const validatedId = validateCommentId(commentId);
 
-        const { data, error } = await supabase
-            .from("comments")
-            .update({
-                content: validatedData.content,
-                edit_reason: validatedData.editReason,
-                is_edited: true,
-                edited_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-            })
-            .eq("id", validatedId)
-            .select(
-                `
-                *,
-                user:users(id, email, full_name, avatar_url)
+    // Check if user owns the comment
+    const { data: existingComment, error: fetchError } = await supabase
+        .from("comments")
+        .select("user_id")
+        .eq("id", validatedId)
+        .single();
+
+    if (fetchError || !existingComment) {
+        throw new Error("Comment not found");
+    }
+
+    if (existingComment.user_id !== userId) {
+        throw new Error("Not authorized to update this comment");
+    }
+
+    const { data: comment, error } = await supabase
+        .from("comments")
+        .update({
+            content: validatedData.content,
+            updated_at: new Date().toISOString(),
+        })
+        .eq("id", validatedId)
+        .select(
             `
+            id,
+            content,
+            article_id,
+            user_id,
+            parent_id,
+            created_at,
+            updated_at,
+            users!inner(
+                id,
+                email,
+                full_name,
+                avatar_url
             )
-            .single();
+        `
+        )
+        .single();
 
-        if (error) {
-            console.error("Error updating comment:", error);
-            return null;
-        }
-
-        return transformCommentData(data);
-    } catch (error) {
-        if (error instanceof Error) {
-            console.error("Validation error updating comment:", error.message);
-            throw new Error(`Validation failed: ${error.message}`);
-        }
-        console.error("Unexpected error updating comment:", error);
-        return null;
+    if (error) {
+        console.error("Error updating comment:", error);
+        throw new Error("Failed to update comment");
     }
+
+    return transformComment(comment);
 }
 
-export async function moderateComment(
-    id: number,
-    moderateData: ModerateCommentData
-): Promise<Comment | null> {
-    try {
-        const validatedId = validateCommentId(id);
-        const validatedData = validateModerateComment(moderateData);
-        const supabase = await createClient();
-
-        const { data, error } = await supabase
-            .from("comments")
-            .update({
-                status: validatedData.status,
-                moderated_by: validatedData.moderatedBy,
-                moderated_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-            })
-            .eq("id", validatedId)
-            .select(
-                `
-                *,
-                user:users(id, email, full_name, avatar_url)
-            `
-            )
-            .single();
-
-        if (error) {
-            console.error("Error moderating comment:", error);
-            return null;
-        }
-
-        return transformCommentData(data);
-    } catch (error) {
-        if (error instanceof Error) {
-            console.error(
-                "Validation error moderating comment:",
-                error.message
-            );
-            throw new Error(`Validation failed: ${error.message}`);
-        }
-        console.error("Unexpected error moderating comment:", error);
-        return null;
-    }
-}
-
-// DELETE operations
-export async function deleteComment(id: number): Promise<boolean> {
-    try {
-        const validatedId = validateCommentId(id);
-        const supabase = await createClient();
-
-        const { error } = await supabase
-            .from("comments")
-            .delete()
-            .eq("id", validatedId);
-
-        if (error) {
-            console.error("Error deleting comment:", error);
-            return false;
-        }
-
-        return true;
-    } catch (error) {
-        if (error instanceof Error) {
-            console.error("Validation error deleting comment:", error.message);
-            throw new Error(`Validation failed: ${error.message}`);
-        }
-        console.error("Unexpected error deleting comment:", error);
-        return false;
-    }
-}
-
-// REACTION operations
-export async function addCommentReaction(
-    reactionData: CreateCommentReactionData
-): Promise<CommentReaction | null> {
-    try {
-        const validatedData = validateCreateCommentReaction(reactionData);
-        const supabase = await createClient();
-
-        // First, remove any existing reaction from this user
-        await supabase
-            .from("comment_reactions")
-            .delete()
-            .eq("comment_id", validatedData.commentId)
-            .eq("user_id", validatedData.userId);
-
-        // Add the new reaction
-        const { data, error } = await supabase
-            .from("comment_reactions")
-            .insert({
-                comment_id: validatedData.commentId,
-                user_id: validatedData.userId,
-                reaction_type: validatedData.reactionType,
-            })
-            .select(
-                `
-                *,
-                user:users(id, full_name, avatar_url)
-            `
-            )
-            .single();
-
-        if (error) {
-            console.error("Error adding comment reaction:", error);
-            return null;
-        }
-
-        return transformReactionData(data);
-    } catch (error) {
-        if (error instanceof Error) {
-            console.error(
-                "Validation error adding comment reaction:",
-                error.message
-            );
-            throw new Error(`Validation failed: ${error.message}`);
-        }
-        console.error("Unexpected error adding comment reaction:", error);
-        return null;
-    }
-}
-
-export async function removeCommentReaction(
+// Delete a comment
+export async function deleteComment(
     commentId: number,
     userId: string
 ): Promise<boolean> {
-    try {
-        const validatedCommentId = validateCommentId(commentId);
-        const supabase = await createClient();
+    const supabase = await createClient();
+    const validatedId = validateCommentId(commentId);
 
-        const { error } = await supabase
-            .from("comment_reactions")
-            .delete()
-            .eq("comment_id", validatedCommentId)
-            .eq("user_id", userId);
+    // Check if user owns the comment
+    const { data: existingComment, error: fetchError } = await supabase
+        .from("comments")
+        .select("user_id")
+        .eq("id", validatedId)
+        .single();
 
-        if (error) {
-            console.error("Error removing comment reaction:", error);
-            return false;
-        }
+    if (fetchError || !existingComment) {
+        throw new Error("Comment not found");
+    }
 
-        return true;
-    } catch (error) {
-        if (error instanceof Error) {
-            console.error(
-                "Validation error removing comment reaction:",
-                error.message
-            );
-            throw new Error(`Validation failed: ${error.message}`);
-        }
-        console.error("Unexpected error removing comment reaction:", error);
+    if (existingComment.user_id !== userId) {
+        throw new Error("Not authorized to delete this comment");
+    }
+
+    const { error } = await supabase
+        .from("comments")
+        .delete()
+        .eq("id", validatedId);
+
+    if (error) {
+        console.error("Error deleting comment:", error);
+        throw new Error("Failed to delete comment");
+    }
+
+    return true;
+}
+
+// Like a comment
+export async function likeComment(
+    data: CreateCommentLikeInput
+): Promise<CommentLike | null> {
+    const supabase = await createClient();
+    const validatedData = validateCreateCommentLike(data);
+
+    // Check if already liked
+    const { data: existingLike, error: checkError } = await supabase
+        .from("comment_likes")
+        .select("id")
+        .eq("comment_id", validatedData.commentId)
+        .eq("user_id", validatedData.userId)
+        .single();
+
+    if (existingLike) {
+        throw new Error("Comment already liked");
+    }
+
+    const { data: like, error } = await supabase
+        .from("comment_likes")
+        .insert({
+            comment_id: validatedData.commentId,
+            user_id: validatedData.userId,
+        })
+        .select(
+            `
+            id,
+            comment_id,
+            user_id,
+            created_at,
+            users!inner(
+                id,
+                email,
+                full_name,
+                avatar_url
+            )
+        `
+        )
+        .single();
+
+    if (error) {
+        console.error("Error liking comment:", error);
+        throw new Error("Failed to like comment");
+    }
+
+    return transformCommentLike(like);
+}
+
+// Unlike a comment
+export async function unlikeComment(
+    commentId: number,
+    userId: string
+): Promise<boolean> {
+    const supabase = await createClient();
+    const validatedId = validateCommentId(commentId);
+
+    const { error } = await supabase
+        .from("comment_likes")
+        .delete()
+        .eq("comment_id", validatedId)
+        .eq("user_id", userId);
+
+    if (error) {
+        console.error("Error unliking comment:", error);
+        throw new Error("Failed to unlike comment");
+    }
+
+    return true;
+}
+
+// Check if user liked a comment
+export async function hasUserLikedComment(
+    commentId: number,
+    userId: string
+): Promise<boolean> {
+    const supabase = await createClient();
+    const validatedId = validateCommentId(commentId);
+
+    const { data, error } = await supabase
+        .from("comment_likes")
+        .select("id")
+        .eq("comment_id", validatedId)
+        .eq("user_id", userId)
+        .single();
+
+    if (error && error.code !== "PGRST116") {
+        console.error("Error checking if user liked comment:", error);
         return false;
     }
+
+    return !!data;
 }
 
-// Helper functions
-function transformCommentData(data: any): Comment {
-    return {
-        id: data.id,
-        content: data.content,
-        articleId: data.article_id,
-        userId: data.user_id,
-        parentId: data.parent_id,
-        status: data.status,
-        isEdited: data.is_edited,
-        editReason: data.edit_reason,
-        ipAddress: data.ip_address,
-        userAgent: data.user_agent,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at,
-        editedAt: data.edited_at,
-        moderatedAt: data.moderated_at,
-        moderatedBy: data.moderated_by,
-        user: data.user
-            ? {
-                  id: data.user.id,
-                  email: data.user.email,
-                  fullName: data.user.full_name,
-                  avatarUrl: data.user.avatar_url,
-              }
-            : undefined,
-        reactions: data.reactions?.map(transformReactionData) || [],
-    };
-}
+// Get a single comment by ID
+export async function getCommentById(
+    commentId: number
+): Promise<Comment | null> {
+    const supabase = await createClient();
+    const validatedId = validateCommentId(commentId);
 
-function transformReactionData(data: any): CommentReaction {
-    return {
-        id: data.id,
-        commentId: data.comment_id,
-        userId: data.user_id,
-        reactionType: data.reaction_type,
-        createdAt: data.created_at,
-        user: data.user
-            ? {
-                  id: data.user.id,
-                  fullName: data.user.full_name,
-                  avatarUrl: data.user.avatar_url,
-              }
-            : undefined,
-    };
+    const { data, error } = await supabase
+        .from("comments")
+        .select(
+            `
+            id,
+            content,
+            article_id,
+            user_id,
+            parent_id,
+            created_at,
+            updated_at,
+            users!inner(
+                id,
+                email,
+                full_name,
+                avatar_url
+            )
+        `
+        )
+        .eq("id", validatedId)
+        .single();
+
+    if (error) {
+        console.error("Error fetching comment:", error);
+        return null;
+    }
+
+    return transformComment(data);
 }

@@ -8,6 +8,7 @@ import { BlurFade } from "@/components/magicui/blur-fade";
 import { TypingAnimation } from "@/components/magicui/typing-animation";
 import { Starfield } from "@/components/magicui/starfield";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
+import { FlickeringGrid } from "@/components/ui/flickering-grid";
 import { Search } from "lucide-react";
 import { type Article } from "@/data/blog-client";
 
@@ -33,6 +34,16 @@ export function ClientSections({ posts, allTags }: ClientSectionsProps) {
                         starSize={[1, 4]}
                         className="dark:opacity-100 opacity-0"
                     />
+                    <div className="absolute inset-0 pointer-events-none dark:hidden">
+                        <FlickeringGrid
+                            className="relative inset-0 z-0"
+                            squareSize={4}
+                            gridGap={6}
+                            color="#60A5FA"
+                            maxOpacity={0.3}
+                            flickerChance={0.1}
+                        />
+                    </div>
                     {/* Grid Layout */}
                     <div className="max-w-7xl mx-auto min-h-full flex flex-col gap-8 justify-between">
                         {/* Top Content Group */}

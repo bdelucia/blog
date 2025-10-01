@@ -1,9 +1,10 @@
 import { requireAdmin } from "@/lib/auth";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/components/admin/app-sidebar";
 import { AdminDashboardProvider } from "@/components/providers/admin-dashboard-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Starfield } from "@/components/magicui/starfield";
 import { ShineBorder } from "@/components/magicui/shine-border";
+import { FlickeringGrid } from "@/components/ui/flickering-grid";
 
 // Force dynamic rendering for admin layout
 export const dynamic = "force-dynamic";
@@ -36,6 +37,16 @@ export default async function AdminLayout({
                                     starSize={[1, 4]}
                                     className="dark:opacity-100 opacity-0"
                                 />
+                                <div className="absolute inset-0 pointer-events-none dark:hidden">
+                                    <FlickeringGrid
+                                        className="relative inset-0 z-0"
+                                        squareSize={4}
+                                        gridGap={6}
+                                        color="#60A5FA"
+                                        maxOpacity={0.3}
+                                        flickerChance={0.1}
+                                    />
+                                </div>
                                 {children}
                             </div>
                             <ShineBorder

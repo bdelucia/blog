@@ -148,7 +148,7 @@ export default function RootLayout({
                                     } else if (theme === 'light') {
                                         document.documentElement.classList.remove('dark');
                                     } else {
-                                        // Default to system preference
+                                        // Default to system preference for first-time visitors
                                         if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
                                             document.documentElement.classList.add('dark');
                                         } else {

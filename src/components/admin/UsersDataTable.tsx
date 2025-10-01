@@ -52,6 +52,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CustomAvatar } from "@/components/ui/custom-avatar";
 
 type User = {
     id: string;
@@ -85,16 +86,18 @@ const columns: ColumnDef<User>[] = [
                 return email.slice(0, 2).toUpperCase();
             };
 
+            // Debug logging for avatar URLs
+            if (avatarUrl) {
+                console.log("Avatar URL:", avatarUrl);
+            }
+
             return (
-                <Avatar className="h-8 w-8">
-                    <AvatarImage
-                        src={avatarUrl || undefined}
-                        alt={fullName || email}
-                    />
-                    <AvatarFallback className="text-xs">
-                        {getInitials(fullName, email)}
-                    </AvatarFallback>
-                </Avatar>
+                <CustomAvatar
+                    src={avatarUrl || undefined}
+                    alt={fullName || email}
+                    fallback={getInitials(fullName, email)}
+                    size="md"
+                />
             );
         },
         enableSorting: false,

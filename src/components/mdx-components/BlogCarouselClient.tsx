@@ -3,7 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 // BLOG_IMGS_URL is passed as a prop instead of imported
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface BlogCarouselClientProps {
@@ -30,6 +30,10 @@ export default function BlogCarouselClient({
         );
     };
 
+    // Get adjacent image indices for preloading
+    const nextIndex = (currentIndex + 1) % images.length;
+    const prevIndex = (currentIndex - 1 + images.length) % images.length;
+
     // Multiple images - render with carousel navigation
     return (
         <div className="flex items-center justify-center">
@@ -41,6 +45,7 @@ export default function BlogCarouselClient({
                         className="w-full h-auto"
                         width={384}
                         height={512}
+                        priority={currentIndex === 0} // Priority load for first image
                     />
                 </div>
 
@@ -75,6 +80,24 @@ export default function BlogCarouselClient({
                         />
                     ))}
                 </div>
+            </div>
+
+            {/* Hidden preload images for instant transitions */}
+            <div className="hidden">
+                <Image
+                    src={`${baseUrl}${images[nextIndex]}`}
+                    alt=""
+                    width={384}
+                    height={512}
+                    priority={false}
+                />
+                <Image
+                    src={`${baseUrl}${images[prevIndex]}`}
+                    alt=""
+                    width={384}
+                    height={512}
+                    priority={false}
+                />
             </div>
         </div>
     );

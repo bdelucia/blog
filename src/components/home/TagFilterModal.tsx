@@ -10,6 +10,7 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { useTagFilter } from "@/components/providers/tag-filter-provider";
+import { RainbowButton } from "@/components/magicui/rainbow-button";
 
 interface TagFilterModalProps {
     allTags: string[];
@@ -67,17 +68,14 @@ export function TagFilterModal({ allTags }: TagFilterModalProps) {
                         {allTags.map((tag) => {
                             const isSelected = selectedTags.includes(tag);
                             return (
-                                <button
+                                <RainbowButton
                                     key={tag}
                                     onClick={() => handleTagClick(tag)}
-                                    className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${
-                                        isSelected
-                                            ? "bg-blue-600 text-white hover:bg-blue-700"
-                                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-800 dark:hover:text-blue-200"
-                                    }`}
+                                    variant={isSelected ? "default" : "outline"}
+                                    size="sm"
                                 >
                                     {tag}
-                                </button>
+                                </RainbowButton>
                             );
                         })}
                     </div>

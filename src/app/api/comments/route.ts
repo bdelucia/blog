@@ -7,8 +7,7 @@ export async function GET(request: NextRequest) {
     try {
         const { searchParams } = new URL(request.url);
         const articleId = searchParams.get("articleId");
-        const includeReactions =
-            searchParams.get("includeReactions") === "true";
+        const includeLikes = searchParams.get("includeLikes") === "true";
         const limit = parseInt(searchParams.get("limit") || "20");
         const offset = parseInt(searchParams.get("offset") || "0");
 
@@ -20,7 +19,7 @@ export async function GET(request: NextRequest) {
         }
 
         const comments = await getCommentsByArticle(parseInt(articleId), {
-            includeReactions,
+            includeLikes,
             limit,
             offset,
         });
@@ -56,20 +55,11 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Get client IP and user agent for moderation
-        const ipAddress =
-            request.headers.get("x-forwarded-for") ||
-            request.headers.get("x-real-ip") ||
-            "unknown";
-        const userAgent = request.headers.get("user-agent") || "unknown";
-
         const comment = await createComment({
             content,
             articleId: parseInt(articleId),
             userId: user.id,
             parentId: parentId ? parseInt(parentId) : undefined,
-            ipAddress,
-            userAgent,
         });
 
         if (!comment) {

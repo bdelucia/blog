@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/client";
 import { Header } from "@/components/shared/Header";
 import { useUpdateUserCache } from "@/hooks/useUserQuery";
 import { Starfield } from "@/components/magicui/starfield";
+import { FlickeringGrid } from "@/components/ui/flickering-grid";
 
 export default function AuthCallbackPage() {
     const router = useRouter();
@@ -287,6 +288,16 @@ export default function AuthCallbackPage() {
                     starSize={[1, 4]}
                     className="dark:opacity-100 opacity-0"
                 />
+                <div className="absolute inset-0 pointer-events-none dark:hidden">
+                    <FlickeringGrid
+                        className="relative inset-0 z-0"
+                        squareSize={4}
+                        gridGap={6}
+                        color="#60A5FA"
+                        maxOpacity={0.3}
+                        flickerChance={0.1}
+                    />
+                </div>
                 <Header />
                 <div className="relative z-10 text-center">
                     <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/20">
@@ -327,6 +338,16 @@ export default function AuthCallbackPage() {
                 starSize={[1, 4]}
                 className="dark:opacity-100 opacity-0"
             />
+            <div className="absolute inset-0 pointer-events-none dark:hidden">
+                <FlickeringGrid
+                    className="relative inset-0 z-0"
+                    squareSize={4}
+                    gridGap={6}
+                    color="#60A5FA"
+                    maxOpacity={0.3}
+                    flickerChance={0.1}
+                />
+            </div>
             <Header />
             <div className="relative z-10 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>

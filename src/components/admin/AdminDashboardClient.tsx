@@ -10,7 +10,7 @@ import { Save, Upload, X, Plus } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { AdminCards } from "@/components/admin-cards";
+import { AdminCards } from "@/components/admin/admin-cards";
 import { AnalyticsChart } from "./analytics-chart";
 import { PageViewsChart } from "./page-views-chart";
 import { UsersChart } from "./users-chart";

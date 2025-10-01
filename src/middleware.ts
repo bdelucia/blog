@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Define protected routes
-const protectedRoutes = ["/admin", "/dashboard", "/profile", "/settings"];
+const protectedRoutes = ["/admin", "/profile", "/settings"];
 
 // Define admin-only routes
 const adminRoutes = ["/admin"];

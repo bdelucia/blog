@@ -11,7 +11,7 @@ import {
     IconCirclePlusFilled,
 } from "@tabler/icons-react";
 
-import { NavUser } from "@/components/nav-user";
+import { NavUser } from "@/components/admin/nav-user";
 import { RainbowButton } from "@/components/magicui/rainbow-button";
 import { CyanButton } from "@/components/magicui/cyan-button";
 import { useTheme } from "@/hooks/useTheme";

@@ -20,8 +20,8 @@ import {
     IconUsers,
 } from "@tabler/icons-react";
 
-import { NavMain } from "@/components/nav-main";
-import { NavUser } from "@/components/nav-user";
+import { NavMain } from "@/components/admin/nav-main";
+import { NavUser } from "@/components/admin/nav-user";
 import { RainbowButton } from "@/components/magicui/rainbow-button";
 import { CyanButton } from "@/components/magicui/cyan-button";
 import { useTheme } from "@/hooks/useTheme";

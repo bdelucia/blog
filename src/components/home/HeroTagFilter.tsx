@@ -2,7 +2,9 @@
 
 import { BlurFade } from "@/components/magicui/blur-fade";
 import { useTagFilter } from "@/components/providers/tag-filter-provider";
-import { ShimmerButton } from "../ui/shimmer-button";
+import { RainbowButton } from "@/components/magicui/rainbow-button";
+import { CyanButton } from "@/components/magicui/cyan-button";
+import { useTheme } from "@/hooks/useTheme";
 
 interface HeroTagFilterProps {
     allTags: string[];
@@ -10,6 +12,7 @@ interface HeroTagFilterProps {
 
 export function HeroTagFilter({ allTags }: HeroTagFilterProps) {
     const { selectedTags, toggleTag } = useTagFilter();
+    const { theme, mounted: themeMounted } = useTheme();
 
     const scrollToBlogSection = () => {
         setTimeout(() => {
@@ -48,27 +51,35 @@ export function HeroTagFilter({ allTags }: HeroTagFilterProps) {
                     </div>
                     <div className="flex flex-wrap gap-2">
                         {allTags.map((tag) => {
-                            const isSelected = selectedTags.includes(tag);
-                            return (
-                                <ShimmerButton
+                            return !themeMounted ? (
+                                // Show a neutral button during SSR to prevent hydration mismatch
+                                <button
                                     key={tag}
                                     onClick={() => handleTagClick(tag)}
-                                    className={`px-4 py-2 text-sm font-medium transition-all duration-200 cursor-pointer ${
-                                        isSelected
-                                            ? "text-gray-900 dark:text-white"
-                                            : "text-gray-100 dark:text-white"
-                                    }`}
-                                    background={
-                                        isSelected
-                                            ? "rgba(243, 244, 246, 1)"
-                                            : "rgba(31, 41, 55, 1)"
-                                    }
-                                    shimmerColor="#00FFFF"
-                                    borderRadius="100px"
-                                    shimmerDuration="2s"
+                                    className="h-8 px-3 text-sm font-semibold bg-black text-white rounded-xl"
                                 >
                                     {tag}
-                                </ShimmerButton>
+                                </button>
+                            ) : theme === "dark" ? (
+                                <RainbowButton
+                                    key={tag}
+                                    onClick={() => handleTagClick(tag)}
+                                    variant="default"
+                                    size="sm"
+                                    className="text-sm font-semibold"
+                                >
+                                    {tag}
+                                </RainbowButton>
+                            ) : (
+                                <CyanButton
+                                    key={tag}
+                                    onClick={() => handleTagClick(tag)}
+                                    variant="default"
+                                    size="sm"
+                                    className="text-sm font-semibold"
+                                >
+                                    {tag}
+                                </CyanButton>
                             );
                         })}
                     </div>

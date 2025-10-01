@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-    addCommentReaction,
-    removeCommentReaction,
-} from "@/db/comments/functions";
+import { likeComment, unlikeComment } from "@/db/comments/functions";
 import { getCurrentUser } from "@/lib/auth";
 
-// POST /api/comments/[id]/reactions
+// POST /api/comments/[id]/likes
 export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -19,41 +16,23 @@ export async function POST(
             );
         }
 
-        const body = await request.json();
-        const { reactionType } = body;
-
-        if (!reactionType) {
-            return NextResponse.json(
-                { error: "Reaction type is required" },
-                { status: 400 }
-            );
-        }
-
         const resolvedParams = await params;
-        const reaction = await addCommentReaction({
+        const like = await likeComment({
             commentId: parseInt(resolvedParams.id),
             userId: user.id,
-            reactionType,
         });
 
-        if (!reaction) {
-            return NextResponse.json(
-                { error: "Failed to add reaction" },
-                { status: 500 }
-            );
-        }
-
-        return NextResponse.json({ reaction }, { status: 201 });
+        return NextResponse.json({ like }, { status: 201 });
     } catch (error) {
-        console.error("Error adding reaction:", error);
+        console.error("Error liking comment:", error);
         return NextResponse.json(
-            { error: "Failed to add reaction" },
+            { error: "Failed to like comment" },
             { status: 500 }
         );
     }
 }
 
-// DELETE /api/comments/[id]/reactions
+// DELETE /api/comments/[id]/likes
 export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -68,23 +47,16 @@ export async function DELETE(
         }
 
         const resolvedParams = await params;
-        const success = await removeCommentReaction(
+        const success = await unlikeComment(
             parseInt(resolvedParams.id),
             user.id
         );
 
-        if (!success) {
-            return NextResponse.json(
-                { error: "Failed to remove reaction" },
-                { status: 500 }
-            );
-        }
-
-        return NextResponse.json({ success: true });
+        return NextResponse.json({ success });
     } catch (error) {
-        console.error("Error removing reaction:", error);
+        console.error("Error unliking comment:", error);
         return NextResponse.json(
-            { error: "Failed to remove reaction" },
+            { error: "Failed to unlike comment" },
             { status: 500 }
         );
     }

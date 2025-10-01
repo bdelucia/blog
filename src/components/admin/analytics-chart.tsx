@@ -212,7 +212,63 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
                     </span>
                 </CardDescription>
                 <CardAction>
-                    <div className="flex items-center gap-2">
+                    {/* Mobile layout: toggle above, timeline below */}
+                    <div className="flex flex-col gap-2 @[505px]/card:hidden">
+                        <div className="flex justify-end">
+                            <div className="flex items-center gap-2">
+                                {viewType === "cumulative" ? (
+                                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                                ) : (
+                                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                                )}
+                                <Switch
+                                    checked={viewType === "cumulative"}
+                                    onCheckedChange={(checked) =>
+                                        setViewType(
+                                            checked ? "cumulative" : "daily"
+                                        )
+                                    }
+                                />
+                            </div>
+                        </div>
+                        <div className="flex justify-start">
+                            <Select
+                                value={timeRange}
+                                onValueChange={setTimeRange}
+                            >
+                                <SelectTrigger
+                                    className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate"
+                                    size="sm"
+                                    aria-label="Select a value"
+                                >
+                                    <SelectValue placeholder="Last 30 days" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-xl">
+                                    <SelectItem
+                                        value="90d"
+                                        className="rounded-lg cursor-pointer"
+                                    >
+                                        Last 3 months
+                                    </SelectItem>
+                                    <SelectItem
+                                        value="30d"
+                                        className="rounded-lg cursor-pointer"
+                                    >
+                                        Last 30 days
+                                    </SelectItem>
+                                    <SelectItem
+                                        value="7d"
+                                        className="rounded-lg cursor-pointer"
+                                    >
+                                        Last 7 days
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {/* Desktop layout: everything in one row */}
+                    <div className="hidden @[505px]/card:flex items-center gap-2 flex-wrap">
                         <div className="flex items-center gap-2">
                             {viewType === "cumulative" ? (
                                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -233,7 +289,7 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
                             value={timeRange}
                             onValueChange={setTimeRange}
                             variant="outline"
-                            className="hidden *:data-[slot=toggle-group-item]:!px-4 @[767px]/card:flex"
+                            className="hidden *:data-[slot=toggle-group-item]:!px-4 @[1123px]/card:flex"
                         >
                             <ToggleGroupItem
                                 value="90d"
@@ -254,36 +310,36 @@ export function AnalyticsChart({ className }: AnalyticsChartProps) {
                                 Last 7 days
                             </ToggleGroupItem>
                         </ToggleGroup>
+                        <Select value={timeRange} onValueChange={setTimeRange}>
+                            <SelectTrigger
+                                className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[1123px]/card:hidden"
+                                size="sm"
+                                aria-label="Select a value"
+                            >
+                                <SelectValue placeholder="Last 30 days" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                                <SelectItem
+                                    value="90d"
+                                    className="rounded-lg cursor-pointer"
+                                >
+                                    Last 3 months
+                                </SelectItem>
+                                <SelectItem
+                                    value="30d"
+                                    className="rounded-lg cursor-pointer"
+                                >
+                                    Last 30 days
+                                </SelectItem>
+                                <SelectItem
+                                    value="7d"
+                                    className="rounded-lg cursor-pointer"
+                                >
+                                    Last 7 days
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
-                    <Select value={timeRange} onValueChange={setTimeRange}>
-                        <SelectTrigger
-                            className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
-                            size="sm"
-                            aria-label="Select a value"
-                        >
-                            <SelectValue placeholder="Last 30 days" />
-                        </SelectTrigger>
-                        <SelectContent className="rounded-xl">
-                            <SelectItem
-                                value="90d"
-                                className="rounded-lg cursor-pointer"
-                            >
-                                Last 3 months
-                            </SelectItem>
-                            <SelectItem
-                                value="30d"
-                                className="rounded-lg cursor-pointer"
-                            >
-                                Last 30 days
-                            </SelectItem>
-                            <SelectItem
-                                value="7d"
-                                className="rounded-lg cursor-pointer"
-                            >
-                                Last 7 days
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
                 </CardAction>
             </CardHeader>
             <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">

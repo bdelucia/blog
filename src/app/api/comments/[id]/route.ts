@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
-    getComment,
+    getCommentById,
     updateComment,
     deleteComment,
 } from "@/db/comments/functions";
@@ -13,7 +13,7 @@ export async function GET(
 ) {
     try {
         const resolvedParams = await params;
-        const comment = await getComment(parseInt(resolvedParams.id));
+        const comment = await getCommentById(parseInt(resolvedParams.id));
 
         if (!comment) {
             return NextResponse.json(
@@ -47,7 +47,7 @@ export async function PUT(
         }
 
         const body = await request.json();
-        const { content, editReason } = body;
+        const { content } = body;
 
         if (!content) {
             return NextResponse.json(
@@ -57,26 +57,11 @@ export async function PUT(
         }
 
         const resolvedParams = await params;
-        // Check if user owns the comment
-        const existingComment = await getComment(parseInt(resolvedParams.id));
-        if (!existingComment) {
-            return NextResponse.json(
-                { error: "Comment not found" },
-                { status: 404 }
-            );
-        }
-
-        if (existingComment.userId !== user.id) {
-            return NextResponse.json(
-                { error: "You can only edit your own comments" },
-                { status: 403 }
-            );
-        }
-
-        const comment = await updateComment(parseInt(resolvedParams.id), {
-            content,
-            editReason,
-        });
+        const comment = await updateComment(
+            parseInt(resolvedParams.id),
+            { content },
+            user.id
+        );
 
         if (!comment) {
             return NextResponse.json(
@@ -110,23 +95,10 @@ export async function DELETE(
         }
 
         const resolvedParams = await params;
-        // Check if user owns the comment or is admin
-        const existingComment = await getComment(parseInt(resolvedParams.id));
-        if (!existingComment) {
-            return NextResponse.json(
-                { error: "Comment not found" },
-                { status: 404 }
-            );
-        }
-
-        if (existingComment.userId !== user.id && user.role !== "admin") {
-            return NextResponse.json(
-                { error: "You can only delete your own comments" },
-                { status: 403 }
-            );
-        }
-
-        const success = await deleteComment(parseInt(resolvedParams.id));
+        const success = await deleteComment(
+            parseInt(resolvedParams.id),
+            user.id
+        );
 
         if (!success) {
             return NextResponse.json(
