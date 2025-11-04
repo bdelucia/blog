@@ -231,11 +231,20 @@ export default function AuthCallbackPage() {
                             );
 
                             if (!response.ok) {
+                                const errorData = await response.json();
                                 console.error(
-                                    "Failed to create user record, but continuing..."
+                                    "Failed to create user record:",
+                                    response.status,
+                                    errorData
                                 );
+                                // Show error to user instead of silently continuing
+                                setError(
+                                    `Failed to create user account: ${errorData.error || "Unknown error"}. Please try again or contact support.`
+                                );
+                                return;
                             } else {
                                 const result = await response.json();
+                                console.log("User created successfully:", result);
 
                                 // Update the cache with the new user data
                                 if (result.user) {
