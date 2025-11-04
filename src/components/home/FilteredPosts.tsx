@@ -4,8 +4,11 @@ import { BlurFade } from "@/components/magicui/blur-fade";
 import { ShineBorder } from "@/components/magicui/shine-border";
 import { BLOG_IMGS_URL, type Article } from "@/data/blog-client";
 import { useTagFilter } from "@/components/providers/tag-filter-provider";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface FilteredPostsProps {
     posts: Article[];
@@ -15,6 +18,7 @@ const BLUR_FADE_DELAY = 0.04;
 
 export function FilteredPosts({ posts }: FilteredPostsProps) {
     const { selectedTags } = useTagFilter();
+    const router = useRouter();
 
     // Filter posts based on selected tags
     const filteredPosts =
@@ -90,7 +94,7 @@ export function FilteredPosts({ posts }: FilteredPostsProps) {
                             {/* Content - Full width on mobile, flexible on larger screens */}
                             <div className="w-full sm:flex-1 sm:min-w-0 flex flex-col justify-between sm:h-[160px]">
                                 {/* Top content: title, date, badges, summary */}
-                                <div className="flex flex-col space-y-3">
+                                <div className="flex flex-col space-y-2">
                                     {/* Article Title */}
                                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
                                         {post.title}
@@ -136,23 +140,20 @@ export function FilteredPosts({ posts }: FilteredPostsProps) {
                                 </div>
 
                                 {/* Read link - positioned at bottom right */}
-                                <div className="flex justify-end mt-auto">
-                                    <div className="flex items-center text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors cursor-pointer">
-                                        <span>Read</span>
-                                        <svg
-                                            className="w-4 h-4 ml-1"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                strokeWidth={2}
-                                                d="M9 5l7 7-7 7"
-                                            />
-                                        </svg>
-                                    </div>
+                                <div className="flex justify-end items-center">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            router.push(`/${post.slug}`);
+                                        }}
+                                        className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 px-3 py-2 cursor-pointer"
+                                    >
+                                        Read
+                                        <ArrowRight className="w-4 h-4 ml-1" />
+                                    </Button>
                                 </div>
                             </div>
                         </div>

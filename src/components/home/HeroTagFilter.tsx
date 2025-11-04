@@ -11,7 +11,7 @@ interface HeroTagFilterProps {
 }
 
 export function HeroTagFilter({ allTags }: HeroTagFilterProps) {
-    const { selectedTags, toggleTag } = useTagFilter();
+    const { selectedTags, selectTag } = useTagFilter();
     const { theme, mounted: themeMounted } = useTheme();
 
     const scrollToBlogSection = () => {
@@ -31,13 +31,8 @@ export function HeroTagFilter({ allTags }: HeroTagFilterProps) {
     };
 
     const handleTagClick = (tag: string) => {
-        const wasSelected = selectedTags.includes(tag);
-        toggleTag(tag);
-
-        // Only scroll if we're enabling/activating a tag (not disabling)
-        if (!wasSelected) {
-            scrollToBlogSection();
-        }
+        selectTag(tag);
+        scrollToBlogSection();
     };
 
     return (

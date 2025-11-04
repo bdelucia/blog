@@ -6,6 +6,7 @@ interface TagFilterContextType {
     selectedTags: string[];
     setSelectedTags: (tags: string[]) => void;
     toggleTag: (tag: string) => void;
+    selectTag: (tag: string) => void;
     clearTags: () => void;
 }
 
@@ -22,6 +23,10 @@ export function TagFilterProvider({ children }: { children: ReactNode }) {
         );
     };
 
+    const selectTag = (tag: string) => {
+        setSelectedTags([tag]);
+    };
+
     const clearTags = () => {
         setSelectedTags([]);
     };
@@ -32,6 +37,7 @@ export function TagFilterProvider({ children }: { children: ReactNode }) {
                 selectedTags,
                 setSelectedTags,
                 toggleTag,
+                selectTag,
                 clearTags,
             }}
         >

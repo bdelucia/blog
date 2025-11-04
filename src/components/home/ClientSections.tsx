@@ -9,7 +9,8 @@ import { TypingAnimation } from "@/components/magicui/typing-animation";
 import { Starfield } from "@/components/magicui/starfield";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 import { FlickeringGrid } from "@/components/ui/flickering-grid";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, ArrowRight } from "lucide-react";
 import { type Article } from "@/data/blog-client";
 
 interface ClientSectionsProps {
@@ -257,30 +258,20 @@ export function ClientSections({ posts, allTags }: ClientSectionsProps) {
                                                         </p>
 
                                                         {/* Read button */}
-                                                        <div className="flex justify-end min-h-[20px]">
-                                                            <a
-                                                                href={`/${post.slug}`}
-                                                                className="flex items-center text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors cursor-pointer"
+                                                        <div className="flex justify-end items-center min-h-[20px]">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                asChild
+                                                                className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 px-3 py-2 cursor-pointer"
                                                             >
-                                                                <span>
-                                                                    Read
-                                                                </span>
-                                                                <svg
-                                                                    className="w-3 h-3 ml-1"
-                                                                    fill="none"
-                                                                    stroke="currentColor"
-                                                                    viewBox="0 0 24 24"
+                                                                <a
+                                                                    href={`/${post.slug}`}
                                                                 >
-                                                                    <path
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                        strokeWidth={
-                                                                            2
-                                                                        }
-                                                                        d="M9 5l7 7-7 7"
-                                                                    />
-                                                                </svg>
-                                                            </a>
+                                                                    Read
+                                                                    <ArrowRight className="w-3 h-3 ml-1" />
+                                                                </a>
+                                                            </Button>
                                                         </div>
                                                     </div>
                                                 </div>

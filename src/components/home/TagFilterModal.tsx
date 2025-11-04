@@ -20,33 +20,16 @@ export function TagFilterModal({ allTags }: TagFilterModalProps) {
     const { selectedTags, toggleTag, clearTags } = useTagFilter();
 
     const handleTagClick = (tag: string) => {
-        const wasSelected = selectedTags.includes(tag);
         toggleTag(tag);
-
-        // Only scroll if we're enabling/activating a tag (not disabling)
-        if (!wasSelected) {
-            // Smooth scroll to the blog section
-            setTimeout(() => {
-                const blogSection = document.getElementById("blog-posts");
-                if (blogSection) {
-                    const elementPosition =
-                        blogSection.getBoundingClientRect().top;
-                    const offsetPosition =
-                        elementPosition + window.pageYOffset - 100; // 100px offset from top
-
-                    window.scrollTo({
-                        top: offsetPosition,
-                        behavior: "smooth",
-                    });
-                }
-            }, 200); // Increased delay for smoother transition
-        }
     };
 
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2">
+                <Button
+                    variant="outline"
+                    className="flex items-center gap-2 cursor-pointer"
+                >
                     <Filter className="w-4 h-4" />
                     Filter Tags
                     {selectedTags.length > 0 && (
@@ -68,19 +51,27 @@ export function TagFilterModal({ allTags }: TagFilterModalProps) {
                         {allTags.map((tag) => {
                             const isSelected = selectedTags.includes(tag);
                             return (
-                                <RainbowButton
+                                <button
                                     key={tag}
                                     onClick={() => handleTagClick(tag)}
-                                    variant={isSelected ? "default" : "outline"}
-                                    size="sm"
+                                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer ${
+                                        isSelected
+                                            ? "bg-blue-600 text-white shadow-sm"
+                                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                    }`}
                                 >
                                     {tag}
-                                </RainbowButton>
+                                </button>
                             );
                         })}
                     </div>
                     <div className="flex justify-end gap-2 pt-4">
-                        <Button variant="outline" size="sm" onClick={clearTags}>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={clearTags}
+                            className="cursor-pointer"
+                        >
                             Clear All
                         </Button>
                     </div>

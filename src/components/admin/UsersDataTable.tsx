@@ -148,10 +148,14 @@ const columns: ColumnDef<User>[] = [
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Edit user</DropdownMenuItem>
-                    <DropdownMenuItem>View profile</DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer">
+                        Edit user
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer">
+                        View profile
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-red-600">
+                    <DropdownMenuItem className="text-red-600 cursor-pointer">
                         Delete user
                     </DropdownMenuItem>
                 </DropdownMenuContent>
